@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Students' Home &mdash; Institution Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+</head>
+<body>
+
+<div class="app">
+  <aside class="spine">
+    <div class="spine-brand">
+      <img src="/images/logo-mark.png" alt="Students' Home logo" class="brand-logo" />
+      <div class="brand-text">
+        <span class="brand-title">Students' Home</span>
+        <span class="brand-sub">Kottakkal · Institution Manager</span>
+      </div>
+    </div>
+    <nav class="tabs" id="nav-tabs">
+      <button class="tab" data-route="dashboard"><span class="tab-idx">01</span>Dashboard</button>
+      <button class="tab" data-route="students"><span class="tab-idx">02</span>Students</button>
+      <button class="tab" data-route="add-student"><span class="tab-idx">03</span>Admit Student</button>
+      <button class="tab" data-route="payment"><span class="tab-idx">04</span>Fee Payment</button>
+      <button class="tab" data-route="payment-history"><span class="tab-idx">05</span>Payment History</button>
+      <button class="tab" data-route="classes"><span class="tab-idx">06</span>Classes</button>
+      <button class="tab" data-route="teachers"><span class="tab-idx">07</span>Teachers</button>
+      <button class="tab" data-route="timetable"><span class="tab-idx">08</span>Timetable</button>
+      <button class="tab" data-route="import"><span class="tab-idx">09</span>Import Data</button>
+    </nav>
+    <div class="spine-mascot">
+      <img src="/images/mascot-main.png" alt="Nubo the Book Sprite" />
+      <p><strong>Nubo says:</strong> Learn today, lead tomorrow!</p>
+    </div>
+    <div class="spine-foot">
+      <span id="clock"></span>
+    </div>
+  </aside>
+
+  <main class="ledger">
+    <div id="toast" class="toast"></div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<template id="tpl-dashboard">
+  <div class="welcome-banner">
+    <img src="/images/mascot-main.png" alt="Nubo" />
+    <div class="wb-text">
+      <h3 id="wb-greeting">Welcome back!</h3>
+      <p>Here's how Students' Home is doing today.</p>
+    </div>
+  </div>
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h1>Today's Standing</h1>
+    </div>
+  </header>
+  <div class="stat-row" id="stat-row"></div>
+  <div class="two-col">
+    <section class="card">
+      <h2>Fee Balance by Class</h2>
+      <div id="fee-by-class" class="table-wrap"></div>
+    </section>
+    <section class="card">
+      <h2>Recent Admissions</h2>
+      <div id="recent-admissions" class="table-wrap"></div>
+    </section>
+  </div>
+</template>
+
+<template id="tpl-students">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 02</p>
+      <h1>Students</h1>
+    </div>
+    <button class="btn btn-primary" data-route="add-student">+ Admit Student</button>
+  </header>
+  <div class="filter-bar">
+    <input type="search" id="stu-search" placeholder="Search by name, admission no, guardian, place…" />
+    <select id="f-class"><option value="">Class — all</option><option>10</option><option>9</option><option>8</option></select>
+    <select id="f-division"><option value="">Division — all</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>M</option></select>
+    <select id="f-medium"><option value="">Medium — all</option><option>English</option><option>Malayalam</option></select>
+    <select id="f-status"><option value="">Status — all</option><option>Active</option><option value="Pending">Pending balance</option></select>
+    <button class="btn btn-ghost" id="export-pending">Export Fee Pending (Excel)</button>
+  </div>
+  <div class="table-wrap" id="students-table"></div>
+</template>
+
+<template id="tpl-student-detail">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Student File</p>
+      <h1 id="sd-name">&nbsp;</h1>
+    </div>
+    <div class="head-actions">
+      <button class="btn btn-ghost" id="sd-back">&larr; Back to Students</button>
+      <button class="btn btn-primary" id="sd-edit">Edit Details</button>
+    </div>
+  </header>
+  <div class="two-col">
+    <section class="card" id="sd-details"></section>
+    <section class="card">
+      <div class="card-head-row">
+        <h2>Fee Ledger</h2>
+        <button class="btn btn-small btn-primary" id="sd-pay">Record Payment</button>
+      </div>
+      <div id="sd-fee-summary" class="fee-summary"></div>
+      <div class="table-wrap" id="sd-payments"></div>
+    </section>
+  </div>
+</template>
+
+<template id="tpl-student-form">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow" id="sf-eyebrow">Register &mdash; Section 03</p>
+      <h1 id="sf-title">Admit a Student</h1>
+    </div>
+  </header>
+  <form class="form card" id="student-form">
+    <div class="form-grid">
+      <label>Admission No. <span class="req">*</span>
+        <input type="text" name="admission_no" required />
+      </label>
+      <label>Joining Date
+        <input type="date" name="joining_date" required />
+      </label>
+      <label>Name of Student <span class="req">*</span>
+        <input type="text" name="name" required />
+      </label>
+      <label>Class <span class="req">*</span>
+        <select name="class" required>
+          <option value="">Select</option><option>10</option><option>9</option><option>8</option>
+        </select>
+      </label>
+      <label>Division <span class="req">*</span>
+        <select name="division" required>
+          <option value="">Select</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>M</option>
+        </select>
+      </label>
+      <label>Medium of Instruction <span class="req">*</span>
+        <select name="medium" required>
+          <option value="">Select</option><option>English</option><option>Malayalam</option>
+        </select>
+      </label>
+      <label>School <span class="req">*</span>
+        <select name="school" id="sf-school" required>
+          <option value="">Select</option>
+          <option>AKM</option><option>IUHSS</option><option>PKMM</option><option>NSS</option>
+          <option>FEM</option><option>MALABAR</option><option>NAJATH</option><option>GRHSS</option>
+          <option>PMSA</option><option value="Others">Others — specify</option>
+        </select>
+      </label>
+      <label id="sf-school-other-wrap" class="hidden">Specify School
+        <input type="text" name="school_other" />
+      </label>
+      <label>Name of Father
+        <input type="text" name="father_name" />
+      </label>
+      <label>Father's Phone Number
+        <input type="tel" name="father_phone" />
+      </label>
+      <label>Name of Mother
+        <input type="text" name="mother_name" />
+      </label>
+      <label>Mother's Phone Number
+        <input type="tel" name="mother_phone" />
+      </label>
+      <label>Place
+        <input type="text" name="place" />
+      </label>
+      <label>Total Fees <span class="req">*</span>
+        <select name="total_fees" required>
+          <option value="">Select</option>
+          <option value="15900">₹15,900</option>
+          <option value="13300">₹13,300</option>
+          <option value="10800">₹10,800</option>
+        </select>
+      </label>
+      <label>Discount
+        <input type="number" name="discount" min="0" value="0" />
+      </label>
+      <div class="net-fee-display">
+        <span>Net Payable</span>
+        <strong id="sf-net-fee">₹0</strong>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" data-route="students">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Student</button>
+    </div>
+  </form>
+</template>
+
+<template id="tpl-payment">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 04</p>
+      <h1>Fee Payment</h1>
+    </div>
+  </header>
+  <form class="form card" id="payment-form">
+    <div class="form-grid">
+      <label>Admission No. <span class="req">*</span>
+        <input type="text" name="admission_no" id="pf-adm" required autocomplete="off" />
+      </label>
+      <label>Student Name
+        <input type="text" id="pf-name" disabled />
+      </label>
+      <label>Class / Division
+        <input type="text" id="pf-class" disabled />
+      </label>
+      <label>Net Fees
+        <input type="text" id="pf-total" disabled />
+      </label>
+      <label>Already Paid
+        <input type="text" id="pf-paid" disabled />
+      </label>
+      <label>Balance Due
+        <input type="text" id="pf-balance" disabled />
+      </label>
+      <label>Receipt No. <span class="req">*</span>
+        <input type="text" name="receipt_no" id="pf-receipt-no" required />
+        <span class="field-hint">Auto-filled from the last receipt — edit if needed.</span>
+      </label>
+      <label>Amount <span class="req">*</span>
+        <input type="number" name="amount" min="1" required />
+      </label>
+      <label>Payment Date <span class="req">*</span>
+        <input type="date" name="payment_date" required />
+      </label>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Record Payment</button>
+    </div>
+  </form>
+  <div id="pf-status" class="status-banner hidden"></div>
+</template>
+
+<template id="tpl-payment-history">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 05</p>
+      <h1>Payment History</h1>
+    </div>
+  </header>
+  <div class="filter-bar">
+    <input type="search" id="ph-search" placeholder="Search by admission no, name or receipt no…" />
+  </div>
+  <div class="table-wrap" id="ph-table"></div>
+</template>
+
+<template id="tpl-classes">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 06</p>
+      <h1>Classes &amp; Divisions</h1>
+    </div>
+  </header>
+  <div class="two-col">
+    <section class="card">
+      <h2>Add Class</h2>
+      <form class="form" id="class-form">
+        <div class="form-grid form-grid-narrow">
+          <label>Class <span class="req">*</span>
+            <select name="class" required><option value="">Select</option><option>10</option><option>9</option><option>8</option></select>
+          </label>
+          <label>Division <span class="req">*</span>
+            <select name="division" required><option value="">Select</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>M</option></select>
+          </label>
+          <label>Medium <span class="req">*</span>
+            <select name="medium" required><option value="">Select</option><option>English</option><option>Malayalam</option></select>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Add Class</button>
+        </div>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Existing Classes</h2>
+      <div class="table-wrap" id="classes-table"></div>
+    </section>
+  </div>
+</template>
+
+<template id="tpl-teachers">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 07</p>
+      <h1>Teachers</h1>
+    </div>
+  </header>
+  <div class="two-col">
+    <section class="card">
+      <h2 id="tf-title">Add Teacher</h2>
+      <form class="form" id="teacher-form">
+        <input type="hidden" name="id" />
+        <div class="form-grid form-grid-narrow">
+          <label>Name <span class="req">*</span>
+            <input type="text" name="name" required />
+          </label>
+          <label>Classes Handled
+            <input type="text" name="classes_handled" placeholder="e.g. 10 A, 10 B, 9 C" />
+          </label>
+          <label>Subject
+            <input type="text" name="subject" placeholder="e.g. Mathematics" />
+          </label>
+          <label>Hour Rate (₹) <span class="req">*</span>
+            <input type="number" name="hour_rate" min="0" required />
+          </label>
+          <label>Phone Number
+            <input type="tel" name="phone" />
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost hidden" id="tf-cancel">Cancel Edit</button>
+          <button type="submit" class="btn btn-primary" id="tf-submit">Add Teacher</button>
+        </div>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Faculty &amp; Worklog</h2>
+      <div class="table-wrap" id="teachers-table"></div>
+    </section>
+  </div>
+</template>
+
+<template id="tpl-timetable">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 08</p>
+      <h1>Timetable</h1>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="card-head-row">
+      <h2>Weekly Grid</h2>
+      <div class="tt-grid-toolbar">
+        <button type="button" class="btn btn-small btn-ghost" id="tt-prev-day">&larr;</button>
+        <input type="date" id="tt-grid-date" />
+        <button type="button" class="btn btn-small btn-ghost" id="tt-next-day">&rarr;</button>
+        <span class="tt-daylabel" id="tt-daylabel"></span>
+      </div>
+    </div>
+    <div class="tt-grid-wrap" id="tt-grid"></div>
+  </section>
+
+  <div class="two-col">
+    <section class="card">
+      <h2>Add Timetable Entry</h2>
+      <form class="form" id="timetable-form">
+        <div class="form-grid form-grid-narrow">
+          <label>Date <span class="req">*</span>
+            <input type="date" name="date" required />
+          </label>
+          <label>Start Time <span class="req">*</span>
+            <input type="time" name="start_time" required />
+          </label>
+          <label>End Time <span class="req">*</span>
+            <input type="time" name="end_time" required />
+          </label>
+          <label>Class &amp; Division <span class="req">*</span>
+            <select id="tt-class-division" required>
+              <option value="">Select</option>
+            </select>
+          </label>
+          <label>Subject
+            <input type="text" name="subject" />
+          </label>
+          <label>Teacher <span class="req">*</span>
+            <select name="teacher_id" id="tt-teacher" required>
+              <option value="">Select teacher</option>
+              <option value="new">+ Add new teacher…</option>
+            </select>
+          </label>
+        </div>
+        <div id="tt-new-teacher" class="form-grid form-grid-narrow hidden">
+          <label>New Teacher Name <span class="req">*</span>
+            <input type="text" name="new_teacher_name" />
+          </label>
+          <label>Subject
+            <input type="text" name="new_teacher_subject" />
+          </label>
+          <label>Hour Rate (₹)
+            <input type="number" name="new_teacher_hour_rate" min="0" />
+          </label>
+          <label>Phone Number
+            <input type="tel" name="new_teacher_phone" />
+          </label>
+        </div>
+        <p class="hint">Hours are calculated automatically from start &amp; end time and logged straight to the teacher's worklog. Add classes on the Classes page first so they appear here.</p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Add to Timetable</button>
+        </div>
+      </form>
+    </section>
+    <section class="card">
+      <div class="card-head-row">
+        <h2>Scheduled Classes (list)</h2>
+        <input type="date" id="tt-filter-date" />
+      </div>
+      <div class="table-wrap" id="timetable-table"></div>
+    </section>
+  </div>
+</template>
+
+<template id="tpl-import">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 09</p>
+      <h1>Import Data</h1>
+    </div>
+  </header>
+  <p class="hint" style="margin-bottom:20px;">Bring in your existing spreadsheets. Each importer accepts your own file formats where possible — download a sample below if you'd like a template to match, upload your Excel file, and we'll report exactly what was added, updated, or needs a fix.</p>
+
+  <div class="two-col">
+    <section class="card">
+      <h2>Import Students</h2>
+      <p class="hint" style="margin:0 0 14px;">Matched by Admission No — re-uploading updates existing students instead of duplicating them.</p>
+      <div class="import-actions">
+        <a href="/templates/students-import-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+        <label class="btn btn-primary btn-small file-btn">
+          Choose Excel File
+          <input type="file" id="import-students-file" accept=".xlsx,.xls" class="hidden" />
+        </label>
+        <span class="import-filename" id="import-students-filename"></span>
+      </div>
+      <button class="btn btn-primary" id="import-students-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
+      <div id="import-students-result"></div>
+    </section>
+
+    <section class="card">
+      <h2>Import Teachers</h2>
+      <p class="hint" style="margin:0 0 14px;">Matched by Name (case-insensitive) — re-uploading updates existing teachers instead of duplicating them.</p>
+      <div class="import-actions">
+        <a href="/templates/teachers-import-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+        <label class="btn btn-primary btn-small file-btn">
+          Choose Excel File
+          <input type="file" id="import-teachers-file" accept=".xlsx,.xls" class="hidden" />
+        </label>
+        <span class="import-filename" id="import-teachers-filename"></span>
+      </div>
+      <button class="btn btn-primary" id="import-teachers-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
+      <div id="import-teachers-result"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Import Teacher Timetable</h2>
+    <p class="hint" style="margin:0 0 14px;">Add teachers first — cells are matched to teachers by their initials (e.g. "Maths SF" → Sarah Fernandez). Re-uploading updates matching entries (same date, time, class &amp; division) instead of duplicating them.</p>
+    <div class="import-actions">
+      <a href="/templates/timetable-import-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+      <label class="btn btn-primary btn-small file-btn">
+        Choose Excel File
+        <input type="file" id="import-timetable-file" accept=".xlsx,.xls" class="hidden" />
+      </label>
+      <span class="import-filename" id="import-timetable-filename"></span>
+    </div>
+    <button class="btn btn-primary" id="import-timetable-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
+    <div id="import-timetable-result"></div>
+  <section class="card">
+    <h2>Import Fee Balances</h2>
+    <p class="hint" style="margin:0 0 14px;">Sets each student's Total Fee &amp; Discount, then tops up their recorded payments to match the sheet's "Paid" figure with one reconciling entry per student (receipt "OB-&lt;admission no&gt;"). Safe to re-run — it only adjusts the shortfall.</p>
+    <div class="import-actions">
+      <a href="/templates/fees-import-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+      <label class="btn btn-primary btn-small file-btn">
+        Choose Excel File
+        <input type="file" id="import-fees-file" accept=".xlsx,.xls" class="hidden" />
+      </label>
+      <span class="import-filename" id="import-fees-filename"></span>
+    </div>
+    <button class="btn btn-primary" id="import-fees-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
+    <div id="import-fees-result"></div>
+  </section>
+</template>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
