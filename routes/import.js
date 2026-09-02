@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const XLSX = require('xlsx');
 const db = require('../db/database');
+const { resolveYearId } = require('../db/academicYear');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -111,6 +112,8 @@ router.post('/students', upload.single('file'), (req, res) => {
   const rows = sheetToRows(ws);
   if (!rows.length) return res.status(400).json({ error: 'The sheet appears to be empty' });
 
+  const academicYearId = resolveYearId(req.body.academic_year_id);
+
   const map = headerIndex(rows[0]);
   const col = {
     admission_no: findCol(map, 'Admission No', 'Adm No', 'Admission Number'),
@@ -138,9 +141,9 @@ router.post('/students', upload.single('file'), (req, res) => {
   const getExisting = db.prepare('SELECT admission_no FROM students WHERE admission_no = ?');
   const insertStmt = db.prepare(`INSERT INTO students
     (admission_no, joining_date, name, class, division, medium, school, school_other,
-     father_name, father_phone, mother_name, mother_phone, place, total_fees, discount, net_fees, status, remark)
+     father_name, father_phone, mother_name, mother_phone, place, total_fees, discount, net_fees, status, remark, academic_year_id)
     VALUES (@admission_no, @joining_date, @name, @class, @division, @medium, @school, @school_other,
-     @father_name, @father_phone, @mother_name, @mother_phone, @place, @total_fees, @discount, @net_fees, 'Active', @remark)`);
+     @father_name, @father_phone, @mother_name, @mother_phone, @place, @total_fees, @discount, @net_fees, 'Active', @remark, @academic_year_id)`);
   const updateStmt = db.prepare(`UPDATE students SET
     name=@name, class=@class, division=@division, medium=@medium, school=@school, school_other=@school_other,
     father_name=@father_name, father_phone=@father_phone, mother_name=@mother_name, mother_phone=@mother_phone,
@@ -186,6 +189,7 @@ router.post('/students', upload.single('file'), (req, res) => {
       discount,
       net_fees: Math.max(total_fees - discount, 0),
       remark: col.remark >= 0 ? cellToString(row[col.remark]).trim() || null : null,
+      academic_year_id: academicYearId,
     };
 
     try {
@@ -352,6 +356,7 @@ router.post('/timetable', upload.single('file'), (req, res) => {
   }
 
   // build teacher initials lookup: initials -> [teacher rows]
+  const academicYearId = resolveYearId(req.body.academic_year_id);
   const teachers = db.prepare('SELECT * FROM teachers').all();
   const byInitials = {};
   teachers.forEach(t => {
@@ -359,9 +364,9 @@ router.post('/timetable', upload.single('file'), (req, res) => {
     (byInitials[ini] = byInitials[ini] || []).push(t);
   });
 
-  const findEntry = db.prepare(`SELECT * FROM timetable WHERE date=? AND start_time=? AND end_time=? AND class=? AND division=?`);
-  const insertEntry = db.prepare(`INSERT INTO timetable (date, start_time, end_time, hours, class, division, subject, teacher_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+  const findEntry = db.prepare(`SELECT * FROM timetable WHERE date=? AND start_time=? AND end_time=? AND class=? AND division=? AND academic_year_id=?`);
+  const insertEntry = db.prepare(`INSERT INTO timetable (date, start_time, end_time, hours, class, division, subject, teacher_id, academic_year_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   const updateEntry = db.prepare(`UPDATE timetable SET hours=?, subject=?, teacher_id=? WHERE id=?`);
 
   let inserted = 0, updated = 0, totalCells = 0;
@@ -409,12 +414,12 @@ router.post('/timetable', upload.single('file'), (req, res) => {
           return;
         }
         const teacher = matches[0];
-        const existing = findEntry.get(date, timeRange.start, timeRange.end, cc.class, cc.division);
+        const existing = findEntry.get(date, timeRange.start, timeRange.end, cc.class, cc.division, academicYearId);
         if (existing) {
           updateEntry.run(hours, parsed.subject, teacher.id, existing.id);
           updated++;
         } else {
-          insertEntry.run(date, timeRange.start, timeRange.end, hours, cc.class, cc.division, parsed.subject, teacher.id);
+          insertEntry.run(date, timeRange.start, timeRange.end, hours, cc.class, cc.division, parsed.subject, teacher.id, academicYearId);
           inserted++;
         }
       });

@@ -66,6 +66,23 @@ CREATE TABLE IF NOT EXISTS timetable (
   FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS academic_years (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  label TEXT UNIQUE NOT NULL,
+  is_current INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS classes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  class TEXT NOT NULL,
+  division TEXT NOT NULL,
+  medium TEXT NOT NULL,
+  academic_year_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(class, division, medium, academic_year_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_payments_adm ON payments(admission_no);
 CREATE INDEX IF NOT EXISTS idx_timetable_teacher ON timetable(teacher_id);
 `);
@@ -76,5 +93,68 @@ if (isNew) {
 
 // Migration: add remark column for imported student notes (safe no-op if it already exists)
 try { db.exec("ALTER TABLE students ADD COLUMN remark TEXT"); } catch (e) { /* column already exists */ }
+
+// Migration: scope students and timetable to an academic year
+try { db.exec("ALTER TABLE students ADD COLUMN academic_year_id INTEGER"); } catch (e) { /* already exists */ }
+try { db.exec("ALTER TABLE timetable ADD COLUMN academic_year_id INTEGER"); } catch (e) { /* already exists */ }
+
+// Migration: an older "classes" table (from before academic years existed) has
+// a UNIQUE(class, division, medium) constraint with no year column, which
+// would wrongly block the same class from being re-added in a new year.
+// Detect that and rebuild the table with the year-aware constraint, keeping data.
+{
+  const hasYearCol = db.prepare("PRAGMA table_info(classes)").all().some(c => c.name === 'academic_year_id');
+  if (!hasYearCol) {
+    db.exec("ALTER TABLE classes ADD COLUMN academic_year_id INTEGER");
+  }
+  const legacyUniqueIndex = db.prepare("PRAGMA index_list(classes)").all().some(idx => {
+    if (!idx.unique) return false;
+    const cols = db.prepare(`PRAGMA index_info(${idx.name})`).all().map(c => c.name);
+    return !cols.includes('academic_year_id');
+  });
+  if (legacyUniqueIndex) {
+    db.exec(`
+      CREATE TABLE classes_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        class TEXT NOT NULL,
+        division TEXT NOT NULL,
+        medium TEXT NOT NULL,
+        academic_year_id INTEGER,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(class, division, medium, academic_year_id)
+      );
+      INSERT INTO classes_new (id, class, division, medium, academic_year_id, created_at)
+        SELECT id, class, division, medium, academic_year_id, created_at FROM classes;
+      DROP TABLE classes;
+      ALTER TABLE classes_new RENAME TO classes;
+    `);
+  }
+}
+
+// Work out today's academic year label the same way the app names new ones,
+// e.g. Aug 2026 -> "2026-27" (year rolls over in June).
+function defaultAcademicYearLabel(date = new Date()) {
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const startYear = m >= 6 ? y : y - 1;
+  return `${startYear}-${String((startYear + 1) % 100).padStart(2, '0')}`;
+}
+
+// Ensure at least one academic year exists, and backfill any pre-existing
+// rows (from before this feature) into it so nothing old goes missing.
+let currentYear = db.prepare('SELECT * FROM academic_years WHERE is_current = 1').get();
+if (!currentYear) {
+  currentYear = db.prepare('SELECT * FROM academic_years ORDER BY id LIMIT 1').get();
+  if (currentYear) {
+    db.prepare('UPDATE academic_years SET is_current = 1 WHERE id = ?').run(currentYear.id);
+  } else {
+    const label = defaultAcademicYearLabel();
+    const result = db.prepare('INSERT INTO academic_years (label, is_current) VALUES (?, 1)').run(label);
+    currentYear = { id: result.lastInsertRowid, label };
+  }
+}
+db.prepare('UPDATE students SET academic_year_id = ? WHERE academic_year_id IS NULL').run(currentYear.id);
+db.prepare('UPDATE classes SET academic_year_id = ? WHERE academic_year_id IS NULL').run(currentYear.id);
+db.prepare('UPDATE timetable SET academic_year_id = ? WHERE academic_year_id IS NULL').run(currentYear.id);
 
 module.exports = db;

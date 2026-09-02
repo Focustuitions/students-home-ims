@@ -32,17 +32,48 @@ To run on a different port: `PORT=4000 npm start`.
 
 ## Features
 
+### Dashboard
+- At-a-glance totals for the active academic year: total students, fees
+  collected, fees pending, and faculty on roll.
+- **Fee Balance by Class** and **Recent Admissions** tables for a quick read
+  on where things stand.
+- **Recent Payments** — the last several payments recorded, each with a
+  one-click **Receipt** link, so you can see who paid recently without
+  opening Payment History.
+
+### Academic Years
+- Every year of admissions, classes, and timetable entries is kept separate.
+  The **Academic Year** switcher in the sidebar shows the active year and lets
+  you jump between years — switching updates the whole app (students,
+  classes, teachers' worklog hours, timetable, dashboard) to that year.
+- Click **+** next to the switcher to add a new year (e.g. "2027-28"); it
+  becomes the active year immediately, ready for fresh admissions.
+- A fresh install auto-creates the current year for you (e.g. installing in
+  August 2026 creates "2026-27"), and any data from before this feature
+  existed is kept exactly where it was.
+- The **Teachers** roster is shared across years (the same teacher can teach
+  in multiple years), but their hours-logged and earnings shown are always
+  for the year currently selected.
+- Admission numbers must stay unique across the whole system, not just
+  within a year — which matches how year-coded admission numbers like
+  `8028EKL26` already work.
+
 ### Students
 - **Admit Student** — admission no., name, class (10/9/8), division (A–E, M), medium
   (English/Malayalam), school (AKM, IUHSS, PKMM, NSS, FEM, MALABAR, NAJATH, GRHSS, PMSA,
   or Others with a text field), parent details, place, total fees (dropdown of
   ₹15,900 / ₹13,300 / ₹10,800), and a discount that is automatically subtracted to
   give the net payable fee. Joining date defaults to today and can be changed.
+  New admissions are filed under whichever academic year is currently active.
 - **Students list** — search by name/admission no./guardian/place, filter by class,
   division, medium, and fee-balance status. Click any row to open the full student
   file with an **Edit** option and the complete fee ledger.
-- **Export Fee Pending** — downloads a CSV of every student with an outstanding
-  balance, ready for follow-up calls or printing.
+- **Delete Student** — on a student's file page, **Delete Student** permanently
+  removes them and their payment history after a confirmation prompt. This
+  cannot be undone.
+- **Export Fee Pending** — downloads a formatted Excel workbook of every
+  student in the active year with an outstanding balance, ready for
+  follow-up calls or printing.
 
 ### Fee Payment
 - Type an **Admission No.** and the student's name, class, net fee, amount already

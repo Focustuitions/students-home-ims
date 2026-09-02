@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+const { resolveYearId } = require('../db/academicYear');
 
 function computeNet(total, discount) {
   const t = Number(total) || 0;
@@ -15,9 +16,11 @@ function paidTotal(admission_no) {
 
 // List / search students
 router.get('/', (req, res) => {
-  const { q, cls, division, medium, school, status } = req.query;
+  const { q, cls, division, medium, school, status, academic_year_id } = req.query;
   let sql = 'SELECT * FROM students WHERE 1=1';
   const params = [];
+  const yearId = resolveYearId(academic_year_id);
+  if (yearId) { sql += ' AND academic_year_id = ?'; params.push(yearId); }
   if (q) {
     sql += ' AND (admission_no LIKE ? OR name LIKE ? OR father_name LIKE ? OR mother_name LIKE ? OR place LIKE ?)';
     const like = `%${q}%`;
@@ -53,12 +56,13 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   const net_fees = computeNet(b.total_fees, b.discount);
+  const academic_year_id = resolveYearId(b.academic_year_id);
   try {
     const stmt = db.prepare(`INSERT INTO students
       (admission_no, joining_date, name, class, division, medium, school, school_other,
-       father_name, father_phone, mother_name, mother_phone, place, total_fees, discount, net_fees, status)
+       father_name, father_phone, mother_name, mother_phone, place, total_fees, discount, net_fees, status, academic_year_id)
       VALUES (@admission_no, @joining_date, @name, @class, @division, @medium, @school, @school_other,
-       @father_name, @father_phone, @mother_name, @mother_phone, @place, @total_fees, @discount, @net_fees, @status)`);
+       @father_name, @father_phone, @mother_name, @mother_phone, @place, @total_fees, @discount, @net_fees, @status, @academic_year_id)`);
     stmt.run({
       admission_no: b.admission_no,
       joining_date: b.joining_date || new Date().toISOString().slice(0, 10),
@@ -76,7 +80,8 @@ router.post('/', (req, res) => {
       total_fees: Number(b.total_fees) || 0,
       discount: Number(b.discount) || 0,
       net_fees,
-      status: 'Active'
+      status: 'Active',
+      academic_year_id
     });
     res.status(201).json({ message: 'Student added', admission_no: b.admission_no });
   } catch (err) {
@@ -132,7 +137,9 @@ router.delete('/:admission_no', (req, res) => {
 
 // Fee-pending export data (JSON; used by the in-page table/CSV fallback)
 router.get('/reports/fee-pending', (req, res) => {
-  const students = db.prepare('SELECT * FROM students').all();
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const sql = yearId ? 'SELECT * FROM students WHERE academic_year_id = ?' : 'SELECT * FROM students';
+  const students = yearId ? db.prepare(sql).all(yearId) : db.prepare(sql).all();
   const pending = students.map(s => {
     const paid = paidTotal(s.admission_no);
     const balance = Math.max(s.net_fees - paid, 0);
@@ -144,7 +151,9 @@ router.get('/reports/fee-pending', (req, res) => {
 // Fee-pending export as a formatted .xlsx workbook (matches the institution's own sheet layout)
 router.get('/reports/fee-pending/export', (req, res) => {
   const XLSX = require('xlsx');
-  const students = db.prepare('SELECT * FROM students').all();
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const sql = yearId ? 'SELECT * FROM students WHERE academic_year_id = ?' : 'SELECT * FROM students';
+  const students = yearId ? db.prepare(sql).all(yearId) : db.prepare(sql).all();
   const pending = students.map(s => {
     const paid = paidTotal(s.admission_no);
     const balance = Math.max(s.net_fees - paid, 0);

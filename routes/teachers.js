@@ -1,21 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+const { resolveYearId } = require('../db/academicYear');
 
 router.get('/', (req, res) => {
+  const yearId = resolveYearId(req.query.academic_year_id);
   const teachers = db.prepare('SELECT * FROM teachers ORDER BY name').all();
   const withWorklog = teachers.map(t => {
-    const agg = db.prepare('SELECT COALESCE(SUM(hours),0) as total_hours FROM timetable WHERE teacher_id = ?').get(t.id);
+    const agg = db.prepare('SELECT COALESCE(SUM(hours),0) as total_hours FROM timetable WHERE teacher_id = ? AND academic_year_id = ?').get(t.id, yearId);
     return { ...t, total_hours: agg.total_hours, total_earned: agg.total_hours * t.hour_rate };
   });
   res.json(withWorklog);
 });
 
 router.get('/:id', (req, res) => {
+  const yearId = resolveYearId(req.query.academic_year_id);
   const teacher = db.prepare('SELECT * FROM teachers WHERE id = ?').get(req.params.id);
   if (!teacher) return res.status(404).json({ error: 'Teacher not found' });
-  const worklog = db.prepare('SELECT * FROM timetable WHERE teacher_id = ? ORDER BY date DESC, start_time DESC').all(req.params.id);
-  const agg = db.prepare('SELECT COALESCE(SUM(hours),0) as total_hours FROM timetable WHERE teacher_id = ?').get(req.params.id);
+  const worklog = db.prepare('SELECT * FROM timetable WHERE teacher_id = ? AND academic_year_id = ? ORDER BY date DESC, start_time DESC').all(req.params.id, yearId);
+  const agg = db.prepare('SELECT COALESCE(SUM(hours),0) as total_hours FROM timetable WHERE teacher_id = ? AND academic_year_id = ?').get(req.params.id, yearId);
   res.json({ ...teacher, worklog, total_hours: agg.total_hours, total_earned: agg.total_hours * teacher.hour_rate });
 });
 

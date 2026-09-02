@@ -12,6 +12,7 @@ app.use('/api/payments', require('./routes/payments'));
 app.use('/api/teachers', require('./routes/teachers'));
 app.use('/api/timetable', require('./routes/timetable'));
 app.use('/api/classes', require('./routes/classes'));
+app.use('/api/academic-years', require('./routes/academic-years'));
 app.use('/api/import', require('./routes/import'));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));

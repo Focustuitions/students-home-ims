@@ -1,28 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
-
-db.exec(`CREATE TABLE IF NOT EXISTS classes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  class TEXT NOT NULL,
-  division TEXT NOT NULL,
-  medium TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE(class, division, medium)
-)`);
+const { resolveYearId } = require('../db/academicYear');
 
 router.get('/', (req, res) => {
-  res.json(db.prepare('SELECT * FROM classes ORDER BY class DESC, division ASC').all());
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const sql = 'SELECT * FROM classes WHERE academic_year_id = ? ORDER BY class DESC, division ASC';
+  res.json(db.prepare(sql).all(yearId));
 });
 
 router.post('/', (req, res) => {
-  const { class: cls, division, medium } = req.body;
+  const { class: cls, division, medium, academic_year_id } = req.body;
   if (!cls || !division || !medium) return res.status(400).json({ error: 'Class, division and medium are required' });
+  const yearId = resolveYearId(academic_year_id);
   try {
-    const result = db.prepare('INSERT INTO classes (class, division, medium) VALUES (?, ?, ?)').run(cls, division, medium);
+    const result = db.prepare('INSERT INTO classes (class, division, medium, academic_year_id) VALUES (?, ?, ?, ?)').run(cls, division, medium, yearId);
     res.status(201).json({ message: 'Class added', id: result.lastInsertRowid });
   } catch (err) {
-    if (String(err.message).includes('UNIQUE')) return res.status(409).json({ error: 'This class/division/medium already exists' });
+    if (String(err.message).includes('UNIQUE')) return res.status(409).json({ error: 'This class/division/medium already exists for this academic year' });
     res.status(500).json({ error: err.message });
   }
 });

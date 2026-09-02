@@ -26,14 +26,61 @@ async function api(path, options = {}) {
   return data;
 }
 
-async function apiUpload(path, file) {
+async function apiUpload(path, file, extraFields = {}) {
   const formData = new FormData();
   formData.append('file', file);
+  Object.entries(extraFields).forEach(([k, v]) => formData.append(k, v));
   const res = await fetch(API + path, { method: 'POST', body: formData });
   let data = null;
   try { data = await res.json(); } catch (e) { /* no body */ }
   if (!res.ok) throw new Error((data && data.error) || 'Upload failed');
   return data;
+}
+
+// ---------- academic year state ----------
+let academicYears = [];
+let currentYearId = null;
+
+function yearQS(extra = '') {
+  const parts = [];
+  if (currentYearId) parts.push(`academic_year_id=${currentYearId}`);
+  if (extra) parts.push(extra);
+  return parts.length ? '?' + parts.join('&') : '';
+}
+
+async function loadAcademicYears() {
+  academicYears = await api('/academic-years');
+  const current = academicYears.find(y => y.is_current) || academicYears[0];
+  currentYearId = current ? current.id : null;
+  renderYearSwitcher();
+}
+
+function renderYearSwitcher() {
+  const sel = $('#year-switcher');
+  if (!sel) return;
+  sel.innerHTML = academicYears.map(y =>
+    `<option value="${y.id}" ${y.id === currentYearId ? 'selected' : ''}>${y.label}</option>`
+  ).join('');
+}
+
+async function switchAcademicYear(id) {
+  await api(`/academic-years/${id}/activate`, { method: 'PUT' });
+  currentYearId = Number(id);
+  renderYearSwitcher();
+  navigate();
+}
+
+async function addAcademicYear() {
+  const label = prompt('New academic year (e.g. 2027-28):');
+  if (!label || !label.trim()) return;
+  try {
+    const result = await api('/academic-years', { method: 'POST', body: JSON.stringify({ label: label.trim() }) });
+    await loadAcademicYears();
+    await switchAcademicYear(result.id);
+    toast(`Academic year ${label.trim()} added and set as active.`);
+  } catch (err) {
+    toast(err.message, true);
+  }
 }
 
 // ---------- clock ----------
@@ -79,13 +126,16 @@ async function navigate() {
 }
 
 window.addEventListener('hashchange', navigate);
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.body.addEventListener('click', e => {
     const btn = e.target.closest('[data-route]');
     if (btn) {
       location.hash = btn.dataset.route;
     }
   });
+  $('#year-switcher').addEventListener('change', e => switchAcademicYear(e.target.value));
+  $('#add-year-btn').addEventListener('click', addAcademicYear);
+  await loadAcademicYears();
   navigate();
 });
 
@@ -108,10 +158,11 @@ function timeGreeting() {
 async function renderDashboard() {
   useTemplate('#tpl-dashboard');
   $('#wb-greeting').textContent = timeGreeting();
-  const [students, payments, teachers] = await Promise.all([
-    api('/students'),
-    api('/payments'),
-    api('/teachers'),
+  const [students, payments, teachers, recentPayments] = await Promise.all([
+    api('/students' + yearQS()),
+    api('/payments' + yearQS()),
+    api('/teachers' + yearQS()),
+    api('/payments' + yearQS('limit=8')),
   ]);
 
   const totalCollected = payments.reduce((s, p) => s + p.amount, 0);
@@ -150,6 +201,16 @@ async function renderDashboard() {
         </tr>`).join('')}
       </tbody></table>`
     : `<p class="empty-row">Nothing to show yet.</p>`;
+
+  // recent payments
+  $('#recent-payments').innerHTML = recentPayments.length
+    ? `<table><thead><tr><th>Date</th><th>Student</th><th>Class</th><th>Amount</th><th></th></tr></thead><tbody>
+        ${recentPayments.map(p => `<tr class="clickable" onclick="location.hash='student/${encodeURIComponent(p.admission_no)}'">
+          <td>${p.payment_date}</td><td>${p.student_name}</td><td>${p.class}-${p.division}</td><td>${money(p.amount)}</td>
+          <td><a href="/receipt.html?id=${p.id}" target="_blank" rel="noopener" class="btn-icon" onclick="event.stopPropagation()">Receipt</a></td>
+        </tr>`).join('')}
+      </tbody></table>`
+    : `<p class="empty-row">No payments recorded yet.</p>`;
 }
 
 // =====================================================================
@@ -160,6 +221,7 @@ async function renderStudents() {
 
   async function load() {
     const params = new URLSearchParams();
+    if (currentYearId) params.set('academic_year_id', currentYearId);
     const q = $('#stu-search').value.trim();
     if (q) params.set('q', q);
     if ($('#f-class').value) params.set('cls', $('#f-class').value);
@@ -200,9 +262,9 @@ function debounce(fn, ms) {
 }
 
 async function exportFeePendingCSV() {
-  const pending = await api('/students/reports/fee-pending');
+  const pending = await api('/students/reports/fee-pending' + yearQS());
   if (!pending.length) { toast('No pending fee balances — nothing to export.'); return; }
-  window.location.href = API + '/students/reports/fee-pending/export';
+  window.location.href = API + '/students/reports/fee-pending/export' + yearQS();
   toast(`Exporting ${pending.length} pending record(s) as Excel…`);
 }
 
@@ -219,6 +281,17 @@ async function renderStudentDetail(admNo) {
   $('#sd-pay').addEventListener('click', () => {
     location.hash = 'payment';
     setTimeout(() => { $('#pf-adm').value = s.admission_no; $('#pf-adm').dispatchEvent(new Event('input')); }, 60);
+  });
+  $('#sd-delete').addEventListener('click', async () => {
+    const confirmed = confirm(`Delete ${s.name} (${s.admission_no})? This also removes their payment history. This cannot be undone.`);
+    if (!confirmed) return;
+    try {
+      await api('/students/' + encodeURIComponent(s.admission_no), { method: 'DELETE' });
+      toast('Student deleted.');
+      location.hash = 'students';
+    } catch (err) {
+      toast(err.message, true);
+    }
   });
 
   const schoolDisplay = s.school === 'Others' ? (s.school_other || 'Others') : s.school;
@@ -273,6 +346,8 @@ async function renderStudentForm(admNo) {
     toggleSchoolOther();
   } else {
     form.elements['joining_date'].value = todayStr();
+    const yearLabel = academicYears.find(y => y.id === currentYearId);
+    if (yearLabel) $('#sf-eyebrow').textContent = `Register — Admitting into ${yearLabel.label}`;
   }
 
   function toggleSchoolOther() {
@@ -298,6 +373,7 @@ async function renderStudentForm(admNo) {
         toast('Student record updated.');
         location.hash = 'student/' + encodeURIComponent(admNo);
       } else {
+        data.academic_year_id = currentYearId;
         await api('/students', { method: 'POST', body: JSON.stringify(data) });
         toast('Student admitted successfully.');
         location.hash = 'students';
@@ -413,14 +489,14 @@ async function renderClasses() {
   const form = $('#class-form');
 
   async function load() {
-    const classes = await api('/classes');
+    const classes = await api('/classes' + yearQS());
     $('#classes-table').innerHTML = classes.length ? `
       <table>
         <thead><tr><th>Class</th><th>Division</th><th>Medium</th><th></th></tr></thead>
         <tbody>${classes.map(c => `
           <tr><td>${c.class}</td><td>${c.division}</td><td>${c.medium}</td>
           <td><button class="btn-icon" data-del="${c.id}">Remove</button></td></tr>`).join('')}</tbody>
-      </table>` : `<p class="empty-row">No classes added yet.</p>`;
+      </table>` : `<p class="empty-row">No classes added yet for this academic year.</p>`;
 
     $$('[data-del]').forEach(btn => btn.addEventListener('click', async () => {
       await api('/classes/' + btn.dataset.del, { method: 'DELETE' });
@@ -432,6 +508,7 @@ async function renderClasses() {
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
+    data.academic_year_id = currentYearId;
     try {
       await api('/classes', { method: 'POST', body: JSON.stringify(data) });
       toast('Class added.');
@@ -451,10 +528,11 @@ async function renderTeachers() {
   const form = $('#teacher-form');
 
   async function load() {
-    const teachers = await api('/teachers');
+    const teachers = await api('/teachers' + yearQS());
+    const yearLabel = academicYears.find(y => y.id === currentYearId);
     $('#teachers-table').innerHTML = teachers.length ? `
       <table>
-        <thead><tr><th>Name</th><th>Subject</th><th>Classes</th><th>Rate/hr</th><th>Hours Logged</th><th>Earned</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Subject</th><th>Classes</th><th>Rate/hr</th><th>Hours Logged${yearLabel ? ` (${yearLabel.label})` : ''}</th><th>Earned</th><th></th></tr></thead>
         <tbody>${teachers.map(t => `
           <tr>
             <td>${t.name}</td><td>${t.subject || '—'}</td><td>${t.classes_handled || '—'}</td>
@@ -547,7 +625,7 @@ async function renderTimetable() {
   const gridDateInput = $('#tt-grid-date');
   gridDateInput.value = todayStr();
 
-  const [teachers, classes] = await Promise.all([api('/teachers'), api('/classes')]);
+  const [teachers, classes] = await Promise.all([api('/teachers' + yearQS()), api('/classes' + yearQS())]);
 
   // populate teacher dropdown
   const newTeacherOpt = teacherSelect.querySelector('option[value="new"]');
@@ -586,7 +664,7 @@ async function renderTimetable() {
     const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long' });
     $('#tt-daylabel').textContent = dayName;
 
-    const [entries, currentClasses] = await Promise.all([api('/timetable?date=' + date), api('/classes')]);
+    const [entries, currentClasses] = await Promise.all([api('/timetable' + yearQS('date=' + date)), api('/classes' + yearQS())]);
 
     // columns: prefer configured classes; fall back to whatever is in the entries for this date
     let columns = [...currentClasses].sort((a, b) => b.class.localeCompare(a.class) || a.division.localeCompare(b.division))
@@ -661,7 +739,7 @@ async function renderTimetable() {
   // ---------- list view ----------
   async function loadList() {
     const date = $('#tt-filter-date').value;
-    const entries = await api('/timetable' + (date ? '?date=' + date : ''));
+    const entries = await api('/timetable' + yearQS(date ? 'date=' + date : ''));
     $('#timetable-table').innerHTML = entries.length ? `
       <table>
         <thead><tr><th>Date</th><th>Time</th><th>Class</th><th>Subject</th><th>Teacher</th><th>Hours</th><th></th></tr></thead>
@@ -691,6 +769,7 @@ async function renderTimetable() {
     const data = Object.fromEntries(new FormData(form).entries());
     data.class = cls;
     data.division = division;
+    data.academic_year_id = currentYearId;
     try {
       const result = await api('/timetable', { method: 'POST', body: JSON.stringify(data) });
       toast(`Scheduled — ${result.hours} hour(s) logged to teacher's worklog.`);
@@ -751,7 +830,7 @@ function renderImportSummary(container, result) {
   container.innerHTML = `<div class="import-result">${summary}${skipTable}</div>`;
 }
 
-function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint, toastText, afterSuccess }) {
+function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint, toastText, afterSuccess, taggedByYear }) {
   const fileInput = $(fileInputId);
   const filenameEl = $(filenameId);
   const submitBtn = $(submitId);
@@ -770,7 +849,8 @@ function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint,
     submitBtn.disabled = true;
     submitBtn.textContent = 'Importing…';
     try {
-      const result = await apiUpload(endpoint, selectedFile);
+      const extra = taggedByYear && currentYearId ? { academic_year_id: currentYearId } : {};
+      const result = await apiUpload(endpoint, selectedFile, extra);
       renderImportSummary(resultEl, result);
       toast(toastText(result));
       if (afterSuccess) afterSuccess();
@@ -786,6 +866,14 @@ function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint,
 
 async function renderImport() {
   useTemplate('#tpl-import');
+  const yearLabel = academicYears.find(y => y.id === currentYearId);
+  if (yearLabel) {
+    const notice = document.createElement('p');
+    notice.className = 'hint';
+    notice.style.marginTop = '-8px';
+    notice.textContent = `Students and timetable entries you import will be filed under ${yearLabel.label} — switch the Academic Year in the sidebar first if you meant a different year.`;
+    view.insertBefore(notice, view.children[1]);
+  }
 
   wireImportCard({
     fileInputId: '#import-students-file',
@@ -794,6 +882,7 @@ async function renderImport() {
     resultId: '#import-students-result',
     endpoint: '/import/students',
     toastText: r => `Students imported — ${r.inserted ?? 0} added, ${r.updated ?? 0} updated.`,
+    taggedByYear: true,
   });
 
   wireImportCard({
@@ -812,6 +901,7 @@ async function renderImport() {
     resultId: '#import-timetable-result',
     endpoint: '/import/timetable',
     toastText: r => `Timetable imported — ${r.inserted ?? 0} added, ${r.updated ?? 0} updated.`,
+    taggedByYear: true,
   });
 
   wireImportCard({

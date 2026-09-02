@@ -1,19 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+const { resolveYearId } = require('../db/academicYear');
 
-// List all payments (history), newest first, with optional search
+// List all payments (history), newest first, with optional search, year and limit
 router.get('/', (req, res) => {
-  const { q } = req.query;
+  const { q, academic_year_id, limit } = req.query;
   let sql = `SELECT p.*, s.name as student_name, s.class, s.division
-             FROM payments p JOIN students s ON s.admission_no = p.admission_no`;
+             FROM payments p JOIN students s ON s.admission_no = p.admission_no WHERE 1=1`;
   const params = [];
+  const yearId = resolveYearId(academic_year_id);
+  if (yearId) { sql += ' AND s.academic_year_id = ?'; params.push(yearId); }
   if (q) {
-    sql += ' WHERE p.admission_no LIKE ? OR s.name LIKE ? OR p.receipt_no LIKE ?';
+    sql += ' AND (p.admission_no LIKE ? OR s.name LIKE ? OR p.receipt_no LIKE ?)';
     const like = `%${q}%`;
     params.push(like, like, like);
   }
   sql += ' ORDER BY p.payment_date DESC, p.id DESC';
+  if (limit) { sql += ' LIMIT ?'; params.push(Number(limit)); }
   res.json(db.prepare(sql).all(...params));
 });
 

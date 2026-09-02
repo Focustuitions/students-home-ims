@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+const { resolveYearId } = require('../db/academicYear');
 
 function calcHours(start, end) {
   const [sh, sm] = start.split(':').map(Number);
@@ -11,10 +12,12 @@ function calcHours(start, end) {
 }
 
 router.get('/', (req, res) => {
-  const { date, teacher_id, class: cls } = req.query;
+  const { date, teacher_id, class: cls, academic_year_id } = req.query;
   let sql = `SELECT t.*, te.name as teacher_name, te.subject as teacher_subject
              FROM timetable t JOIN teachers te ON te.id = t.teacher_id WHERE 1=1`;
   const params = [];
+  const yearId = resolveYearId(academic_year_id);
+  if (yearId) { sql += ' AND t.academic_year_id = ?'; params.push(yearId); }
   if (date) { sql += ' AND t.date = ?'; params.push(date); }
   if (teacher_id) { sql += ' AND t.teacher_id = ?'; params.push(teacher_id); }
   if (cls) { sql += ' AND t.class = ?'; params.push(cls); }
@@ -46,9 +49,10 @@ router.post('/', (req, res) => {
   if (!teacher_id) return res.status(400).json({ error: 'Teacher is required' });
 
   const hours = calcHours(b.start_time, b.end_time);
-  const result = db.prepare(`INSERT INTO timetable (date, start_time, end_time, hours, class, division, subject, teacher_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    b.date, b.start_time, b.end_time, hours, b.class || '', b.division || '', b.subject || '', teacher_id
+  const academic_year_id = resolveYearId(b.academic_year_id);
+  const result = db.prepare(`INSERT INTO timetable (date, start_time, end_time, hours, class, division, subject, teacher_id, academic_year_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    b.date, b.start_time, b.end_time, hours, b.class || '', b.division || '', b.subject || '', teacher_id, academic_year_id
   );
   res.status(201).json({ message: 'Timetable entry added, hours logged to teacher worklog', id: result.lastInsertRowid, teacher_id, hours });
 });

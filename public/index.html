@@ -20,6 +20,13 @@
         <span class="brand-sub">Kottakkal · Institution Manager</span>
       </div>
     </div>
+    <div class="spine-year">
+      <label for="year-switcher">Academic Year</label>
+      <div class="spine-year-row">
+        <select id="year-switcher"></select>
+        <button type="button" id="add-year-btn" title="Add Academic Year">+</button>
+      </div>
+    </div>
     <nav class="tabs" id="nav-tabs">
       <button class="tab" data-route="dashboard"><span class="tab-idx">01</span>Dashboard</button>
       <button class="tab" data-route="students"><span class="tab-idx">02</span>Students</button>
@@ -71,6 +78,10 @@
       <div id="recent-admissions" class="table-wrap"></div>
     </section>
   </div>
+  <div class="card">
+    <h2>Recent Payments</h2>
+    <div id="recent-payments" class="table-wrap"></div>
+  </div>
 </template>
 
 <template id="tpl-students">
@@ -101,6 +112,7 @@
     <div class="head-actions">
       <button class="btn btn-ghost" id="sd-back">&larr; Back to Students</button>
       <button class="btn btn-primary" id="sd-edit">Edit Details</button>
+      <button class="btn btn-danger" id="sd-delete">Delete Student</button>
     </div>
   </header>
   <div class="two-col">
