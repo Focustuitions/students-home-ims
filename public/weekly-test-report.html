@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Weekly Test Report — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root {
+    --navy: #182238;
+    --teal: #04A5A7;
+    --teal-deep: #04807F;
+    --orange: #FA7232;
+    --pink: #DE306F;
+    --blue: #1C66A1;
+    --yellow: #F7B23D;
+    --line: #E6E8F0;
+    --text: #262B38;
+    --text-mute: #6B7284;
+    --bg: #F5F6FA;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; padding: 28px 16px 60px; }
+  .toolbar { width: 210mm; max-width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .toolbar .msg { font-size: 13px; color: var(--text-mute); }
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; margin-left: 8px; }
+  .btn.ghost { background: transparent; color: var(--navy); }
+  .btn.teal { background: var(--teal); border-color: var(--teal); }
+
+  .sheet { width: 210mm; max-width: 100%; min-height: 297mm; background: #fff; box-shadow: 0 2px 4px rgba(24,34,56,0.08), 0 16px 40px rgba(24,34,56,0.1); padding: 16mm; }
+
+  .r-header { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 8mm; border-bottom: 2px solid var(--navy); margin-bottom: 8mm; }
+  .r-brand { display: flex; align-items: center; gap: 10px; }
+  .r-brand img { width: 40px; height: 40px; object-fit: contain; }
+  .r-brand .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); line-height: 1.2; }
+  .r-brand .addr { font-size: 10.5px; color: var(--text-mute); margin-top: 2px; }
+  .r-title { text-align: right; }
+  .r-title .label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); font-weight: 700; }
+  .r-title h1 { margin: 3px 0 0; font-family: 'Baloo 2', sans-serif; font-size: 21px; color: var(--navy); max-width: 320px; }
+
+  .r-meta { display: flex; gap: 22px; margin-bottom: 8mm; flex-wrap: wrap; }
+  .r-meta .item .l { font-family: 'Space Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-mute); }
+  .r-meta .item .v { font-size: 13.5px; font-weight: 600; color: var(--navy); margin-top: 2px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3mm; margin-bottom: 8mm; }
+  .stat-card { background: var(--bg); border-radius: 6px; padding: 4mm 3mm; text-align: center; }
+  .stat-card .l { font-family: 'Space Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); }
+  .stat-card .v { font-family: 'Baloo 2', sans-serif; font-size: 18px; font-weight: 700; color: var(--navy); margin-top: 3px; }
+  .stat-card.alert .v { color: var(--pink); }
+  .stat-card.good .v { color: var(--teal-deep); }
+
+  .section-title { font-family: 'Baloo 2', sans-serif; font-size: 14px; font-weight: 700; color: var(--navy); margin: 0 0 4mm; }
+
+  .band-row { display: flex; align-items: center; gap: 3mm; margin-bottom: 2mm; font-size: 11px; }
+  .band-row .band-label { width: 46mm; flex-shrink: 0; color: var(--text-mute); }
+  .band-row .band-bar-wrap { flex: 1; background: var(--bg); border-radius: 4px; height: 5mm; overflow: hidden; }
+  .band-row .band-bar { height: 100%; border-radius: 4px; }
+  .band-row .band-count { width: 10mm; text-align: right; font-weight: 700; color: var(--navy); flex-shrink: 0; }
+
+  .two-col-report { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm; }
+  .highlight-list { list-style: none; margin: 0; padding: 0; }
+  .highlight-list li { display: flex; justify-content: space-between; align-items: center; padding: 2mm 0; border-bottom: 1px dashed var(--line); font-size: 11.5px; }
+  .highlight-list li:last-child { border-bottom: none; }
+  .highlight-rank { display: inline-flex; align-items: center; justify-content: center; width: 5mm; height: 5mm; border-radius: 50%; background: var(--navy); color: #fff; font-size: 9px; font-weight: 700; margin-right: 2mm; }
+  .highlight-rank.gold { background: var(--yellow); color: var(--navy); }
+  .highlight-rank.silver { background: #C7CBD6; color: var(--navy); }
+  .highlight-rank.bronze { background: #D8945A; color: #fff; }
+
+  table.marks-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+  table.marks-table thead th { text-align: left; font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); border-bottom: 2px solid var(--navy); padding: 2mm 2mm; }
+  table.marks-table tbody td { padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); }
+  .status-pill { display: inline-block; font-size: 8.5px; font-weight: 700; padding: 0.5mm 2mm; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .status-pass { background: rgba(4,165,167,0.14); color: var(--teal-deep); }
+  .status-fail { background: rgba(222,48,111,0.12); color: var(--pink); }
+  .status-absent { background: rgba(107,114,132,0.14); color: var(--text-mute); }
+
+  .r-footer { margin-top: 10mm; padding-top: 4mm; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 9px; color: var(--text-mute); }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .screen-wrap { padding: 0; }
+    .sheet { box-shadow: none; width: auto; min-height: auto; }
+    @page { size: A4; margin: 12mm; }
+    table.marks-table { page-break-inside: auto; }
+    table.marks-table tr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="screen-wrap">
+    <div class="toolbar no-print">
+      <span class="msg" id="toolbar-msg">Loading report…</span>
+      <div>
+        <button class="btn ghost" onclick="window.close ? window.close() : history.back()">Close</button>
+        <button class="btn teal" id="export-btn">Export Excel</button>
+        <button class="btn" id="print-btn">Print Report</button>
+      </div>
+    </div>
+    <div class="sheet" id="report-body">
+      <p class="no-print" style="text-align:center;color:#888;padding-top:100mm;">Loading…</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const testId = params.get('id');
+
+async function load() {
+  if (!testId) {
+    document.getElementById('report-body').innerHTML = '<p style="text-align:center;color:#888;">No test specified.</p>';
+    return;
+  }
+  try {
+    const res = await fetch('/api/weekly-tests/' + testId);
+    if (!res.ok) throw new Error((await res.json()).error || 'Could not load report');
+    const t = await res.json();
+    render(t);
+    document.getElementById('toolbar-msg').textContent = `${t.exam_name} · ${t.test_date}`;
+    document.getElementById('export-btn').addEventListener('click', () => {
+      window.location.href = '/api/weekly-tests/' + testId + '/export';
+    });
+  } catch (err) {
+    document.getElementById('report-body').innerHTML = `<p style="text-align:center;color:#c00;">${err.message}</p>`;
+  }
+}
+
+function render(t) {
+  const dateDisplay = new Date(t.test_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const present = t.marks.filter(m => !m.is_absent);
+  const topPerformers = [...present].sort((a, b) => b.marks - a.marks).slice(0, 5);
+  const needsAttention = [...present].filter(m => m.marks < t.max_marks * 0.35).sort((a, b) => a.marks - b.marks).slice(0, 5);
+  const bandColors = ['#F7B23D', '#04A5A7', '#1C66A1', '#FA7232', '#DE306F'];
+  const maxBandCount = Math.max(...t.bands.map(b => b.count), 1);
+
+  const rankMedal = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+  let rank = 0;
+  const tableRows = t.marks.map(m => {
+    if (!m.is_absent) rank++;
+    const pct = m.is_absent ? null : Math.round((m.marks / t.max_marks) * 1000) / 10;
+    const status = m.is_absent ? `<span class="status-pill status-absent">Absent</span>`
+      : (m.marks >= t.max_marks * 0.35 ? `<span class="status-pill status-pass">Pass</span>` : `<span class="status-pill status-fail">Below Pass</span>`);
+    return `<tr>
+      <td>${m.is_absent ? '—' : rank}</td>
+      <td class="mono">${m.admission_no}</td>
+      <td>${m.student_name}</td>
+      <td>${m.student_class}-${m.student_division}</td>
+      <td>${m.is_absent ? 'AB' : m.marks + ' / ' + t.max_marks}</td>
+      <td>${pct !== null ? pct + '%' : '—'}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('report-body').innerHTML = `
+    <div class="r-header">
+      <div class="r-brand">
+        <img src="/images/logo-mark.png" alt="Students' Home" />
+        <div>
+          <div class="name">Students' Home</div>
+          <div class="addr">Kottakkal &middot; 9745924345</div>
+        </div>
+      </div>
+      <div class="r-title">
+        <div class="label">Weekly Test Report</div>
+        <h1>${t.exam_name}</h1>
+      </div>
+    </div>
+
+    <div class="r-meta">
+      <div class="item"><div class="l">Date</div><div class="v">${dateDisplay}</div></div>
+      <div class="item"><div class="l">Class</div><div class="v">${t.class ? 'Class ' + t.class : '—'}</div></div>
+      <div class="item"><div class="l">Subject</div><div class="v">${t.subject || '—'}</div></div>
+      <div class="item"><div class="l">Max Marks</div><div class="v">${t.max_marks}</div></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="l">Students</div><div class="v">${t.totalStudents}</div></div>
+      <div class="stat-card good"><div class="l">Present</div><div class="v">${t.presentCount}</div></div>
+      <div class="stat-card alert"><div class="l">Absent</div><div class="v">${t.absentCount}</div></div>
+      <div class="stat-card"><div class="l">Average</div><div class="v">${t.average}</div></div>
+      <div class="stat-card good"><div class="l">Highest</div><div class="v">${t.highest ?? '—'}</div></div>
+      <div class="stat-card ${t.passRate < 60 ? 'alert' : 'good'}"><div class="l">Pass Rate</div><div class="v">${t.passRate}%</div></div>
+    </div>
+
+    <p class="section-title">Grade Distribution</p>
+    <div style="margin-bottom:8mm;">
+      ${t.bands.map((b, i) => `
+        <div class="band-row">
+          <span class="band-label">${b.label}</span>
+          <span class="band-bar-wrap"><span class="band-bar" style="width:${(b.count / maxBandCount) * 100}%;background:${bandColors[i]};display:block;"></span></span>
+          <span class="band-count">${b.count}</span>
+        </div>`).join('')}
+    </div>
+
+    <div class="two-col-report">
+      <div>
+        <p class="section-title">Top Performers</p>
+        <ul class="highlight-list">
+          ${topPerformers.length ? topPerformers.map((m, i) => `
+            <li><span><span class="highlight-rank ${rankMedal(i)}">${i + 1}</span>${m.student_name} (${m.student_class}-${m.student_division})</span><strong>${m.marks}/${t.max_marks}</strong></li>
+          `).join('') : '<li style="color:#888;">No marks recorded.</li>'}
+        </ul>
+      </div>
+      <div>
+        <p class="section-title">Needs Attention (below pass mark)</p>
+        <ul class="highlight-list">
+          ${needsAttention.length ? needsAttention.map(m => `
+            <li><span>${m.student_name} (${m.student_class}-${m.student_division})</span><strong style="color:var(--pink);">${m.marks}/${t.max_marks}</strong></li>
+          `).join('') : '<li style="color:#888;">No students below the pass mark — well done!</li>'}
+        </ul>
+      </div>
+    </div>
+
+    <p class="section-title">Full Mark List</p>
+    <table class="marks-table">
+      <thead><tr><th>Rank</th><th>Adm. No.</th><th>Name</th><th>Class</th><th>Marks</th><th>%</th><th>Status</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+
+    <div class="r-footer">
+      <span>Generated by Students' Home Institution Manager</span>
+      <span>Pass mark: 35% of ${t.max_marks}</span>
+    </div>
+  `;
+}
+
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+load();
+</script>
+</body>
+</html>

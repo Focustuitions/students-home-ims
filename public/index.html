@@ -36,7 +36,9 @@
       <button class="tab" data-route="classes"><span class="tab-idx">06</span>Classes</button>
       <button class="tab" data-route="teachers"><span class="tab-idx">07</span>Teachers</button>
       <button class="tab" data-route="timetable"><span class="tab-idx">08</span>Timetable</button>
-      <button class="tab" data-route="import"><span class="tab-idx">09</span>Import Data</button>
+      <button class="tab" data-route="weekly-tests"><span class="tab-idx">09</span>Weekly Tests</button>
+      <button class="tab" data-route="hot-seat"><span class="tab-idx">10</span>Hot Seat</button>
+      <button class="tab" data-route="import"><span class="tab-idx">11</span>Import Data</button>
     </nav>
     <div class="spine-mascot">
       <img src="/images/mascot-main.png" alt="Nubo the Book Sprite" />
@@ -125,6 +127,17 @@
       <div id="sd-fee-summary" class="fee-summary"></div>
       <div class="table-wrap" id="sd-payments"></div>
     </section>
+  </div>
+  <div class="card">
+    <div class="card-head-row">
+      <h2>Weekly Test Performance</h2>
+      <a class="btn btn-small btn-primary" id="sd-performance-report" target="_blank" rel="noopener" style="text-decoration:none;">Performance Report</a>
+    </div>
+    <div id="sd-weekly-tests" class="table-wrap"></div>
+  </div>
+  <div class="card">
+    <h2>Hot Seat History</h2>
+    <div id="sd-hot-seats" class="table-wrap"></div>
   </div>
 </template>
 
@@ -424,10 +437,133 @@
   </div>
 </template>
 
-<template id="tpl-import">
+<template id="tpl-weekly-tests">
   <header class="page-head">
     <div>
       <p class="eyebrow">Register &mdash; Section 09</p>
+      <h1>Weekly Tests</h1>
+    </div>
+    <button class="btn btn-primary" data-route="import">+ Import Marks</button>
+  </header>
+  <div class="table-wrap" id="wt-list"></div>
+
+  <div class="card">
+    <div class="card-head-row">
+      <h2>Top Performing Students</h2>
+      <div class="tt-grid-toolbar">
+        <select id="wt-top-limit">
+          <option value="10" selected>Top 10</option>
+          <option value="25">Top 25</option>
+        </select>
+        <a href="#" id="wt-top-report-link" target="_blank" rel="noopener" class="btn btn-small btn-ghost" style="text-decoration:none;">Printable Report</a>
+      </div>
+    </div>
+    <p class="hint" style="margin:0 0 16px;">Ranked by each student's average score across every weekly test they've taken this academic year.</p>
+    <div id="wt-top-performers"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head-row">
+      <h2>Most Improved Students</h2>
+      <div class="tt-grid-toolbar">
+        <select id="wt-improved-limit">
+          <option value="10" selected>Top 10</option>
+          <option value="25">Top 25</option>
+        </select>
+        <a href="#" id="wt-improved-report-link" target="_blank" rel="noopener" class="btn btn-small btn-ghost" style="text-decoration:none;">Printable Report</a>
+      </div>
+    </div>
+    <p class="hint" style="margin:0 0 16px;">Compares each student's recent weekly test scores against their own earlier scores — not against classmates — so this highlights genuine upward trends. Needs at least 3 tests to qualify.</p>
+    <div id="wt-improved-list"></div>
+  </div>
+</template>
+
+<template id="tpl-hot-seat">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 10</p>
+      <h1>Hot Seat</h1>
+    </div>
+  </header>
+  <p class="hint" style="margin-bottom:20px;">A quick per-session observation log — how a student did when put on the spot in class: engagement, preparedness, and any notes for parents.</p>
+
+  <section class="card">
+    <h2 id="hs-form-title">Add Hot Seat Record</h2>
+    <form class="form" id="hot-seat-form">
+      <input type="hidden" name="id" />
+      <div class="form-grid form-grid-narrow">
+        <label>Admission No. <span class="req">*</span>
+          <input type="text" id="hs-adm" name="admission_no" required autocomplete="off" />
+        </label>
+        <label>Student Name
+          <input type="text" id="hs-name" disabled />
+        </label>
+        <label>Class &amp; Division
+          <input type="text" id="hs-class" disabled />
+        </label>
+        <label>School
+          <input type="text" id="hs-school" disabled />
+        </label>
+        <label>Date <span class="req">*</span>
+          <input type="date" name="date" required />
+        </label>
+        <label>Subject
+          <input type="text" name="subject" />
+        </label>
+        <label>Teacher
+          <input type="text" name="teacher" placeholder="e.g. SN" />
+        </label>
+        <label>Performance
+          <select name="performance">
+            <option value="">Select</option>
+            <option>Excellent</option>
+            <option>Very Good</option>
+            <option>Good</option>
+            <option>Average</option>
+            <option>Poor</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="section-label">Checklist</p>
+      <div class="checklist-grid">
+        <label class="checkbox-field"><input type="checkbox" name="notes_completed" /> Notes Completed</label>
+        <label class="checkbox-field"><input type="checkbox" name="notebook_neat" /> Notebook Neat</label>
+        <label class="checkbox-field"><input type="checkbox" name="questions_answered" /> Questions Answered</label>
+        <label class="checkbox-field"><input type="checkbox" name="good_attention_span" /> Good Attention Span</label>
+        <label class="checkbox-field alert"><input type="checkbox" name="no_notebook" /> No Notebook</label>
+        <label class="checkbox-field alert"><input type="checkbox" name="no_textbook" /> No Text Book</label>
+      </div>
+
+      <div class="form-grid" style="margin-top:16px;">
+        <label style="grid-column: span 3;">Remarks
+          <textarea name="remarks" rows="2" placeholder="Enter any remarks about the student's performance…"></textarea>
+        </label>
+        <label style="grid-column: span 3;">Parent Feedback
+          <textarea name="parent_feedback" rows="2" placeholder="Enter parent's feedback or concerns…"></textarea>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost hidden" id="hs-cancel-edit">Cancel Edit</button>
+        <button type="submit" class="btn btn-primary" id="hs-submit">Add Record</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="card-head-row">
+      <h2>Hot Seat Records</h2>
+      <input type="search" id="hs-search" placeholder="Search by admission no, name, or subject…" style="max-width:320px;" />
+    </div>
+    <div class="table-wrap" id="hs-table"></div>
+  </section>
+</template>
+
+<template id="tpl-import">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 11</p>
       <h1>Import Data</h1>
     </div>
   </header>
@@ -478,6 +614,8 @@
     </div>
     <button class="btn btn-primary" id="import-timetable-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
     <div id="import-timetable-result"></div>
+  </section>
+
   <section class="card">
     <h2>Import Fee Balances</h2>
     <p class="hint" style="margin:0 0 14px;">Sets each student's Total Fee &amp; Discount, then tops up their recorded payments to match the sheet's "Paid" figure with one reconciling entry per student (receipt "OB-&lt;admission no&gt;"). Safe to re-run — it only adjusts the shortfall.</p>
@@ -491,6 +629,29 @@
     </div>
     <button class="btn btn-primary" id="import-fees-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
     <div id="import-fees-result"></div>
+  </section>
+
+  <section class="card">
+    <h2>Import Weekly Test Marks</h2>
+    <p class="hint" style="margin:0 0 14px;">Columns: Admission No, Name, Exam, Mark (numeric, or "AB" for absent). Since the sheet doesn't carry a date, set the test date below before uploading. Re-uploading the same exam &amp; date updates marks instead of duplicating the test.</p>
+    <div class="form-grid form-grid-narrow" style="margin-bottom:14px;max-width:420px;">
+      <label>Test Date <span class="req">*</span>
+        <input type="date" id="wt-import-date" />
+      </label>
+      <label>Max Marks
+        <input type="number" id="wt-import-maxmarks" value="20" min="1" />
+      </label>
+    </div>
+    <div class="import-actions">
+      <a href="/templates/weekly-test-import-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+      <label class="btn btn-primary btn-small file-btn">
+        Choose Excel File
+        <input type="file" id="import-weeklytest-file" accept=".xlsx,.xls" class="hidden" />
+      </label>
+      <span class="import-filename" id="import-weeklytest-filename"></span>
+    </div>
+    <button class="btn btn-primary" id="import-weeklytest-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
+    <div id="import-weeklytest-result"></div>
   </section>
 </template>
 

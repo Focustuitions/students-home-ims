@@ -114,6 +114,77 @@ To run on a different port: `PORT=4000 npm start`.
 - A plain list view sits underneath the grid for quick scanning/removal across
   any date.
 
+### Weekly Tests
+- Marks are uploaded from an Excel sheet with **Admission No, Name, Exam,
+  Mark** columns — the same format the institution's own exports already
+  use. "Mark" can be a number or "AB" for absent.
+- Since that sheet doesn't carry a date, the **Test Date** (and Max Marks,
+  default 20) are set once on the Import Data page right before uploading.
+- "Exam" names like `Class 10 - Biology - Chapter 1` are automatically split
+  into class/subject/topic for reporting; anything that doesn't match that
+  pattern is kept as one label.
+- Re-uploading the same exam name on the same test date updates those marks
+  instead of creating a duplicate test — handy for correcting an entry.
+- The **Weekly Tests** page lists every imported test for the active academic
+  year with at-a-glance stats (present/absent, average, pass rate) and a
+  **Report** link for each.
+- **Weekly Test Report** — a printable, professional report built to
+  highlight academic performance: summary stats (average, highest, pass
+  rate), a grade-distribution breakdown (Excellent/Good/Average/Below
+  Average/Needs Improvement), a Top Performers list, a "Needs Attention" list
+  of students below the pass mark, and the full ranked mark list with
+  pass/fail status. It opens in a new tab, prints cleanly on A4, and has a
+  one-click **Export Excel** button for a formatted two-sheet workbook
+  (summary + full marks).
+- Every student's file page shows their own **Weekly Test Performance**
+  history across all tests they've taken, each linking to that test's report.
+- **Student Performance Report** — click **Performance Report** on a
+  student's file for an individual report that pulls together every weekly
+  test they've taken in the active academic year: overall average, their
+  strongest and weakest subjects, a trend indicator (Improving / Steady /
+  Declining, based on recent tests vs. earlier ones), a subject-by-subject
+  strength chart, a score-over-time chart compared against their class
+  average, a short auto-generated summary in plain language, and the full
+  test-by-test history with how each score compared to the class. If the
+  student has any Hot Seat records for the year, a **Classroom Engagement**
+  section is added automatically — session count, predominant rating, a
+  checklist completion score, a missing-materials alert count, the rating
+  distribution, per-item checklist bars, and the most recent remarks and
+  parent feedback. It opens in a new tab and prints cleanly on A4 — handy
+  for parent meetings or progress reviews.
+- **Top Performing Students** — a leaderboard on the Weekly Tests page
+  ranking students by their average score across every weekly test they've
+  taken this academic year, grouped into columns by class (10, 9, 8).
+  Toggle between Top 10 and Top 25 per class, and click any student to open
+  their file. A **Printable Report** link opens a clean A4 leaderboard
+  (medal-style ranking for the top 3 in each class) suitable for posting or
+  sharing at parent meetings.
+- **Most Improved Students** — right below the leaderboard, this compares
+  each student's most recent weekly test scores against their own earlier
+  scores this academic year (not against classmates), so it surfaces genuine
+  upward trends rather than just who's already strongest. A student needs at
+  least 3 weekly tests on file to qualify, and only shows up if the
+  improvement is meaningful (a noticeable jump, not test-to-test noise).
+  Same Top 10 / Top 25 toggle, per-class columns, and a **Printable Report**
+  showing each student's earlier-average → recent-average and how much
+  they've gained.
+
+### Hot Seat
+- A quick per-session classroom observation log — how a student did when put
+  on the spot in class, separate from formal weekly test marks.
+- **Add a record** by typing an Admission No. (name, class & division, and
+  school auto-fill, same as Fee Payment), then set the date, subject,
+  teacher, and an overall performance rating (Excellent / Very Good / Good /
+  Average / Poor).
+- **Checklist** — Notes Completed, Notebook Neat, Questions Answered, Good
+  Attention Span, plus two alert flags: No Notebook and No Text Book.
+- **Remarks** for the teacher's own notes, and **Parent Feedback** for
+  anything to flag home — both optional free text.
+- The records table below the form is searchable by admission no., name, or
+  subject, and every record can be edited or removed.
+- Every student's file page shows their own **Hot Seat History**.
+- This feeds directly into the **Student Performance Report** — see below.
+
 ### Import Data
 - **Import Students** — upload an Excel file to add or update students in bulk.
   Matched by Admission No, so re-uploading the same file safely updates records

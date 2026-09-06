@@ -519,4 +519,107 @@ router.post('/fees', upload.single('file'), (req, res) => {
   res.json({ total: rows.length - 1, feesUpdated, paymentsAdjusted, skipped });
 });
 
+// ---------------------------------------------------------------------------
+// Weekly test marks import
+// ---------------------------------------------------------------------------
+// Expects columns: Admission No, Name (for reference only), Exam, Mark.
+// "Exam" like "Class 10 - Biology - Chapter 1" is parsed into class/subject/topic
+// where possible. "Mark" is numeric, or "AB" for absent. Test Date and Max Marks
+// aren't in the sheet (the institution's own export doesn't include them), so
+// they're supplied as form fields alongside the file.
+
+function parseExamName(examName) {
+  const parts = examName.split(' - ').map(p => p.trim());
+  if (parts.length >= 3) {
+    const classMatch = parts[0].match(/(\d+)/);
+    return { class: classMatch ? classMatch[1] : null, subject: parts[1], topic: parts.slice(2).join(' - ') };
+  }
+  return { class: null, subject: null, topic: null };
+}
+
+router.post('/weekly-test', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  if (!req.body.test_date) return res.status(400).json({ error: 'Test date is required' });
+  let wb;
+  try {
+    wb = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
+  } catch (err) {
+    return res.status(400).json({ error: 'Could not read this file as an Excel workbook' });
+  }
+
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = sheetToRows(ws);
+  if (!rows.length) return res.status(400).json({ error: 'The sheet appears to be empty' });
+
+  const academicYearId = resolveYearId(req.body.academic_year_id);
+  const testDate = cellToString(req.body.test_date);
+  const maxMarks = Number(req.body.max_marks) || 20;
+
+  const map = headerIndex(rows[0]);
+  const col = {
+    admission_no: findCol(map, 'Admission No', 'Adm No', 'Admission Number'),
+    exam: findCol(map, 'Exam', 'Exam Name', 'Test'),
+    mark: findCol(map, 'Mark', 'Marks', 'Score'),
+  };
+  if (col.admission_no === -1 || col.exam === -1 || col.mark === -1) {
+    return res.status(400).json({ error: 'Could not find "Admission No", "Exam" and "Mark" columns in the sheet header row' });
+  }
+
+  const getStudent = db.prepare('SELECT admission_no FROM students WHERE admission_no = ?');
+  const findTest = db.prepare('SELECT * FROM weekly_tests WHERE exam_name = ? AND test_date = ? AND academic_year_id = ?');
+  const insertTest = db.prepare(`INSERT INTO weekly_tests (exam_name, class, subject, topic, test_date, max_marks, academic_year_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`);
+  const upsertMark = db.prepare(`INSERT INTO weekly_test_marks (weekly_test_id, admission_no, marks, is_absent)
+    VALUES (@weekly_test_id, @admission_no, @marks, @is_absent)
+    ON CONFLICT(weekly_test_id, admission_no) DO UPDATE SET marks=@marks, is_absent=@is_absent`);
+
+  let inserted = 0, updated = 0, testsCreated = 0;
+  const skipped = [];
+  const testCache = {};
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row || row.every(c => c === null || c === undefined || c === '')) continue;
+    const admission_no = cellToString(row[col.admission_no]).trim();
+    const examName = cellToString(row[col.exam]).trim();
+    const markRaw = cellToString(row[col.mark]).trim();
+    if (!admission_no || !examName) { skipped.push({ row: r + 1, reason: 'Missing Admission No or Exam' }); continue; }
+
+    if (!getStudent.get(admission_no)) {
+      skipped.push({ row: r + 1, admission_no, reason: 'No matching student — import students first' });
+      continue;
+    }
+
+    let marks = null, is_absent = 0;
+    if (/^ab(sent)?$/i.test(markRaw)) {
+      is_absent = 1;
+    } else {
+      const n = Number(markRaw);
+      if (Number.isNaN(n)) {
+        skipped.push({ row: r + 1, admission_no, reason: `Mark "${markRaw}" isn't a number or "AB"` });
+        continue;
+      }
+      marks = n;
+    }
+
+    let test = testCache[examName];
+    if (!test) {
+      test = findTest.get(examName, testDate, academicYearId);
+      if (!test) {
+        const { class: cls, subject, topic } = parseExamName(examName);
+        const result = insertTest.run(examName, cls, subject, topic, testDate, maxMarks, academicYearId);
+        test = { id: result.lastInsertRowid };
+        testsCreated++;
+      }
+      testCache[examName] = test;
+    }
+
+    const existingMark = db.prepare('SELECT id FROM weekly_test_marks WHERE weekly_test_id = ? AND admission_no = ?').get(test.id, admission_no);
+    upsertMark.run({ weekly_test_id: test.id, admission_no, marks, is_absent });
+    if (existingMark) updated++; else inserted++;
+  }
+
+  res.json({ total: rows.length - 1, testsCreated, inserted, updated, skipped });
+});
+
 module.exports = router;

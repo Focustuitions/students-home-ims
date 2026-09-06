@@ -10,6 +10,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "allowScripts": {
+    "better-sqlite3": true
+  },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "express": "^5.2.1",

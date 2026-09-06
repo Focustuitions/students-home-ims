@@ -102,6 +102,8 @@ const routes = {
   classes: renderClasses,
   teachers: renderTeachers,
   timetable: renderTimetable,
+  'weekly-tests': renderWeeklyTests,
+  'hot-seat': renderHotSeat,
   import: renderImport,
 };
 
@@ -324,6 +326,37 @@ async function renderStudentDetail(admNo) {
       <tbody>${s.payments.map(p => `<tr><td class="mono">${p.receipt_no}</td><td>${money(p.amount)}</td><td>${p.payment_date}</td>
         <td><a href="/receipt.html?id=${p.id}" target="_blank" rel="noopener" class="btn-icon">Receipt</a></td></tr>`).join('')}</tbody>
     </table>` : `<p class="empty-row">No payments recorded yet.</p>`;
+
+  const weeklyTests = await api('/students/' + encodeURIComponent(admNo) + '/weekly-tests');
+  $('#sd-performance-report').href = '/student-performance-report.html?adm=' + encodeURIComponent(admNo);
+  $('#sd-weekly-tests').innerHTML = weeklyTests.length ? `
+    <table>
+      <thead><tr><th>Date</th><th>Exam</th><th>Marks</th><th>%</th><th></th></tr></thead>
+      <tbody>${weeklyTests.map(w => {
+        const pct = w.is_absent ? null : Math.round((w.marks / w.max_marks) * 1000) / 10;
+        return `<tr>
+          <td>${w.test_date}</td>
+          <td>${w.subject || w.exam_name}</td>
+          <td>${w.is_absent ? 'Absent' : `${w.marks} / ${w.max_marks}`}</td>
+          <td>${pct !== null ? `<span class="tag ${pct < 35 ? 'due' : ''}">${pct}%</span>` : '—'}</td>
+          <td><a href="/weekly-test-report.html?id=${w.test_id}" target="_blank" rel="noopener" class="btn-icon">Report</a></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>` : `<p class="empty-row">No weekly test marks recorded yet.</p>`;
+
+  const hotSeats = await api('/students/' + encodeURIComponent(admNo) + '/hot-seats' + yearQS());
+  $('#sd-hot-seats').innerHTML = hotSeats.length ? `
+    <table>
+      <thead><tr><th>Date</th><th>Subject</th><th>Teacher</th><th>Performance</th><th>Notes</th></tr></thead>
+      <tbody>${hotSeats.map(h => `
+        <tr>
+          <td>${h.date}</td>
+          <td>${h.subject || '—'}</td>
+          <td>${h.teacher || '—'}</td>
+          <td>${h.performance ? `<span class="perf-badge ${perfBadgeClass(h.performance)}">${h.performance}</span>` : '—'}</td>
+          <td>${h.remarks || (h.no_notebook || h.no_textbook ? '<span style="color:var(--pink);">Missing materials</span>' : '—')}</td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<p class="empty-row">No Hot Seat records yet.</p>`;
 }
 
 // =====================================================================
@@ -799,6 +832,247 @@ async function renderTimetable() {
 }
 
 // =====================================================================
+// WEEKLY TESTS
+// =====================================================================
+function gradeColor(pct) {
+  if (pct >= 90) return 'tt-c0';
+  if (pct >= 75) return 'tt-c3';
+  if (pct >= 50) return 'tt-c4';
+  if (pct >= 35) return 'tt-c1';
+  return 'tt-c2';
+}
+
+async function renderWeeklyTests() {
+  useTemplate('#tpl-weekly-tests');
+  const tests = await api('/weekly-tests' + yearQS());
+
+  $('#wt-list').innerHTML = tests.length ? `
+    <table>
+      <thead><tr><th>Date</th><th>Exam</th><th>Class</th><th>Present</th><th>Absent</th><th>Average</th><th>Pass Rate</th><th></th></tr></thead>
+      <tbody>${tests.map(t => {
+        const avgPct = t.average != null ? Math.round((t.average / t.max_marks) * 1000) / 10 : null;
+        return `<tr>
+          <td>${t.test_date}</td>
+          <td>${t.subject ? `${t.subject}${t.topic ? ' — ' + t.topic : ''}` : t.exam_name}</td>
+          <td>${t.class ? `Class ${t.class}` : '—'}</td>
+          <td>${t.presentCount}</td>
+          <td>${t.absentCount > 0 ? `<span class="tag due">${t.absentCount}</span>` : '0'}</td>
+          <td>${t.average} / ${t.max_marks}${avgPct !== null ? ` <span class="mono" style="color:var(--text-mute);">(${avgPct}%)</span>` : ''}</td>
+          <td>${t.passRate}%</td>
+          <td>
+            <a href="/weekly-test-report.html?id=${t.id}" target="_blank" rel="noopener" class="btn-icon">Report</a>
+            <button class="btn-icon" data-del="${t.id}">Remove</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No weekly tests imported yet for this academic year. Head to Import Data to add marks.</p></div>`;
+
+  $$('[data-del]').forEach(btn => btn.addEventListener('click', async () => {
+    if (!confirm('Delete this weekly test and all its marks? This cannot be undone.')) return;
+    await api('/weekly-tests/' + btn.dataset.del, { method: 'DELETE' });
+    toast('Weekly test deleted.');
+    renderWeeklyTests();
+  }));
+
+  async function loadTopPerformers() {
+    const limit = $('#wt-top-limit').value;
+    $('#wt-top-report-link').href = `/top-performers-report.html?limit=${limit}${currentYearId ? '&academic_year_id=' + currentYearId : ''}`;
+    const data = await api('/weekly-tests/top-performers' + yearQS('limit=' + limit));
+    const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+    $('#wt-top-performers').innerHTML = data.classes.length ? `
+      <div class="top-performers-grid">
+        ${data.classes.map(cls => `
+          <div class="tp-class-col">
+            <div class="tp-class-head">Class ${cls}</div>
+            ${data.byClass[cls].map((s, i) => `
+              <div class="tp-row clickable" onclick="location.hash='student/${encodeURIComponent(s.admission_no)}'">
+                <span class="tp-rank ${rankClass(i)}">${s.rank}</span>
+                <span class="tp-name">${s.name} <span class="division">(${s.class}-${s.division})</span></span>
+                <span class="tp-avg">${s.average}%</span>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No weekly test marks yet — import some to see the leaderboard.</p></div>`;
+  }
+
+  $('#wt-top-limit').addEventListener('change', loadTopPerformers);
+  await loadTopPerformers();
+
+  async function loadMostImproved() {
+    const limit = $('#wt-improved-limit').value;
+    $('#wt-improved-report-link').href = `/most-improved-report.html?limit=${limit}${currentYearId ? '&academic_year_id=' + currentYearId : ''}`;
+    const data = await api('/weekly-tests/most-improved' + yearQS('limit=' + limit));
+    const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+    $('#wt-improved-list').innerHTML = data.classes.length ? `
+      <div class="top-performers-grid">
+        ${data.classes.map(cls => `
+          <div class="tp-class-col">
+            <div class="tp-class-head">Class ${cls}</div>
+            ${data.byClass[cls].map((s, i) => `
+              <div class="tp-row clickable" onclick="location.hash='student/${encodeURIComponent(s.admission_no)}'">
+                <span class="tp-rank ${rankClass(i)}">${s.rank}</span>
+                <span class="tp-name">${s.name} <span class="division">(${s.class}-${s.division})</span></span>
+                <span class="tp-scoreline">${s.earlier_avg}% → ${s.recent_avg}%</span>
+                <span class="tp-improve-badge">+${s.improvement}%</span>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No students with a clear upward trend yet — this needs at least 3 weekly tests per student to spot a trend.</p></div>`;
+  }
+
+  $('#wt-improved-limit').addEventListener('change', loadMostImproved);
+  await loadMostImproved();
+}
+
+// =====================================================================
+// HOT SEAT
+// =====================================================================
+function perfBadgeClass(perf) {
+  const key = (perf || '').toLowerCase().replace(/\s+/g, '');
+  return { excellent: 'perf-excellent', verygood: 'perf-verygood', good: 'perf-good', average: 'perf-average', poor: 'perf-poor' }[key] || '';
+}
+
+async function renderHotSeat() {
+  useTemplate('#tpl-hot-seat');
+  const form = $('#hot-seat-form');
+  form.elements['date'].value = todayStr();
+  let currentStudent = null;
+  let editingId = null;
+
+  $('#hs-adm').addEventListener('input', debounce(async () => {
+    const adm = $('#hs-adm').value.trim();
+    if (!adm) { clearHsFields(); return; }
+    try {
+      const s = await api('/students/' + encodeURIComponent(adm));
+      currentStudent = s;
+      $('#hs-name').value = s.name;
+      $('#hs-class').value = `${s.class}-${s.division}`;
+      $('#hs-school').value = s.school === 'Others' ? (s.school_other || 'Others') : s.school;
+    } catch (err) {
+      currentStudent = null;
+      clearHsFields();
+    }
+  }, 300));
+
+  function clearHsFields() {
+    $('#hs-name').value = '';
+    $('#hs-class').value = '';
+    $('#hs-school').value = '';
+  }
+
+  function resetForm() {
+    form.reset();
+    form.elements['date'].value = todayStr();
+    form.elements['id'].value = '';
+    $('#hs-adm').removeAttribute('readonly');
+    clearHsFields();
+    currentStudent = null;
+    editingId = null;
+    $('#hs-form-title').textContent = 'Add Hot Seat Record';
+    $('#hs-submit').textContent = 'Add Record';
+    $('#hs-cancel-edit').classList.add('hidden');
+  }
+
+  $('#hs-cancel-edit').addEventListener('click', resetForm);
+
+  async function loadList() {
+    const q = $('#hs-search').value.trim();
+    const params = new URLSearchParams();
+    if (currentYearId) params.set('academic_year_id', currentYearId);
+    if (q) params.set('q', q);
+    const records = await api('/hot-seats?' + params.toString());
+
+    $('#hs-table').innerHTML = records.length ? `
+      <table>
+        <thead><tr><th>Date</th><th>Adm. No.</th><th>Name</th><th>Class</th><th>Subject</th><th>Teacher</th><th>Performance</th><th>Checklist</th><th></th></tr></thead>
+        <tbody>${records.map(r => {
+          const icons = [];
+          if (r.notes_completed) icons.push('<span class="ci-yes" title="Notes Completed">✓Notes</span>');
+          if (r.notebook_neat) icons.push('<span class="ci-yes" title="Notebook Neat">✓Book</span>');
+          if (r.questions_answered) icons.push('<span class="ci-yes" title="Questions Answered">✓Qs</span>');
+          if (r.good_attention_span) icons.push('<span class="ci-yes" title="Good Attention Span">✓Focus</span>');
+          if (r.no_notebook) icons.push('<span class="ci-alert" title="No Notebook">!Notebook</span>');
+          if (r.no_textbook) icons.push('<span class="ci-alert" title="No Text Book">!Textbook</span>');
+          return `<tr>
+            <td>${r.date}</td>
+            <td class="mono clickable" onclick="location.hash='student/${encodeURIComponent(r.admission_no)}'">${r.admission_no}</td>
+            <td class="clickable" onclick="location.hash='student/${encodeURIComponent(r.admission_no)}'">${r.student_name}</td>
+            <td>${r.student_class}-${r.student_division}</td>
+            <td>${r.subject || '—'}</td>
+            <td>${r.teacher || '—'}</td>
+            <td>${r.performance ? `<span class="perf-badge ${perfBadgeClass(r.performance)}">${r.performance}</span>` : '—'}</td>
+            <td><div class="checklist-icons">${icons.join(' ') || '<span style="color:var(--text-mute);">—</span>'}</div></td>
+            <td>
+              <button class="btn-icon" data-edit="${r.id}">Edit</button>
+              <button class="btn-icon" data-del="${r.id}">Remove</button>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No Hot Seat records yet.</p></div>`;
+
+    $$('[data-del]').forEach(btn => btn.addEventListener('click', async () => {
+      if (!confirm('Delete this Hot Seat record?')) return;
+      await api('/hot-seats/' + btn.dataset.del, { method: 'DELETE' });
+      toast('Hot Seat record deleted.');
+      loadList();
+    }));
+    $$('[data-edit]').forEach(btn => btn.addEventListener('click', async () => {
+      const r = await api('/hot-seats/' + btn.dataset.edit);
+      editingId = r.id;
+      form.elements['id'].value = r.id;
+      $('#hs-adm').value = r.admission_no;
+      $('#hs-adm').setAttribute('readonly', 'true');
+      $('#hs-name').value = r.student_name;
+      $('#hs-class').value = `${r.student_class}-${r.student_division}`;
+      $('#hs-school').value = r.student_school === 'Others' ? (r.school_other || 'Others') : r.student_school;
+      currentStudent = { admission_no: r.admission_no };
+      form.elements['date'].value = r.date;
+      form.elements['subject'].value = r.subject || '';
+      form.elements['teacher'].value = r.teacher || '';
+      form.elements['performance'].value = r.performance || '';
+      form.elements['remarks'].value = r.remarks || '';
+      form.elements['parent_feedback'].value = r.parent_feedback || '';
+      ['notes_completed', 'notebook_neat', 'questions_answered', 'good_attention_span', 'no_notebook', 'no_textbook'].forEach(k => {
+        form.elements[k].checked = !!r[k];
+      });
+      $('#hs-form-title').textContent = 'Edit Hot Seat Record';
+      $('#hs-submit').textContent = 'Save Changes';
+      $('#hs-cancel-edit').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+  }
+
+  $('#hs-search').addEventListener('input', debounce(loadList, 250));
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!currentStudent) { toast('Enter a valid Admission Number first.', true); return; }
+    const formData = new FormData(form);
+    const data = {};
+    formData.forEach((v, k) => { if (k !== 'id') data[k] = v; });
+    ['notes_completed', 'notebook_neat', 'questions_answered', 'good_attention_span', 'no_notebook', 'no_textbook'].forEach(k => {
+      data[k] = form.elements[k].checked;
+    });
+    try {
+      if (editingId) {
+        await api('/hot-seats/' + editingId, { method: 'PUT', body: JSON.stringify(data) });
+        toast('Hot Seat record updated.');
+      } else {
+        data.academic_year_id = currentYearId;
+        await api('/hot-seats', { method: 'POST', body: JSON.stringify(data) });
+        toast('Hot Seat record added.');
+      }
+      resetForm();
+      loadList();
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
+
+  await loadList();
+}
+
+// =====================================================================
 // IMPORT DATA
 // =====================================================================
 function renderImportSummary(container, result) {
@@ -830,7 +1104,7 @@ function renderImportSummary(container, result) {
   container.innerHTML = `<div class="import-result">${summary}${skipTable}</div>`;
 }
 
-function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint, toastText, afterSuccess, taggedByYear }) {
+function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint, toastText, afterSuccess, taggedByYear, getExtraFields, validate }) {
   const fileInput = $(fileInputId);
   const filenameEl = $(filenameId);
   const submitBtn = $(submitId);
@@ -846,10 +1120,14 @@ function wireImportCard({ fileInputId, filenameId, submitId, resultId, endpoint,
 
   submitBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
+    if (validate) {
+      const problem = validate();
+      if (problem) { toast(problem, true); return; }
+    }
     submitBtn.disabled = true;
     submitBtn.textContent = 'Importing…';
     try {
-      const extra = taggedByYear && currentYearId ? { academic_year_id: currentYearId } : {};
+      const extra = { ...(taggedByYear && currentYearId ? { academic_year_id: currentYearId } : {}), ...(getExtraFields ? getExtraFields() : {}) };
       const result = await apiUpload(endpoint, selectedFile, extra);
       renderImportSummary(resultEl, result);
       toast(toastText(result));
@@ -911,5 +1189,21 @@ async function renderImport() {
     resultId: '#import-fees-result',
     endpoint: '/import/fees',
     toastText: r => `Fees imported — ${r.feesUpdated ?? 0} students updated, ${r.paymentsAdjusted ?? 0} payment entries adjusted.`,
+  });
+
+  $('#wt-import-date').value = todayStr();
+  wireImportCard({
+    fileInputId: '#import-weeklytest-file',
+    filenameId: '#import-weeklytest-filename',
+    submitId: '#import-weeklytest-submit',
+    resultId: '#import-weeklytest-result',
+    endpoint: '/import/weekly-test',
+    toastText: r => `Weekly test imported — ${r.inserted ?? 0} marks added, ${r.updated ?? 0} updated across ${r.testsCreated ?? 0} exam(s).`,
+    taggedByYear: true,
+    validate: () => $('#wt-import-date').value ? null : 'Set a test date before uploading.',
+    getExtraFields: () => ({
+      test_date: $('#wt-import-date').value,
+      max_marks: $('#wt-import-maxmarks').value || 20,
+    }),
   });
 }

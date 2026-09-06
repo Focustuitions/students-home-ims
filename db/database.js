@@ -157,4 +157,58 @@ db.prepare('UPDATE students SET academic_year_id = ? WHERE academic_year_id IS N
 db.prepare('UPDATE classes SET academic_year_id = ? WHERE academic_year_id IS NULL').run(currentYear.id);
 db.prepare('UPDATE timetable SET academic_year_id = ? WHERE academic_year_id IS NULL').run(currentYear.id);
 
+// Weekly test marks
+db.exec(`
+CREATE TABLE IF NOT EXISTS weekly_tests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exam_name TEXT NOT NULL,
+  class TEXT,
+  subject TEXT,
+  topic TEXT,
+  test_date TEXT NOT NULL,
+  max_marks REAL NOT NULL DEFAULT 20,
+  academic_year_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS weekly_test_marks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  weekly_test_id INTEGER NOT NULL,
+  admission_no TEXT NOT NULL,
+  marks REAL,
+  is_absent INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (weekly_test_id) REFERENCES weekly_tests(id) ON DELETE CASCADE,
+  UNIQUE(weekly_test_id, admission_no)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wtm_test ON weekly_test_marks(weekly_test_id);
+CREATE INDEX IF NOT EXISTS idx_wtm_adm ON weekly_test_marks(admission_no);
+`);
+
+// Hot Seat — per-session classroom observation records
+db.exec(`
+CREATE TABLE IF NOT EXISTS hot_seats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admission_no TEXT NOT NULL,
+  date TEXT NOT NULL,
+  subject TEXT,
+  teacher TEXT,
+  performance TEXT,
+  notes_completed INTEGER NOT NULL DEFAULT 0,
+  notebook_neat INTEGER NOT NULL DEFAULT 0,
+  questions_answered INTEGER NOT NULL DEFAULT 0,
+  good_attention_span INTEGER NOT NULL DEFAULT 0,
+  no_notebook INTEGER NOT NULL DEFAULT 0,
+  no_textbook INTEGER NOT NULL DEFAULT 0,
+  remarks TEXT,
+  parent_feedback TEXT,
+  academic_year_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_hotseat_adm ON hot_seats(admission_no);
+CREATE INDEX IF NOT EXISTS idx_hotseat_date ON hot_seats(date);
+`);
+
 module.exports = db;

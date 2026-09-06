@@ -49,6 +49,167 @@ router.get('/:admission_no', (req, res) => {
   res.json({ ...student, payments, paid, balance: Math.max(student.net_fees - paid, 0) });
 });
 
+// A student's weekly test history (marks over time, most recent first)
+router.get('/:admission_no/weekly-tests', (req, res) => {
+  const rows = db.prepare(`
+    SELECT m.marks, m.is_absent, t.id as test_id, t.exam_name, t.subject, t.test_date, t.max_marks
+    FROM weekly_test_marks m JOIN weekly_tests t ON t.id = m.weekly_test_id
+    WHERE m.admission_no = ?
+    ORDER BY t.test_date DESC
+  `).all(req.params.admission_no);
+  res.json(rows);
+});
+
+// A student's Hot Seat history (most recent first)
+router.get('/:admission_no/hot-seats', (req, res) => {
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const rows = db.prepare(`
+    SELECT * FROM hot_seats WHERE admission_no = ? AND academic_year_id = ? ORDER BY date DESC, id DESC
+  `).all(req.params.admission_no, yearId);
+  res.json(rows);
+});
+
+// A student's overall academic performance report: subject strengths/weaknesses,
+// trend over time, and how they compare to their classmates on each test.
+router.get('/:admission_no/weekly-test-report', (req, res) => {
+  const student = db.prepare('SELECT * FROM students WHERE admission_no = ?').get(req.params.admission_no);
+  if (!student) return res.status(404).json({ error: 'Student not found' });
+
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const rows = db.prepare(`
+    SELECT m.marks, m.is_absent, t.id as test_id, t.exam_name, t.subject, t.topic, t.test_date, t.max_marks
+    FROM weekly_test_marks m JOIN weekly_tests t ON t.id = m.weekly_test_id
+    WHERE m.admission_no = ? AND t.academic_year_id = ?
+    ORDER BY t.test_date ASC
+  `).all(req.params.admission_no, yearId);
+
+  const withPct = rows.map(r => ({
+    ...r,
+    subjectLabel: r.subject || r.exam_name,
+    pct: r.is_absent ? null : Math.round((r.marks / r.max_marks) * 1000) / 10,
+  }));
+  const present = withPct.filter(r => !r.is_absent);
+  const absentCount = withPct.length - present.length;
+
+  const overallAverage = present.length
+    ? Math.round((present.reduce((s, r) => s + r.pct, 0) / present.length) * 10) / 10
+    : null;
+
+  // subject-wise breakdown
+  const bySubject = {};
+  present.forEach(r => {
+    const key = r.subjectLabel;
+    bySubject[key] = bySubject[key] || { subject: key, count: 0, totalPct: 0, best: -Infinity, worst: Infinity };
+    const s = bySubject[key];
+    s.count++;
+    s.totalPct += r.pct;
+    s.best = Math.max(s.best, r.pct);
+    s.worst = Math.min(s.worst, r.pct);
+  });
+  const subjects = Object.values(bySubject).map(s => ({
+    subject: s.subject,
+    count: s.count,
+    average: Math.round((s.totalPct / s.count) * 10) / 10,
+    best: s.best,
+    worst: s.worst,
+  })).sort((a, b) => b.average - a.average);
+
+  const strongest = subjects.length ? subjects[0] : null;
+  const weakest = subjects.length ? subjects[subjects.length - 1] : null;
+
+  // trend: compare the average of the most recent tests against the earlier ones
+  let trend = 'Not enough data';
+  let trendDelta = null;
+  if (present.length >= 4) {
+    const half = Math.floor(present.length / 2);
+    const earlier = present.slice(0, half);
+    const recent = present.slice(present.length - half);
+    const earlierAvg = earlier.reduce((s, r) => s + r.pct, 0) / earlier.length;
+    const recentAvg = recent.reduce((s, r) => s + r.pct, 0) / recent.length;
+    trendDelta = Math.round((recentAvg - earlierAvg) * 10) / 10;
+    trend = trendDelta > 3 ? 'Improving' : trendDelta < -3 ? 'Declining' : 'Steady';
+  } else if (present.length >= 2) {
+    trendDelta = Math.round((present[present.length - 1].pct - present[0].pct) * 10) / 10;
+    trend = trendDelta > 3 ? 'Improving' : trendDelta < -3 ? 'Declining' : 'Steady';
+  }
+
+  // class average per test, for comparison
+  const classAvgStmt = db.prepare(`
+    SELECT AVG(m.marks * 100.0 / t.max_marks) as avg_pct
+    FROM weekly_test_marks m
+    JOIN students s ON s.admission_no = m.admission_no
+    JOIN weekly_tests t ON t.id = m.weekly_test_id
+    WHERE m.weekly_test_id = ? AND m.is_absent = 0 AND s.class = ? AND s.division = ?
+  `);
+  const timeline = withPct.map(r => {
+    const classAvgRow = classAvgStmt.get(r.test_id, student.class, student.division);
+    return {
+      test_id: r.test_id,
+      exam_name: r.exam_name,
+      subject: r.subjectLabel,
+      topic: r.topic,
+      test_date: r.test_date,
+      is_absent: r.is_absent,
+      marks: r.marks,
+      max_marks: r.max_marks,
+      pct: r.pct,
+      class_average_pct: classAvgRow.avg_pct !== null ? Math.round(classAvgRow.avg_pct * 10) / 10 : null,
+    };
+  });
+
+  // Hot Seat: classroom engagement observations (notebook/homework/attention,
+  // performance ratings, remarks) for the same academic year.
+  const hotSeatRows = db.prepare(`
+    SELECT * FROM hot_seats WHERE admission_no = ? AND academic_year_id = ? ORDER BY date DESC, id DESC
+  `).all(req.params.admission_no, yearId);
+
+  const performanceRank = { 'Excellent': 4, 'Very Good': 3, 'Good': 2, 'Average': 1, 'Poor': 0 };
+  const ratingCounts = {};
+  hotSeatRows.forEach(h => {
+    if (h.performance) ratingCounts[h.performance] = (ratingCounts[h.performance] || 0) + 1;
+  });
+  const sessionCount = hotSeatRows.length;
+  const checklistTotals = { notes_completed: 0, notebook_neat: 0, questions_answered: 0, good_attention_span: 0, no_notebook: 0, no_textbook: 0 };
+  hotSeatRows.forEach(h => {
+    Object.keys(checklistTotals).forEach(k => { if (h[k]) checklistTotals[k]++; });
+  });
+  const checklistRates = sessionCount ? Object.fromEntries(
+    Object.entries(checklistTotals).map(([k, v]) => [k, Math.round((v / sessionCount) * 1000) / 10])
+  ) : null;
+  const predominantRating = Object.entries(ratingCounts).sort((a, b) => b[1] - a[1])[0];
+  const recentRemarks = hotSeatRows.filter(h => h.remarks && h.remarks.trim()).slice(0, 5)
+    .map(h => ({ date: h.date, subject: h.subject, remarks: h.remarks }));
+  const recentParentFeedback = hotSeatRows.filter(h => h.parent_feedback && h.parent_feedback.trim()).slice(0, 5)
+    .map(h => ({ date: h.date, subject: h.subject, parent_feedback: h.parent_feedback }));
+
+  const hotSeat = {
+    sessionCount,
+    ratingCounts,
+    predominantRating: predominantRating ? predominantRating[0] : null,
+    checklistTotals,
+    checklistRates,
+    alertCount: checklistTotals.no_notebook + checklistTotals.no_textbook,
+    recentRemarks,
+    recentParentFeedback,
+    records: hotSeatRows,
+  };
+
+  res.json({
+    student: { admission_no: student.admission_no, name: student.name, class: student.class, division: student.division },
+    testsTaken: withPct.length,
+    presentCount: present.length,
+    absentCount,
+    overallAverage,
+    strongest,
+    weakest,
+    trend,
+    trendDelta,
+    subjects,
+    timeline,
+    hotSeat,
+  });
+});
+
 // Create student
 router.post('/', (req, res) => {
   const b = req.body;
