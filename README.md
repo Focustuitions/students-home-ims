@@ -30,7 +30,28 @@ and Nubo the mascot).
 The database file is created automatically on first run at `db/institution.db`.
 To run on a different port: `PORT=4000 npm start`.
 
+### First-time login
+
+The very first time you open the app, you'll be asked to create the one
+administrator account (username + password, at least 6 characters) instead
+of seeing a login form. From then on, everyone signs in with that account.
+You can change the password later from the sidebar (**Change Password**),
+and sign out with **Log Out**. There's no separate "forgot password" flow —
+if you lose the password, you'll need to reset it directly in the database
+(ask if you'd like help with that) or delete `db/institution.db` to start
+over (this erases all data, so only do this on a fresh install).
+
 ## Features
+
+### Administrator Login
+- The whole app sits behind a single administrator login — every API route
+  requires a signed-in session except the login/setup screens themselves.
+- Sessions are cookie-based (HttpOnly, 30-day expiry) and stored in the
+  database, so a server restart doesn't force everyone to sign in again.
+- Passwords are hashed with bcrypt before being stored — the plain password
+  is never saved anywhere.
+- **Change Password** and **Log Out** are both available from the sidebar
+  once signed in.
 
 ### Dashboard
 - At-a-glance totals for the active academic year: total students, fees
@@ -86,6 +107,12 @@ To run on a different port: `PORT=4000 npm start`.
 - **Payment History** lists every payment across all students, searchable by
   admission no., student name, or receipt number, and each row links back to the
   student's file.
+- **Edit a receipt** — every row in Payment History and on a student's Fee
+  Ledger has an **Edit** link. It opens the same form with the student
+  locked in (so a receipt can't accidentally be reassigned) but Receipt No.,
+  Amount, and Payment Date are all editable — handy for correcting a typo or
+  a wrong amount after the fact. Saving updates the student's fee balance
+  immediately.
 
 ### Classes
 - Add and remove class/division/medium combinations used across the system.

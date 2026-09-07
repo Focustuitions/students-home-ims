@@ -162,6 +162,26 @@ body {
   font-size: 11.5px;
   color: #767E93;
 }
+.spine-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--font-body);
+}
+.spine-account span { color: #9BA3BC; }
+.spine-account strong { color: #E7EAF3; }
+.spine-account button {
+  background: transparent;
+  border: 1px solid rgba(231,234,243,0.25);
+  color: #C6CBDC;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.spine-account button:hover { background: rgba(222,48,111,0.15); border-color: var(--pink); color: #fff; }
 
 /* ---------- Main content ---------- */
 .ledger {

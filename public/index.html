@@ -46,6 +46,13 @@
     </div>
     <div class="spine-foot">
       <span id="clock"></span>
+      <div class="spine-account">
+        <span>Signed in as <strong id="logged-in-as">—</strong></span>
+        <div style="display:flex;gap:6px;">
+          <button type="button" id="change-password-btn">Change Password</button>
+          <button type="button" id="logout-btn">Log Out</button>
+        </div>
+      </div>
     </div>
   </aside>
 
@@ -226,8 +233,8 @@
 <template id="tpl-payment">
   <header class="page-head">
     <div>
-      <p class="eyebrow">Register &mdash; Section 04</p>
-      <h1>Fee Payment</h1>
+      <p class="eyebrow" id="pf-eyebrow">Register &mdash; Section 04</p>
+      <h1 id="pf-title">Fee Payment</h1>
     </div>
   </header>
   <form class="form card" id="payment-form">
@@ -252,7 +259,7 @@
       </label>
       <label>Receipt No. <span class="req">*</span>
         <input type="text" name="receipt_no" id="pf-receipt-no" required />
-        <span class="field-hint">Auto-filled from the last receipt — edit if needed.</span>
+        <span class="field-hint" id="pf-receipt-hint">Auto-filled from the last receipt — edit if needed.</span>
       </label>
       <label>Amount <span class="req">*</span>
         <input type="number" name="amount" min="1" required />
@@ -262,7 +269,8 @@
       </label>
     </div>
     <div class="form-actions">
-      <button type="submit" class="btn btn-primary">Record Payment</button>
+      <button type="button" class="btn btn-ghost hidden" id="pf-cancel-edit" data-route="payment-history">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="pf-submit">Record Payment</button>
     </div>
   </form>
   <div id="pf-status" class="status-banner hidden"></div>

@@ -20,6 +20,7 @@ async function api(path, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     ...options
   });
+  if (res.status === 401) { location.href = '/login.html'; throw new Error('Not logged in'); }
   let data = null;
   try { data = await res.json(); } catch (e) { /* no body */ }
   if (!res.ok) throw new Error((data && data.error) || 'Request failed');
@@ -31,6 +32,7 @@ async function apiUpload(path, file, extraFields = {}) {
   formData.append('file', file);
   Object.entries(extraFields).forEach(([k, v]) => formData.append(k, v));
   const res = await fetch(API + path, { method: 'POST', body: formData });
+  if (res.status === 401) { location.href = '/login.html'; throw new Error('Not logged in'); }
   let data = null;
   try { data = await res.json(); } catch (e) { /* no body */ }
   if (!res.ok) throw new Error((data && data.error) || 'Upload failed');
@@ -117,6 +119,7 @@ async function navigate() {
 
   if (base === 'student') return renderStudentDetail(decodeURIComponent(param));
   if (base === 'edit-student') return renderStudentForm(decodeURIComponent(param));
+  if (base === 'edit-payment') { setActiveTab('payment'); return renderPayment(decodeURIComponent(param)); }
 
   setActiveTab(base);
   const fn = routes[base] || renderDashboard;
@@ -129,6 +132,16 @@ async function navigate() {
 
 window.addEventListener('hashchange', navigate);
 document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const status = await fetch('/api/auth/status').then(r => r.json());
+    if (status.setupNeeded || !status.loggedIn) { location.href = '/login.html'; return; }
+    const usernameEl = $('#logged-in-as');
+    if (usernameEl) usernameEl.textContent = status.username;
+  } catch (err) {
+    location.href = '/login.html';
+    return;
+  }
+
   document.body.addEventListener('click', e => {
     const btn = e.target.closest('[data-route]');
     if (btn) {
@@ -137,6 +150,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   $('#year-switcher').addEventListener('change', e => switchAcademicYear(e.target.value));
   $('#add-year-btn').addEventListener('click', addAcademicYear);
+  $('#logout-btn').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.href = '/login.html';
+  });
+  $('#change-password-btn').addEventListener('click', async () => {
+    const currentPassword = prompt('Current password:');
+    if (currentPassword === null) return;
+    const newPassword = prompt('New password (at least 6 characters):');
+    if (newPassword === null) return;
+    try {
+      await api('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+      toast('Password updated.');
+    } catch (err) {
+      toast(err.message, true);
+    }
+  });
   await loadAcademicYears();
   navigate();
 });
@@ -324,7 +353,10 @@ async function renderStudentDetail(admNo) {
     <table>
       <thead><tr><th>Receipt No.</th><th>Amount</th><th>Date</th><th></th></tr></thead>
       <tbody>${s.payments.map(p => `<tr><td class="mono">${p.receipt_no}</td><td>${money(p.amount)}</td><td>${p.payment_date}</td>
-        <td><a href="/receipt.html?id=${p.id}" target="_blank" rel="noopener" class="btn-icon">Receipt</a></td></tr>`).join('')}</tbody>
+        <td>
+          <a href="/receipt.html?id=${p.id}" target="_blank" rel="noopener" class="btn-icon">Receipt</a>
+          <a href="#edit-payment/${p.id}" class="btn-icon">Edit</a>
+        </td></tr>`).join('')}</tbody>
     </table>` : `<p class="empty-row">No payments recorded yet.</p>`;
 
   const weeklyTests = await api('/students/' + encodeURIComponent(admNo) + '/weekly-tests');
@@ -420,10 +452,10 @@ async function renderStudentForm(admNo) {
 // =====================================================================
 // FEE PAYMENT
 // =====================================================================
-async function renderPayment() {
+async function renderPayment(editPaymentId) {
   useTemplate('#tpl-payment');
   const form = $('#payment-form');
-  form.elements['payment_date'].value = todayStr();
+  const isEdit = !!editPaymentId;
   let currentStudent = null;
 
   async function suggestReceiptNo() {
@@ -432,11 +464,8 @@ async function renderPayment() {
       form.elements['receipt_no'].value = next_receipt_no;
     } catch (err) { /* leave blank if this fails — still editable */ }
   }
-  suggestReceiptNo();
 
-  $('#pf-adm').addEventListener('input', debounce(async () => {
-    const adm = $('#pf-adm').value.trim();
-    if (!adm) { clearStudentFields(); return; }
+  async function loadStudentFields(adm) {
     try {
       const s = await api('/students/' + encodeURIComponent(adm));
       currentStudent = s;
@@ -449,6 +478,36 @@ async function renderPayment() {
       currentStudent = null;
       clearStudentFields();
     }
+  }
+
+  if (isEdit) {
+    $('#pf-eyebrow').textContent = 'Register — Editing Payment';
+    $('#pf-title').textContent = 'Edit Fee Receipt';
+    $('#pf-submit').textContent = 'Save Changes';
+    $('#pf-cancel-edit').classList.remove('hidden');
+    $('#pf-receipt-hint').textContent = 'Editing this receipt updates the student\'s fee ledger immediately.';
+    try {
+      const p = await api('/payments/' + editPaymentId + '/receipt');
+      $('#pf-adm').value = p.admission_no;
+      $('#pf-adm').setAttribute('readonly', 'true');
+      form.elements['receipt_no'].value = p.receipt_no;
+      form.elements['amount'].value = p.amount;
+      form.elements['payment_date'].value = p.payment_date;
+      await loadStudentFields(p.admission_no);
+    } catch (err) {
+      view.innerHTML = `<div class="card"><p>Could not load this payment: ${err.message}</p></div>`;
+      return;
+    }
+  } else {
+    form.elements['payment_date'].value = todayStr();
+    suggestReceiptNo();
+  }
+
+  $('#pf-adm').addEventListener('input', debounce(async () => {
+    if (isEdit) return; // admission no. is locked while editing
+    const adm = $('#pf-adm').value.trim();
+    if (!adm) { clearStudentFields(); return; }
+    loadStudentFields(adm);
   }, 300));
 
   function clearStudentFields() {
@@ -469,16 +528,24 @@ async function renderPayment() {
     }
     const data = Object.fromEntries(new FormData(form).entries());
     try {
-      const result = await api('/payments', { method: 'POST', body: JSON.stringify(data) });
-      banner.innerHTML = `Payment of ${money(data.amount)} recorded for ${currentStudent.name} (${currentStudent.admission_no}).
-        <a href="/receipt.html?id=${result.id}" target="_blank" rel="noopener" class="btn btn-small btn-primary" style="margin-left:10px;text-decoration:none;">Print Receipt</a>`;
-      banner.className = 'status-banner';
-      toast('Payment recorded.');
-      form.reset();
-      form.elements['payment_date'].value = todayStr();
-      clearStudentFields();
-      currentStudent = null;
-      suggestReceiptNo();
+      if (isEdit) {
+        await api('/payments/' + editPaymentId, { method: 'PUT', body: JSON.stringify(data) });
+        banner.innerHTML = `Receipt ${data.receipt_no} updated for ${currentStudent.name} (${currentStudent.admission_no}).
+          <a href="/receipt.html?id=${editPaymentId}" target="_blank" rel="noopener" class="btn btn-small btn-primary" style="margin-left:10px;text-decoration:none;">Print Receipt</a>`;
+        banner.className = 'status-banner';
+        toast('Receipt updated.');
+      } else {
+        const result = await api('/payments', { method: 'POST', body: JSON.stringify(data) });
+        banner.innerHTML = `Payment of ${money(data.amount)} recorded for ${currentStudent.name} (${currentStudent.admission_no}).
+          <a href="/receipt.html?id=${result.id}" target="_blank" rel="noopener" class="btn btn-small btn-primary" style="margin-left:10px;text-decoration:none;">Print Receipt</a>`;
+        banner.className = 'status-banner';
+        toast('Payment recorded.');
+        form.reset();
+        form.elements['payment_date'].value = todayStr();
+        clearStudentFields();
+        currentStudent = null;
+        suggestReceiptNo();
+      }
     } catch (err) {
       banner.textContent = err.message;
       banner.className = 'status-banner error';
@@ -506,7 +573,10 @@ async function renderPaymentHistory() {
             <td class="clickable" onclick="location.hash='student/${encodeURIComponent(p.admission_no)}'">${p.student_name}</td>
             <td class="clickable" onclick="location.hash='student/${encodeURIComponent(p.admission_no)}'">${p.class}-${p.division}</td>
             <td class="clickable" onclick="location.hash='student/${encodeURIComponent(p.admission_no)}'">${money(p.amount)}</td>
-            <td><a href="/receipt.html?id=${p.id}" target="_blank" rel="noopener" class="btn-icon">Receipt</a></td>
+            <td>
+              <a href="/receipt.html?id=${p.id}" target="_blank" rel="noopener" class="btn-icon">Receipt</a>
+              <a href="#edit-payment/${p.id}" class="btn-icon">Edit</a>
+            </td>
           </tr>`).join('')}</tbody>
       </table>` : `<p class="empty-row">No payments recorded yet.</p>`;
   }

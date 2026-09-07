@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign In — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root {
+    --navy: #182238;
+    --teal: #04A5A7;
+    --teal-deep: #04807F;
+    --pink: #DE306F;
+    --line: #E6E8F0;
+    --text: #262B38;
+    --text-mute: #6B7284;
+    --bg: #F5F6FA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #103A52, var(--navy));
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+  }
+  .card {
+    width: 380px;
+    max-width: 92vw;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    padding: 34px 32px 30px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .brand img { width: 38px; height: 38px; object-fit: contain; }
+  .brand .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); }
+  .subtitle { font-size: 13px; color: var(--text-mute); margin: 0 0 24px; }
+  .mascot-row { display: flex; justify-content: center; margin-bottom: 8px; }
+  .mascot-row img { width: 56px; height: 56px; object-fit: contain; }
+  label { display: block; font-size: 12.5px; font-weight: 600; color: #2A3B5C; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+  .btn {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px;
+    border: none;
+    border-radius: 6px;
+    background: var(--teal);
+    color: #fff;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .btn:hover { background: var(--teal-deep); }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .error { color: var(--pink); font-size: 12.5px; margin: -8px 0 14px; min-height: 1em; }
+  .footer-note { text-align: center; font-size: 11px; color: var(--text-mute); margin-top: 18px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="mascot-row"><img src="/images/mascot-main.png" alt="Nubo" /></div>
+    <div class="brand">
+      <img src="/images/logo-mark.png" alt="Students' Home" />
+      <span class="name">Students' Home</span>
+    </div>
+    <p class="subtitle" id="subtitle">Institution Manager — sign in to continue.</p>
+
+    <form id="auth-form">
+      <div id="setup-fields" class="hidden-fields">
+        <label for="f-username">Choose a Username</label>
+        <input type="text" id="f-username" autocomplete="username" required />
+      </div>
+      <div id="login-username-field">
+        <label for="f-username-login">Username</label>
+        <input type="text" id="f-username-login" autocomplete="username" required />
+      </div>
+      <label for="f-password">Password</label>
+      <input type="password" id="f-password" autocomplete="current-password" required />
+      <div id="confirm-field" style="display:none;">
+        <label for="f-confirm">Confirm Password</label>
+        <input type="password" id="f-confirm" autocomplete="new-password" />
+      </div>
+      <div class="error" id="error-msg"></div>
+      <button type="submit" class="btn" id="submit-btn">Sign In</button>
+    </form>
+    <p class="footer-note">Students' Home &middot; Kottakkal</p>
+  </div>
+
+<script>
+const form = document.getElementById('auth-form');
+const errorMsg = document.getElementById('error-msg');
+const submitBtn = document.getElementById('submit-btn');
+const subtitle = document.getElementById('subtitle');
+const confirmField = document.getElementById('confirm-field');
+const setupFields = document.getElementById('setup-fields');
+const loginUsernameField = document.getElementById('login-username-field');
+let isSetup = false;
+
+async function init() {
+  try {
+    const res = await fetch('/api/auth/status');
+    const status = await res.json();
+    if (status.loggedIn) {
+      location.href = '/';
+      return;
+    }
+    isSetup = status.setupNeeded;
+    if (isSetup) {
+      subtitle.textContent = 'First time here — create the administrator account.';
+      submitBtn.textContent = 'Create Account & Sign In';
+      confirmField.style.display = 'block';
+      setupFields.style.display = 'block';
+      loginUsernameField.style.display = 'none';
+    } else {
+      setupFields.style.display = 'none';
+    }
+  } catch (err) {
+    errorMsg.textContent = 'Could not reach the server.';
+  }
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  errorMsg.textContent = '';
+  const username = (isSetup ? document.getElementById('f-username') : document.getElementById('f-username-login')).value.trim();
+  const password = document.getElementById('f-password').value;
+
+  if (isSetup) {
+    const confirm = document.getElementById('f-confirm').value;
+    if (password !== confirm) { errorMsg.textContent = 'Passwords do not match.'; return; }
+  }
+
+  submitBtn.disabled = true;
+  try {
+    const endpoint = isSetup ? '/api/auth/setup' : '/api/auth/login';
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Something went wrong');
+    location.href = '/';
+  } catch (err) {
+    errorMsg.textContent = err.message;
+    submitBtn.disabled = false;
+  }
+});
+
+init();
+</script>
+</body>
+</html>
