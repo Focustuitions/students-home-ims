@@ -40,7 +40,7 @@
   .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
   .brand img { width: 38px; height: 38px; object-fit: contain; }
   .brand .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); }
-  .subtitle { font-size: 13px; color: var(--text-mute); margin: 0 0 24px; }
+  .subtitle { font-size: 13px; color: var(--text-mute); margin: 0 0 24px; min-height: 1.3em; }
   .mascot-row { display: flex; justify-content: center; margin-bottom: 8px; }
   .mascot-row img { width: 56px; height: 56px; object-fit: contain; }
   label { display: block; font-size: 12.5px; font-weight: 600; color: #2A3B5C; margin-bottom: 6px; }
@@ -54,6 +54,7 @@
     margin-bottom: 16px;
   }
   input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+  .field-hint { font-size: 11px; color: var(--text-mute); margin: -12px 0 16px; }
   .btn {
     width: 100%;
     font-family: 'Inter', sans-serif;
@@ -69,8 +70,20 @@
   }
   .btn:hover { background: var(--teal-deep); }
   .btn:disabled { opacity: 0.6; cursor: default; }
-  .error { color: var(--pink); font-size: 12.5px; margin: -8px 0 14px; min-height: 1em; }
+  .error {
+    display: none;
+    color: #921C42;
+    background: rgba(222,48,111,0.1);
+    border: 1px solid rgba(222,48,111,0.35);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .error.shown { display: block; }
   .footer-note { text-align: center; font-size: 11px; color: var(--text-mute); margin-top: 18px; }
+  .loading-note { text-align: center; font-size: 13px; color: var(--text-mute); padding: 20px 0; }
 </style>
 </head>
 <body>
@@ -80,23 +93,18 @@
       <img src="/images/logo-mark.png" alt="Students' Home" />
       <span class="name">Students' Home</span>
     </div>
-    <p class="subtitle" id="subtitle">Institution Manager — sign in to continue.</p>
+    <p class="subtitle" id="subtitle">Checking…</p>
 
-    <form id="auth-form">
-      <div id="setup-fields" class="hidden-fields">
-        <label for="f-username">Choose a Username</label>
-        <input type="text" id="f-username" autocomplete="username" required />
-      </div>
-      <div id="login-username-field">
-        <label for="f-username-login">Username</label>
-        <input type="text" id="f-username-login" autocomplete="username" required />
-      </div>
-      <label for="f-password">Password</label>
+    <p class="loading-note" id="loading-note">One moment…</p>
+
+    <form id="auth-form" style="display:none;">
+      <label for="f-username" id="username-label">Username</label>
+      <input type="text" id="f-username" autocomplete="username" required />
+
+      <label for="f-password" id="password-label">Password</label>
       <input type="password" id="f-password" autocomplete="current-password" required />
-      <div id="confirm-field" style="display:none;">
-        <label for="f-confirm">Confirm Password</label>
-        <input type="password" id="f-confirm" autocomplete="new-password" />
-      </div>
+      <p class="field-hint" id="password-hint" style="display:none;">At least 6 characters.</p>
+
       <div class="error" id="error-msg"></div>
       <button type="submit" class="btn" id="submit-btn">Sign In</button>
     </form>
@@ -105,49 +113,75 @@
 
 <script>
 const form = document.getElementById('auth-form');
+const loadingNote = document.getElementById('loading-note');
 const errorMsg = document.getElementById('error-msg');
 const submitBtn = document.getElementById('submit-btn');
 const subtitle = document.getElementById('subtitle');
-const confirmField = document.getElementById('confirm-field');
-const setupFields = document.getElementById('setup-fields');
-const loginUsernameField = document.getElementById('login-username-field');
+const usernameLabel = document.getElementById('username-label');
+const passwordHint = document.getElementById('password-hint');
 let isSetup = false;
+
+function showError(message) {
+  errorMsg.textContent = message;
+  errorMsg.classList.add('shown');
+}
+function clearError() {
+  errorMsg.textContent = '';
+  errorMsg.classList.remove('shown');
+}
 
 async function init() {
   try {
     const res = await fetch('/api/auth/status');
+    if (!res.ok) throw new Error('status ' + res.status);
     const status = await res.json();
     if (status.loggedIn) {
       location.href = '/';
       return;
     }
-    isSetup = status.setupNeeded;
+    isSetup = !!status.setupNeeded;
     if (isSetup) {
       subtitle.textContent = 'First time here — create the administrator account.';
+      usernameLabel.textContent = 'Choose a Username';
       submitBtn.textContent = 'Create Account & Sign In';
-      confirmField.style.display = 'block';
-      setupFields.style.display = 'block';
-      loginUsernameField.style.display = 'none';
+      passwordHint.style.display = 'block';
     } else {
-      setupFields.style.display = 'none';
+      subtitle.textContent = 'Institution Manager — sign in to continue.';
+      usernameLabel.textContent = 'Username';
+      submitBtn.textContent = 'Sign In';
+      passwordHint.style.display = 'none';
     }
+    loadingNote.style.display = 'none';
+    form.style.display = 'block';
   } catch (err) {
-    errorMsg.textContent = 'Could not reach the server.';
+    loadingNote.style.display = 'none';
+    form.style.display = 'block';
+    showError('Could not reach the server. Check that it is running, then reload this page.');
   }
 }
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
-  errorMsg.textContent = '';
-  const username = (isSetup ? document.getElementById('f-username') : document.getElementById('f-username-login')).value.trim();
+  clearError();
+  submitBtn.disabled = true;
+  submitBtn.textContent = isSetup ? 'Creating account…' : 'Signing in…';
+
+  const username = document.getElementById('f-username').value.trim();
   const password = document.getElementById('f-password').value;
 
-  if (isSetup) {
-    const confirm = document.getElementById('f-confirm').value;
-    if (password !== confirm) { errorMsg.textContent = 'Passwords do not match.'; return; }
+  if (!username) {
+    showError('Enter a username.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = isSetup ? 'Create Account & Sign In' : 'Sign In';
+    return;
+  }
+  if (isSetup && password.length < 6) {
+    showError('Password must be at least 6 characters.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Account & Sign In';
+    return;
   }
 
-  submitBtn.disabled = true;
   try {
     const endpoint = isSetup ? '/api/auth/setup' : '/api/auth/login';
     const res = await fetch(endpoint, {
@@ -155,12 +189,14 @@ form.addEventListener('submit', async e => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Something went wrong');
+    let data = {};
+    try { data = await res.json(); } catch (e2) { /* no body */ }
+    if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
     location.href = '/';
   } catch (err) {
-    errorMsg.textContent = err.message;
+    showError(err.message);
     submitBtn.disabled = false;
+    submitBtn.textContent = isSetup ? 'Create Account & Sign In' : 'Sign In';
   }
 });
 
