@@ -95,6 +95,15 @@ over (this erases all data, so only do this on a fresh install).
 - **Export Fee Pending** — downloads a formatted Excel workbook of every
   student in the active year with an outstanding balance, ready for
   follow-up calls or printing.
+- **Export Student Details** — downloads a complete Excel workbook covering
+  every student in the active year: a **Students** sheet with every profile
+  field (contact details, fees, discount, balance, status, remarks), a
+  **Payment History** sheet with every receipt, a **Weekly Test Summary**
+  sheet (tests taken, average %), and a **Hot Seat Summary** sheet (session
+  count, predominant rating, missing-materials alerts) — everything the
+  software holds about students, in one file.
+- The students list shows **50 students per page**, with page controls
+  underneath the table.
 
 ### Fee Payment
 - Type an **Admission No.** and the student's name, class, net fee, amount already
@@ -106,7 +115,7 @@ over (this erases all data, so only do this on a fresh install).
   creates) are ignored when suggesting the next number.
 - **Payment History** lists every payment across all students, searchable by
   admission no., student name, or receipt number, and each row links back to the
-  student's file.
+  student's file. Shows **50 payments per page**, with page controls underneath.
 - **Edit a receipt** — every row in Payment History and on a student's Fee
   Ledger has an **Edit** link. It opens the same form with the student
   locked in (so a receipt can't accidentally be reassigned) but Receipt No.,

@@ -342,4 +342,99 @@ router.get('/reports/fee-pending/export', (req, res) => {
   res.send(buf);
 });
 
+// Full student details export — every field on every student record, plus
+// their full payment history, weekly test summary, and Hot Seat summary,
+// each as its own sheet — everything the software holds about students.
+router.get('/reports/details/export', (req, res) => {
+  const XLSX = require('xlsx');
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const sql = yearId ? 'SELECT * FROM students WHERE academic_year_id = ?' : 'SELECT * FROM students';
+  const students = (yearId ? db.prepare(sql).all(yearId) : db.prepare(sql).all())
+    .sort((a, b) => b.class.localeCompare(a.class) || a.division.localeCompare(b.division) || a.name.localeCompare(b.name));
+
+  const wb = XLSX.utils.book_new();
+
+  // ---- Sheet 1: Students (full profile + fee status) ----
+  const studentHeader = [
+    'Adm No', 'Name', 'Class', 'Division', 'Medium', 'School', 'Joining Date',
+    'Father Name', 'Father Phone', 'Mother Name', 'Mother Phone', 'Place',
+    'Total Fee', 'Discount', 'Net Fee', 'Paid', 'Balance', 'Status', 'Remark',
+  ];
+  const studentData = students.map(s => {
+    const paid = paidTotal(s.admission_no);
+    const balance = Math.max(s.net_fees - paid, 0);
+    return [
+      s.admission_no, s.name, s.class, s.division, s.medium,
+      s.school === 'Others' ? (s.school_other || 'Others') : s.school,
+      s.joining_date,
+      s.father_name || '', s.father_phone || '', s.mother_name || '', s.mother_phone || '',
+      s.place || '', s.total_fees, s.discount, s.net_fees, paid, balance, s.status, s.remark || '',
+    ];
+  });
+  const studentsSheet = XLSX.utils.aoa_to_sheet([studentHeader, ...studentData]);
+  studentsSheet['!cols'] = [
+    { wch: 12 }, { wch: 24 }, { wch: 7 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 12 },
+    { wch: 20 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 16 },
+    { wch: 10 }, { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 24 },
+  ];
+  XLSX.utils.book_append_sheet(wb, studentsSheet, 'Students');
+
+  // ---- Sheet 2: Payment History ----
+  const admissionNos = students.map(s => s.admission_no);
+  const payments = admissionNos.length
+    ? db.prepare(`SELECT * FROM payments WHERE admission_no IN (${admissionNos.map(() => '?').join(',')}) ORDER BY payment_date DESC`).all(...admissionNos)
+    : [];
+  const studentByAdm = Object.fromEntries(students.map(s => [s.admission_no, s]));
+  const paymentHeader = ['Adm No', 'Name', 'Receipt No', 'Amount', 'Payment Date'];
+  const paymentData = payments.map(p => {
+    const s = studentByAdm[p.admission_no];
+    return [p.admission_no, s ? s.name : '', p.receipt_no, p.amount, p.payment_date];
+  });
+  const paymentsSheet = XLSX.utils.aoa_to_sheet([paymentHeader, ...paymentData]);
+  paymentsSheet['!cols'] = [{ wch: 12 }, { wch: 24 }, { wch: 16 }, { wch: 10 }, { wch: 13 }];
+  XLSX.utils.book_append_sheet(wb, paymentsSheet, 'Payment History');
+
+  // ---- Sheet 3: Weekly Test Summary ----
+  const weeklyTestHeader = ['Adm No', 'Name', 'Class', 'Division', 'Tests Taken', 'Present', 'Absent', 'Average %'];
+  const weeklyTestData = students.map(s => {
+    const rows = db.prepare(`
+      SELECT m.marks, m.is_absent, t.max_marks FROM weekly_test_marks m
+      JOIN weekly_tests t ON t.id = m.weekly_test_id
+      WHERE m.admission_no = ? AND t.academic_year_id = ?
+    `).all(s.admission_no, yearId);
+    const present = rows.filter(r => !r.is_absent);
+    const avg = present.length
+      ? Math.round((present.reduce((sum, r) => sum + (r.marks / r.max_marks) * 100, 0) / present.length) * 10) / 10
+      : '';
+    return [s.admission_no, s.name, s.class, s.division, rows.length, present.length, rows.length - present.length, avg];
+  });
+  const weeklyTestSheet = XLSX.utils.aoa_to_sheet([weeklyTestHeader, ...weeklyTestData]);
+  weeklyTestSheet['!cols'] = [{ wch: 12 }, { wch: 24 }, { wch: 7 }, { wch: 9 }, { wch: 11 }, { wch: 9 }, { wch: 9 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, weeklyTestSheet, 'Weekly Test Summary');
+
+  // ---- Sheet 4: Hot Seat Summary ----
+  const hotSeatHeader = ['Adm No', 'Name', 'Class', 'Division', 'Sessions', 'Predominant Rating', 'Missing Materials Alerts'];
+  const hotSeatData = students.map(s => {
+    const rows = db.prepare('SELECT * FROM hot_seats WHERE admission_no = ? AND academic_year_id = ?').all(s.admission_no, yearId);
+    const ratingCounts = {};
+    let alertCount = 0;
+    rows.forEach(h => {
+      if (h.performance) ratingCounts[h.performance] = (ratingCounts[h.performance] || 0) + 1;
+      if (h.no_notebook) alertCount++;
+      if (h.no_textbook) alertCount++;
+    });
+    const predominant = Object.entries(ratingCounts).sort((a, b) => b[1] - a[1])[0];
+    return [s.admission_no, s.name, s.class, s.division, rows.length, predominant ? predominant[0] : '', alertCount];
+  });
+  const hotSeatSheet = XLSX.utils.aoa_to_sheet([hotSeatHeader, ...hotSeatData]);
+  hotSeatSheet['!cols'] = [{ wch: 12 }, { wch: 24 }, { wch: 7 }, { wch: 9 }, { wch: 10 }, { wch: 18 }, { wch: 20 }];
+  XLSX.utils.book_append_sheet(wb, hotSeatSheet, 'Hot Seat Summary');
+
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  const filename = `students-full-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buf);
+});
+
 module.exports = router;

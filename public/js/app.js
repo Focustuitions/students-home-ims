@@ -249,23 +249,19 @@ async function renderDashboard() {
 // =====================================================================
 async function renderStudents() {
   useTemplate('#tpl-students');
+  const PAGE_SIZE = 50;
+  let currentPage = 1;
+  let allStudents = [];
 
-  async function load() {
-    const params = new URLSearchParams();
-    if (currentYearId) params.set('academic_year_id', currentYearId);
-    const q = $('#stu-search').value.trim();
-    if (q) params.set('q', q);
-    if ($('#f-class').value) params.set('cls', $('#f-class').value);
-    if ($('#f-division').value) params.set('division', $('#f-division').value);
-    if ($('#f-medium').value) params.set('medium', $('#f-medium').value);
-    let students = await api('/students?' + params.toString());
-    if ($('#f-status').value === 'Pending') students = students.filter(s => s.balance > 0);
+  function renderPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = allStudents.slice(start, start + PAGE_SIZE);
 
-    $('#students-table').innerHTML = students.length ? `
+    $('#students-table').innerHTML = pageItems.length ? `
       <table>
         <thead><tr><th>Adm. No.</th><th>Name</th><th>Class</th><th>Medium</th><th>School</th><th>Net Fee</th><th>Balance</th><th>Status</th></tr></thead>
         <tbody>
-          ${students.map(s => `
+          ${pageItems.map(s => `
             <tr class="clickable" onclick="location.hash='student/${encodeURIComponent(s.admission_no)}'">
               <td class="mono">${s.admission_no}</td>
               <td>${s.name}</td>
@@ -278,11 +274,35 @@ async function renderStudents() {
             </tr>`).join('')}
         </tbody>
       </table>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No students match this search yet.</p></div>`;
+
+    renderPaginationBar('#students-pagination', currentPage, allStudents.length, PAGE_SIZE, p => {
+      currentPage = p;
+      renderPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  async function load() {
+    const params = new URLSearchParams();
+    if (currentYearId) params.set('academic_year_id', currentYearId);
+    const q = $('#stu-search').value.trim();
+    if (q) params.set('q', q);
+    if ($('#f-class').value) params.set('cls', $('#f-class').value);
+    if ($('#f-division').value) params.set('division', $('#f-division').value);
+    if ($('#f-medium').value) params.set('medium', $('#f-medium').value);
+    allStudents = await api('/students?' + params.toString());
+    if ($('#f-status').value === 'Pending') allStudents = allStudents.filter(s => s.balance > 0);
+    currentPage = 1;
+    renderPage();
   }
 
   $('#stu-search').addEventListener('input', debounce(load, 250));
   ['#f-class', '#f-division', '#f-medium', '#f-status'].forEach(sel => $(sel).addEventListener('change', load));
   $('#export-pending').addEventListener('click', exportFeePendingCSV);
+  $('#export-details').addEventListener('click', () => {
+    window.location.href = API + '/students/reports/details/export' + yearQS();
+    toast('Exporting full student details as Excel…');
+  });
 
   await load();
 }
@@ -290,6 +310,45 @@ async function renderStudents() {
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// Reusable client-side pagination bar. Renders "Showing X–Y of Z" plus
+// Prev/page-number/Next controls into containerId, and calls onChange(page)
+// when the user picks a different page.
+function renderPaginationBar(containerId, currentPage, totalItems, pageSize, onChange) {
+  const container = $(containerId);
+  if (!container) return;
+  const totalPages = Math.max(Math.ceil(totalItems / pageSize), 1);
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const end = Math.min(currentPage * pageSize, totalItems);
+
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== '…') {
+      pages.push('…');
+    }
+  }
+  const pageButtons = pages.map(p => p === '…'
+    ? `<span class="page-number">…</span>`
+    : `<button class="page-number ${p === currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="page-info">Showing ${start}&ndash;${end} of ${totalItems}</div>
+    <div class="page-controls">
+      <button data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>&larr; Prev</button>
+      ${pageButtons}
+      <button data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Next &rarr;</button>
+    </div>
+  `;
+  $$('[data-page]', container).forEach(btn => btn.addEventListener('click', () => {
+    const p = Number(btn.dataset.page);
+    if (p >= 1 && p <= totalPages) onChange(p);
+  }));
 }
 
 async function exportFeePendingCSV() {
@@ -558,14 +617,18 @@ async function renderPayment(editPaymentId) {
 // =====================================================================
 async function renderPaymentHistory() {
   useTemplate('#tpl-payment-history');
+  const PAGE_SIZE = 50;
+  let currentPage = 1;
+  let allPayments = [];
 
-  async function load() {
-    const q = $('#ph-search').value.trim();
-    const payments = await api('/payments' + (q ? '?q=' + encodeURIComponent(q) : ''));
-    $('#ph-table').innerHTML = payments.length ? `
+  function renderPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = allPayments.slice(start, start + PAGE_SIZE);
+
+    $('#ph-table').innerHTML = pageItems.length ? `
       <table>
         <thead><tr><th>Date</th><th>Receipt No.</th><th>Adm. No.</th><th>Student</th><th>Class</th><th>Amount</th><th></th></tr></thead>
-        <tbody>${payments.map(p => `
+        <tbody>${pageItems.map(p => `
           <tr>
             <td class="clickable" onclick="location.hash='student/${encodeURIComponent(p.admission_no)}'">${p.payment_date}</td>
             <td class="mono clickable" onclick="location.hash='student/${encodeURIComponent(p.admission_no)}'">${p.receipt_no}</td>
@@ -579,6 +642,19 @@ async function renderPaymentHistory() {
             </td>
           </tr>`).join('')}</tbody>
       </table>` : `<p class="empty-row">No payments recorded yet.</p>`;
+
+    renderPaginationBar('#ph-pagination', currentPage, allPayments.length, PAGE_SIZE, p => {
+      currentPage = p;
+      renderPage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  async function load() {
+    const q = $('#ph-search').value.trim();
+    allPayments = await api('/payments' + yearQS(q ? 'q=' + encodeURIComponent(q) : ''));
+    currentPage = 1;
+    renderPage();
   }
   $('#ph-search').addEventListener('input', debounce(load, 250));
   await load();

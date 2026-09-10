@@ -107,9 +107,11 @@
     <select id="f-division"><option value="">Division — all</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>M</option></select>
     <select id="f-medium"><option value="">Medium — all</option><option>English</option><option>Malayalam</option></select>
     <select id="f-status"><option value="">Status — all</option><option>Active</option><option value="Pending">Pending balance</option></select>
+    <button class="btn btn-ghost" id="export-details">Export Student Details (Excel)</button>
     <button class="btn btn-ghost" id="export-pending">Export Fee Pending (Excel)</button>
   </div>
   <div class="table-wrap" id="students-table"></div>
+  <div class="pagination-bar" id="students-pagination"></div>
 </template>
 
 <template id="tpl-student-detail">
@@ -287,6 +289,7 @@
     <input type="search" id="ph-search" placeholder="Search by admission no, name or receipt no…" />
   </div>
   <div class="table-wrap" id="ph-table"></div>
+  <div class="pagination-bar" id="ph-pagination"></div>
 </template>
 
 <template id="tpl-classes">
