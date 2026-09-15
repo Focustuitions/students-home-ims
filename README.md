@@ -182,8 +182,16 @@ over (this erases all data, so only do this on a fresh install).
   strength chart, a score-over-time chart compared against their class
   average, a short auto-generated summary in plain language, and the full
   test-by-test history with how each score compared to the class. If the
-  student has any Hot Seat records for the year, a **Classroom Engagement**
-  section is added automatically — session count, predominant rating, a
+  student sat any **Term Exams** this academic year, a **Term Examinations**
+  section is added automatically — every exam they took, with a subject-wise
+  breakdown, their overall percentage, and how that compares to their class
+  average. When a student has both weekly test and term exam results, an
+  **Analysis: Weekly Tests vs. Term Exams** section compares the two —
+  overall averages side by side, a plain-language verdict (Consistent /
+  Stronger in Weekly Tests / Stronger in Term Exams) with a short written
+  explanation, and a subject-by-subject table showing where the two formats
+  agree or diverge. If the student has any Hot Seat records for the year, a
+  **Classroom Engagement** section is added automatically — session count, predominant rating, a
   checklist completion score, a missing-materials alert count, the rating
   distribution, per-item checklist bars, and the most recent remarks and
   parent feedback. It opens in a new tab and prints cleanly on A4 — handy
@@ -204,6 +212,31 @@ over (this erases all data, so only do this on a fresh install).
   Same Top 10 / Top 25 toggle, per-class columns, and a **Printable Report**
   showing each student's earlier-average → recent-average and how much
   they've gained.
+
+### Term Exams
+- For multi-subject term/annual examinations, uploaded from a marklist
+  workbook — one sheet per class/division (e.g. "10 A", "10 B", "10 C"),
+  each with a header row of **Adm No, Name, Class**, then one column per
+  subject. Marks are numbers, or "AB" for absent; a blank cell means that
+  subject doesn't apply to that student (not zero).
+- Since the sheet doesn't carry a date, the **Exam Name** (default "Term
+  Examination") and **Exam Date** are set once on the Import Data page
+  right before uploading.
+- **Max marks per subject aren't in the sheet either** — they're detected
+  automatically from the highest score seen for that subject, rounded up to
+  a standard total (40, 50, 80, or 100). The result after uploading shows
+  exactly what was detected for each subject, so it's easy to check —
+  re-uploading with a correction is safe, since the same exam name, class,
+  and date updates existing marks rather than duplicating them.
+- The **Term Exams** page lists every imported exam for the active academic
+  year with quick stats (subjects, students, average/highest/lowest) and a
+  **Report** link for each.
+- **Term Exam Report** — a printable A4-landscape report per class: subject-
+  wise class averages, Top Performers and Needs Attention lists, and the
+  full marklist with every subject, total, percentage, and pass/fail status.
+  Has the same one-click **Export Excel** option as the other reports.
+- Every student's **Performance Report** now includes their term exam
+  results alongside weekly tests and Hot Seat — see below.
 
 ### Hot Seat
 - A quick per-session classroom observation log — how a student did when put

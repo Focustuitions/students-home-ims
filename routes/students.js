@@ -194,6 +194,81 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     records: hotSeatRows,
   };
 
+  // Term Examinations: subject-wise marks per exam sat this academic year,
+  // plus each exam's overall percentage and how it compares to the class.
+  const termExamRows = db.prepare(`
+    SELECT m.subject, m.marks, m.max_marks, m.is_absent, e.id as exam_id, e.exam_name, e.exam_date
+    FROM term_exam_marks m JOIN term_exams e ON e.id = m.term_exam_id
+    WHERE m.admission_no = ? AND e.academic_year_id = ?
+    ORDER BY e.exam_date ASC
+  `).all(req.params.admission_no, yearId);
+
+  const examGroups = {};
+  termExamRows.forEach(r => {
+    const g = examGroups[r.exam_id] || (examGroups[r.exam_id] = {
+      exam_id: r.exam_id, exam_name: r.exam_name, exam_date: r.exam_date, subjects: [], total: 0, maxTotal: 0, anyPresent: false,
+    });
+    g.subjects.push({ subject: r.subject, marks: r.marks, max_marks: r.max_marks, is_absent: !!r.is_absent });
+    if (!r.is_absent && r.marks !== null) { g.total += r.marks; g.maxTotal += r.max_marks; g.anyPresent = true; }
+  });
+  const classAvgForExam = db.prepare(`
+    SELECT m.admission_no, SUM(m.marks) as total, SUM(m.max_marks) as maxTotal
+    FROM term_exam_marks m JOIN students s ON s.admission_no = m.admission_no
+    WHERE m.term_exam_id = ? AND m.is_absent = 0 AND s.class = ? AND s.division = ?
+    GROUP BY m.admission_no
+  `);
+  const termExams = Object.values(examGroups).map(g => {
+    const pct = g.anyPresent && g.maxTotal > 0 ? Math.round((g.total / g.maxTotal) * 1000) / 10 : null;
+    const classRows = classAvgForExam.all(g.exam_id, student.class, student.division)
+      .map(r => r.maxTotal > 0 ? (r.total / r.maxTotal) * 100 : null).filter(v => v !== null);
+    const classAverage = classRows.length ? Math.round((classRows.reduce((s, v) => s + v, 0) / classRows.length) * 10) / 10 : null;
+    return { exam_id: g.exam_id, exam_name: g.exam_name, exam_date: g.exam_date, subjects: g.subjects, total: g.total, maxTotal: g.maxTotal, pct, classAverage };
+  });
+
+  // Cross-analysis: compare weekly test performance against term exam
+  // performance, both overall and subject-by-subject, to see whether the
+  // two formats agree or diverge for this student.
+  const termSubjectPct = {};
+  termExams.forEach(ex => {
+    ex.subjects.forEach(s => {
+      if (!s.is_absent && s.marks !== null) {
+        const pct = (s.marks / s.max_marks) * 100;
+        (termSubjectPct[s.subject] = termSubjectPct[s.subject] || []).push(pct);
+      }
+    });
+  });
+  const termOverallValues = termExams.filter(ex => ex.pct !== null).map(ex => ex.pct);
+  const termOverallAverage = termOverallValues.length
+    ? Math.round((termOverallValues.reduce((a, b) => a + b, 0) / termOverallValues.length) * 10) / 10
+    : null;
+
+  const subjectNames = new Set([...subjects.map(s => s.subject), ...Object.keys(termSubjectPct)]);
+  const subjectComparison = [...subjectNames].map(name => {
+    const weekly = subjects.find(s => s.subject === name);
+    const termVals = termSubjectPct[name];
+    const weeklyAverage = weekly ? weekly.average : null;
+    const termAverage = termVals && termVals.length ? Math.round((termVals.reduce((a, b) => a + b, 0) / termVals.length) * 10) / 10 : null;
+    const gap = (weeklyAverage !== null && termAverage !== null) ? Math.round((weeklyAverage - termAverage) * 10) / 10 : null;
+    return { subject: name, weeklyAverage, termAverage, gap };
+  }).sort((a, b) => (b.weeklyAverage ?? b.termAverage ?? 0) - (a.weeklyAverage ?? a.termAverage ?? 0));
+
+  let overallGap = null;
+  let consistency = 'Not enough data';
+  if (overallAverage !== null && termOverallAverage !== null) {
+    overallGap = Math.round((overallAverage - termOverallAverage) * 10) / 10;
+    if (Math.abs(overallGap) <= 7) consistency = 'Consistent';
+    else if (overallGap > 7) consistency = 'Stronger in Weekly Tests';
+    else consistency = 'Stronger in Term Exams';
+  }
+
+  const crossAnalysis = {
+    weeklyOverall: overallAverage,
+    termOverall: termOverallAverage,
+    overallGap,
+    consistency,
+    subjectComparison,
+  };
+
   res.json({
     student: { admission_no: student.admission_no, name: student.name, class: student.class, division: student.division },
     testsTaken: withPct.length,
@@ -207,6 +282,8 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     subjects,
     timeline,
     hotSeat,
+    termExams,
+    crossAnalysis,
   });
 });
 

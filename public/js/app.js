@@ -105,6 +105,7 @@ const routes = {
   teachers: renderTeachers,
   timetable: renderTimetable,
   'weekly-tests': renderWeeklyTests,
+  'term-exams': renderTermExams,
   'hot-seat': renderHotSeat,
   import: renderImport,
 };
@@ -1071,6 +1072,41 @@ async function renderWeeklyTests() {
 }
 
 // =====================================================================
+// TERM EXAMS
+// =====================================================================
+async function renderTermExams() {
+  useTemplate('#tpl-term-exams');
+  const exams = await api('/term-exams' + yearQS());
+
+  $('#te-list').innerHTML = exams.length ? `
+    <table>
+      <thead><tr><th>Date</th><th>Exam</th><th>Class</th><th>Subjects</th><th>Students</th><th>Average</th><th>Highest</th><th>Lowest</th><th></th></tr></thead>
+      <tbody>${exams.map(e => `
+        <tr>
+          <td>${e.exam_date}</td>
+          <td>${e.exam_name}</td>
+          <td>${e.class ? `Class ${e.class}` : '—'}</td>
+          <td>${e.subjectCount}</td>
+          <td>${e.studentCount}</td>
+          <td>${e.average !== null ? e.average + '%' : '—'}</td>
+          <td>${e.highest !== null ? e.highest + '%' : '—'}</td>
+          <td>${e.lowest !== null ? e.lowest + '%' : '—'}</td>
+          <td>
+            <a href="/term-exam-report.html?id=${e.id}" target="_blank" rel="noopener" class="btn-icon">Report</a>
+            <button class="btn-icon" data-del="${e.id}">Remove</button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No term exams imported yet for this academic year. Head to Import Data to add a marklist.</p></div>`;
+
+  $$('[data-del]').forEach(btn => btn.addEventListener('click', async () => {
+    if (!confirm('Delete this term exam and all its marks? This cannot be undone.')) return;
+    await api('/term-exams/' + btn.dataset.del, { method: 'DELETE' });
+    toast('Term exam deleted.');
+    renderTermExams();
+  }));
+}
+
+// =====================================================================
 // HOT SEAT
 // =====================================================================
 function perfBadgeClass(perf) {
@@ -1350,6 +1386,25 @@ async function renderImport() {
     getExtraFields: () => ({
       test_date: $('#wt-import-date').value,
       max_marks: $('#wt-import-maxmarks').value || 20,
+    }),
+  });
+
+  $('#te-import-date').value = todayStr();
+  wireImportCard({
+    fileInputId: '#import-termexam-file',
+    filenameId: '#import-termexam-filename',
+    submitId: '#import-termexam-submit',
+    resultId: '#import-termexam-result',
+    endpoint: '/import/term-exam',
+    toastText: r => {
+      const detected = (r.subjectsDetected || []).map(s => `${s.subject} (/${s.max_marks})`).join(', ');
+      return `Term exam imported — ${r.inserted ?? 0} marks added, ${r.updated ?? 0} updated across ${r.examsCreated ?? 0} class(es). Detected: ${detected}`;
+    },
+    taggedByYear: true,
+    validate: () => $('#te-import-date').value ? null : 'Set an exam date before uploading.',
+    getExtraFields: () => ({
+      exam_name: $('#te-import-name').value || 'Term Examination',
+      exam_date: $('#te-import-date').value,
     }),
   });
 }

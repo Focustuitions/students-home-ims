@@ -37,8 +37,9 @@
       <button class="tab" data-route="teachers"><span class="tab-idx">07</span>Teachers</button>
       <button class="tab" data-route="timetable"><span class="tab-idx">08</span>Timetable</button>
       <button class="tab" data-route="weekly-tests"><span class="tab-idx">09</span>Weekly Tests</button>
-      <button class="tab" data-route="hot-seat"><span class="tab-idx">10</span>Hot Seat</button>
-      <button class="tab" data-route="import"><span class="tab-idx">11</span>Import Data</button>
+      <button class="tab" data-route="term-exams"><span class="tab-idx">10</span>Term Exams</button>
+      <button class="tab" data-route="hot-seat"><span class="tab-idx">11</span>Hot Seat</button>
+      <button class="tab" data-route="import"><span class="tab-idx">12</span>Import Data</button>
     </nav>
     <div class="spine-mascot">
       <img src="/images/mascot-main.png" alt="Nubo the Book Sprite" />
@@ -489,10 +490,22 @@
   </div>
 </template>
 
-<template id="tpl-hot-seat">
+<template id="tpl-term-exams">
   <header class="page-head">
     <div>
       <p class="eyebrow">Register &mdash; Section 10</p>
+      <h1>Term Exams</h1>
+    </div>
+    <button class="btn btn-primary" data-route="import">+ Import Marks</button>
+  </header>
+  <p class="hint" style="margin-bottom:20px;">Multi-subject term examinations — imported straight from a class marklist, one sheet per division.</p>
+  <div class="table-wrap" id="te-list"></div>
+</template>
+
+<template id="tpl-hot-seat">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Register &mdash; Section 11</p>
       <h1>Hot Seat</h1>
     </div>
   </header>
@@ -574,7 +587,7 @@
 <template id="tpl-import">
   <header class="page-head">
     <div>
-      <p class="eyebrow">Register &mdash; Section 11</p>
+      <p class="eyebrow">Register &mdash; Section 12</p>
       <h1>Import Data</h1>
     </div>
   </header>
@@ -663,6 +676,29 @@
     </div>
     <button class="btn btn-primary" id="import-weeklytest-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
     <div id="import-weeklytest-result"></div>
+  </section>
+
+  <section class="card">
+    <h2>Import Term Exam Marks</h2>
+    <p class="hint" style="margin:0 0 14px;">Upload a marklist workbook with one sheet per class/division (e.g. "10 A", "10 B") — each sheet's header row should have Adm No, Name, Class, then one column per subject. Marks are numbers, or "AB" for absent; leave a cell blank if that subject doesn't apply to a student. Max marks per subject aren't in the sheet, so they're detected automatically from the highest score seen (rounded to a standard total like 40, 50, 80, or 100) — the result after upload shows what was detected. Re-uploading the same exam name, class, and date updates marks instead of duplicating.</p>
+    <div class="form-grid form-grid-narrow" style="margin-bottom:14px;max-width:420px;">
+      <label>Exam Name
+        <input type="text" id="te-import-name" value="Term Examination" />
+      </label>
+      <label>Exam Date <span class="req">*</span>
+        <input type="date" id="te-import-date" />
+      </label>
+    </div>
+    <div class="import-actions">
+      <a href="/templates/term-exam-import-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+      <label class="btn btn-primary btn-small file-btn">
+        Choose Excel File
+        <input type="file" id="import-termexam-file" accept=".xlsx,.xls" class="hidden" />
+      </label>
+      <span class="import-filename" id="import-termexam-filename"></span>
+    </div>
+    <button class="btn btn-primary" id="import-termexam-submit" style="margin-top:14px;" disabled>Upload &amp; Import</button>
+    <div id="import-termexam-result"></div>
   </section>
 </template>
 

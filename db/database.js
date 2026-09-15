@@ -231,4 +231,33 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
 `);
 
+// Term examinations (multi-subject, per-class marklists)
+db.exec(`
+CREATE TABLE IF NOT EXISTS term_exams (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  exam_name TEXT NOT NULL,
+  class TEXT,
+  exam_date TEXT NOT NULL,
+  academic_year_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(exam_name, class, exam_date, academic_year_id)
+);
+
+CREATE TABLE IF NOT EXISTS term_exam_marks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  term_exam_id INTEGER NOT NULL,
+  admission_no TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  marks REAL,
+  max_marks REAL NOT NULL DEFAULT 100,
+  is_absent INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (term_exam_id) REFERENCES term_exams(id) ON DELETE CASCADE,
+  UNIQUE(term_exam_id, admission_no, subject)
+);
+
+CREATE INDEX IF NOT EXISTS idx_term_marks_exam ON term_exam_marks(term_exam_id);
+CREATE INDEX IF NOT EXISTS idx_term_marks_adm ON term_exam_marks(admission_no);
+`);
+
 module.exports = db;

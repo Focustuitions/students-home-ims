@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Term Exam Report — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root {
+    --navy: #182238;
+    --teal: #04A5A7;
+    --teal-deep: #04807F;
+    --orange: #FA7232;
+    --pink: #DE306F;
+    --blue: #1C66A1;
+    --yellow: #F7B23D;
+    --line: #E6E8F0;
+    --text: #262B38;
+    --text-mute: #6B7284;
+    --bg: #F5F6FA;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; padding: 28px 16px 60px; }
+  .toolbar { width: 297mm; max-width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .toolbar .msg { font-size: 13px; color: var(--text-mute); }
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; margin-left: 8px; }
+  .btn.ghost { background: transparent; color: var(--navy); }
+  .btn.teal { background: var(--teal); border-color: var(--teal); }
+
+  .sheet { width: 297mm; max-width: 100%; min-height: 210mm; background: #fff; box-shadow: 0 2px 4px rgba(24,34,56,0.08), 0 16px 40px rgba(24,34,56,0.1); padding: 14mm; }
+
+  .r-header { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 6mm; border-bottom: 2px solid var(--navy); margin-bottom: 6mm; }
+  .r-brand { display: flex; align-items: center; gap: 10px; }
+  .r-brand img { width: 38px; height: 38px; object-fit: contain; }
+  .r-brand .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 17px; color: var(--navy); line-height: 1.2; }
+  .r-brand .addr { font-size: 10px; color: var(--text-mute); margin-top: 2px; }
+  .r-title { text-align: right; }
+  .r-title .label { font-family: 'Space Mono', monospace; font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); font-weight: 700; }
+  .r-title h1 { margin: 3px 0 0; font-family: 'Baloo 2', sans-serif; font-size: 19px; color: var(--navy); }
+
+  .r-meta { display: flex; gap: 20px; margin-bottom: 6mm; flex-wrap: wrap; }
+  .r-meta .item .l { font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-mute); }
+  .r-meta .item .v { font-size: 13px; font-weight: 600; color: var(--navy); margin-top: 2px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3mm; margin-bottom: 6mm; }
+  .stat-card { background: var(--bg); border-radius: 6px; padding: 3.5mm 3mm; text-align: center; }
+  .stat-card .l { font-family: 'Space Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); }
+  .stat-card .v { font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 700; color: var(--navy); margin-top: 3px; }
+  .stat-card.alert .v { color: var(--pink); }
+  .stat-card.good .v { color: var(--teal-deep); }
+
+  .section-title { font-family: 'Baloo 2', sans-serif; font-size: 13.5px; font-weight: 700; color: var(--navy); margin: 0 0 3.5mm; }
+
+  .subject-row { display: flex; align-items: center; gap: 3mm; margin-bottom: 2mm; font-size: 10.5px; }
+  .subject-row .subj-label { width: 34mm; flex-shrink: 0; font-weight: 600; color: var(--navy); }
+  .subject-row .subj-bar-wrap { flex: 1; background: var(--bg); border-radius: 4px; height: 4.5mm; overflow: hidden; }
+  .subject-row .subj-bar { height: 100%; border-radius: 4px; }
+  .subject-row .subj-pct { width: 11mm; text-align: right; font-weight: 700; color: var(--navy); flex-shrink: 0; }
+
+  .two-col-report { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 6mm; }
+  .highlight-list { list-style: none; margin: 0; padding: 0; }
+  .highlight-list li { display: flex; justify-content: space-between; align-items: center; padding: 1.6mm 0; border-bottom: 1px dashed var(--line); font-size: 11px; }
+  .highlight-list li:last-child { border-bottom: none; }
+  .highlight-rank { display: inline-flex; align-items: center; justify-content: center; width: 5mm; height: 5mm; border-radius: 50%; background: var(--navy); color: #fff; font-size: 8.5px; font-weight: 700; margin-right: 2mm; }
+  .highlight-rank.gold { background: var(--yellow); color: var(--navy); }
+  .highlight-rank.silver { background: #C7CBD6; color: var(--navy); }
+  .highlight-rank.bronze { background: #D8945A; color: #fff; }
+
+  table.marks-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+  table.marks-table thead th { text-align: left; font-family: 'Space Mono', monospace; font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-mute); border-bottom: 2px solid var(--navy); padding: 1.6mm 1.6mm; white-space: nowrap; }
+  table.marks-table tbody td { padding: 1.3mm 1.6mm; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .status-pill { display: inline-block; font-size: 7.5px; font-weight: 700; padding: 0.4mm 1.8mm; border-radius: 7px; text-transform: uppercase; letter-spacing: 0.2px; }
+  .status-pass { background: rgba(4,165,167,0.14); color: var(--teal-deep); }
+  .status-fail { background: rgba(222,48,111,0.12); color: var(--pink); }
+
+  .r-footer { margin-top: 8mm; padding-top: 4mm; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 9px; color: var(--text-mute); }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .screen-wrap { padding: 0; }
+    .sheet { box-shadow: none; width: auto; min-height: auto; }
+    @page { size: A4 landscape; margin: 10mm; }
+    table.marks-table { page-break-inside: auto; }
+    table.marks-table tr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="screen-wrap">
+    <div class="toolbar no-print">
+      <span class="msg" id="toolbar-msg">Loading report…</span>
+      <div>
+        <button class="btn ghost" onclick="window.close ? window.close() : history.back()">Close</button>
+        <button class="btn teal" id="export-btn">Export Excel</button>
+        <button class="btn" id="print-btn">Print Report</button>
+      </div>
+    </div>
+    <div class="sheet" id="report-body">
+      <p class="no-print" style="text-align:center;color:#888;padding-top:80mm;">Loading…</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const examId = params.get('id');
+const subjectColors = ['#04A5A7', '#1C66A1', '#FA7232', '#DE306F', '#F7B23D', '#8A5C0C', '#B4501C', '#04807F', '#921C42'];
+
+async function load() {
+  if (!examId) {
+    document.getElementById('report-body').innerHTML = '<p style="text-align:center;color:#888;">No exam specified.</p>';
+    return;
+  }
+  try {
+    const res = await fetch('/api/term-exams/' + examId);
+    if (!res.ok) throw new Error((await res.json()).error || 'Could not load report');
+    const e = await res.json();
+    render(e);
+    document.getElementById('toolbar-msg').textContent = `${e.exam_name} · Class ${e.class} · ${e.exam_date}`;
+    document.getElementById('export-btn').addEventListener('click', () => {
+      window.location.href = '/api/term-exams/' + examId + '/export';
+    });
+  } catch (err) {
+    document.getElementById('report-body').innerHTML = `<p style="text-align:center;color:#c00;">${err.message}</p>`;
+  }
+}
+
+function render(e) {
+  const dateDisplay = new Date(e.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const scored = e.students.filter(s => s.pct !== null);
+  const topPerformers = [...scored].sort((a, b) => b.pct - a.pct).slice(0, 5);
+  const needsAttention = [...scored].filter(s => s.pct < 35).sort((a, b) => a.pct - b.pct).slice(0, 5);
+  const passCount = scored.filter(s => s.pct >= 35).length;
+  const passRate = scored.length ? Math.round((passCount / scored.length) * 1000) / 10 : 0;
+
+  // per-subject class average, for the subject strength/weakness bars
+  const subjectAverages = e.subjects.map((sub, i) => {
+    const vals = e.students
+      .map(s => s.subjectMarks[sub.subject])
+      .filter(m => m && !m.is_absent && m.marks !== null)
+      .map(m => (m.marks / m.max_marks) * 100);
+    const avg = vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : 0;
+    return { subject: sub.subject, avg, color: subjectColors[i % subjectColors.length] };
+  });
+
+  const rankMedal = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+
+  const tableHeader = `<tr><th>Rank</th><th>Adm. No.</th><th>Name</th><th>Div.</th>${e.subjects.map(s => `<th>${s.subject}</th>`).join('')}<th>Total</th><th>%</th><th>Status</th></tr>`;
+  let rank = 0;
+  const tableRows = e.students.map(s => {
+    if (s.pct !== null) rank++;
+    const status = s.pct === null ? '—' : (s.pct >= 35 ? `<span class="status-pill status-pass">Pass</span>` : `<span class="status-pill status-fail">Below Pass</span>`);
+    const subjectCells = e.subjects.map(sub => {
+      const m = s.subjectMarks[sub.subject];
+      if (!m) return '<td>—</td>';
+      return `<td>${m.is_absent ? 'AB' : (m.marks ?? '—')}</td>`;
+    }).join('');
+    return `<tr>
+      <td>${s.pct !== null ? rank : '—'}</td>
+      <td class="mono">${s.admission_no}</td>
+      <td>${s.name}</td>
+      <td>${s.division}</td>
+      ${subjectCells}
+      <td>${s.total}/${s.maxTotal}</td>
+      <td>${s.pct !== null ? s.pct + '%' : '—'}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('report-body').innerHTML = `
+    <div class="r-header">
+      <div class="r-brand">
+        <img src="/images/logo-mark.png" alt="Students' Home" />
+        <div>
+          <div class="name">Students' Home</div>
+          <div class="addr">Kottakkal &middot; 9745924345</div>
+        </div>
+      </div>
+      <div class="r-title">
+        <div class="label">Term Examination Report</div>
+        <h1>${e.exam_name}</h1>
+      </div>
+    </div>
+
+    <div class="r-meta">
+      <div class="item"><div class="l">Date</div><div class="v">${dateDisplay}</div></div>
+      <div class="item"><div class="l">Class</div><div class="v">Class ${e.class}</div></div>
+      <div class="item"><div class="l">Subjects</div><div class="v">${e.subjects.length}</div></div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="l">Students</div><div class="v">${e.studentCount}</div></div>
+      <div class="stat-card"><div class="l">Average</div><div class="v">${e.average ?? '—'}%</div></div>
+      <div class="stat-card good"><div class="l">Highest</div><div class="v">${e.highest ?? '—'}%</div></div>
+      <div class="stat-card alert"><div class="l">Lowest</div><div class="v">${e.lowest ?? '—'}%</div></div>
+      <div class="stat-card ${passRate < 60 ? 'alert' : 'good'}"><div class="l">Pass Rate</div><div class="v">${passRate}%</div></div>
+    </div>
+
+    <p class="section-title">Subject-wise Class Average</p>
+    <div style="margin-bottom:6mm;">
+      ${subjectAverages.map(s => `
+        <div class="subject-row">
+          <span class="subj-label">${s.subject}</span>
+          <span class="subj-bar-wrap"><span class="subj-bar" style="width:${s.avg}%;background:${s.color};display:block;"></span></span>
+          <span class="subj-pct">${s.avg}%</span>
+        </div>`).join('')}
+    </div>
+
+    <div class="two-col-report">
+      <div>
+        <p class="section-title">Top Performers</p>
+        <ul class="highlight-list">
+          ${topPerformers.length ? topPerformers.map((s, i) => `
+            <li><span><span class="highlight-rank ${rankMedal(i)}">${i + 1}</span>${s.name} (${s.class}-${s.division})</span><strong>${s.pct}%</strong></li>
+          `).join('') : '<li style="color:#888;">No marks recorded.</li>'}
+        </ul>
+      </div>
+      <div>
+        <p class="section-title">Needs Attention (below 35%)</p>
+        <ul class="highlight-list">
+          ${needsAttention.length ? needsAttention.map(s => `
+            <li><span>${s.name} (${s.class}-${s.division})</span><strong style="color:var(--pink);">${s.pct}%</strong></li>
+          `).join('') : '<li style="color:#888;">No students below the pass mark — well done!</li>'}
+        </ul>
+      </div>
+    </div>
+
+    <p class="section-title">Full Marklist</p>
+    <table class="marks-table">
+      <thead>${tableHeader}</thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+
+    <div class="r-footer">
+      <span>Generated by Students' Home Institution Manager</span>
+      <span>Pass mark: 35% per subject-weighted total</span>
+    </div>
+  `;
+}
+
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+load();
+</script>
+</body>
+</html>

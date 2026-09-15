@@ -79,6 +79,21 @@
   .perf-chip.pc-average { background: rgba(250,114,50,0.16); color: #B4501C; }
   .perf-chip.pc-poor { background: rgba(222,48,111,0.14); color: #DE306F; }
 
+  .compare-stat-row { display: flex; gap: 4mm; margin-bottom: 6mm; }
+  .compare-stat { flex: 1; background: var(--bg); border-radius: 6px; padding: 4mm; text-align: center; }
+  .compare-stat .cs-label { font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); }
+  .compare-stat .cs-value { font-family: 'Baloo 2', sans-serif; font-size: 22px; font-weight: 700; color: var(--navy); margin-top: 3px; }
+  .compare-stat.badge .cs-value { font-size: 13px; }
+  .compare-stat.badge.consistent .cs-value { color: #04807F; }
+  .compare-stat.badge.weekly-stronger .cs-value,
+  .compare-stat.badge.term-stronger .cs-value { color: #B4501C; }
+
+  table.compare-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 8mm; }
+  table.compare-table thead th { text-align: left; font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); border-bottom: 2px solid var(--navy); padding: 1.8mm 2mm; }
+  table.compare-table tbody td { padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); }
+  .gap-pos { color: #04807F; font-weight: 700; }
+  .gap-neg { color: #DE306F; font-weight: 700; }
+
   .chart-wrap { margin-bottom: 8mm; }
   .chart-legend { display: flex; gap: 5mm; font-size: 10px; color: var(--text-mute); margin-top: 2mm; }
   .chart-legend span { display: inline-flex; align-items: center; gap: 1.5mm; }
@@ -250,6 +265,10 @@ function render(r) {
         </div>
       </div>` : ''}
 
+    ${r.termExams && r.termExams.length ? renderTermExamsSection(r.termExams) : ''}
+
+    ${r.crossAnalysis && r.crossAnalysis.weeklyOverall !== null && r.crossAnalysis.termOverall !== null ? renderAnalysisSection(r.crossAnalysis, r.student.name) : ''}
+
     ${r.hotSeat && r.hotSeat.sessionCount > 0 ? renderHotSeatSection(r.hotSeat) : ''}
 
     <p class="section-title">Full Test History</p>
@@ -268,6 +287,78 @@ function render(r) {
 function perfChipClass(perf) {
   const key = (perf || '').toLowerCase().replace(/\s+/g, '');
   return { excellent: 'pc-excellent', verygood: 'pc-verygood', good: 'pc-good', average: 'pc-average', poor: 'pc-poor' }[key] || '';
+}
+
+function renderAnalysisSection(ca, firstNameFull) {
+  const firstName = (firstNameFull || '').split(' ')[0] || 'This student';
+  const consistencyClass = ca.consistency === 'Consistent' ? 'consistent'
+    : ca.consistency === 'Stronger in Weekly Tests' ? 'weekly-stronger' : 'term-stronger';
+
+  let narrative;
+  if (ca.consistency === 'Consistent') {
+    narrative = `${firstName}'s weekly test average (${ca.weeklyOverall}%) and term exam average (${ca.termOverall}%) are closely matched — performance is holding up consistently across both quick weekly checks and the more comprehensive term exam.`;
+  } else if (ca.consistency === 'Stronger in Weekly Tests') {
+    narrative = `${firstName} scores notably higher in weekly tests (${ca.weeklyOverall}%) than in term exams (${ca.termOverall}%), a gap of ${ca.overallGap}%. This can point to exam-day pressure, gaps in retaining material over a longer syllabus, or term exam papers covering more ground than the weekly checks — worth a closer look at exam preparation and revision habits.`;
+  } else {
+    narrative = `${firstName} scores notably higher in term exams (${ca.termOverall}%) than in weekly tests (${ca.weeklyOverall}%), a gap of ${Math.abs(ca.overallGap)}%. This can mean stronger performance under full-syllabus revision than in the shorter weekly checks — worth checking whether weekly preparation is keeping pace with actual understanding.`;
+  }
+
+  const comparableSubjects = ca.subjectComparison.filter(s => s.weeklyAverage !== null && s.termAverage !== null);
+  const rows = ca.subjectComparison.map(s => {
+    const gapCell = s.gap === null ? '—' : `<span class="${s.gap >= 0 ? 'gap-pos' : 'gap-neg'}">${s.gap >= 0 ? '+' : ''}${s.gap}%</span>`;
+    return `<tr>
+      <td>${s.subject}</td>
+      <td>${s.weeklyAverage !== null ? s.weeklyAverage + '%' : '—'}</td>
+      <td>${s.termAverage !== null ? s.termAverage + '%' : '—'}</td>
+      <td>${gapCell}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <p class="section-title">Analysis: Weekly Tests vs. Term Exams</p>
+    <div class="compare-stat-row">
+      <div class="compare-stat"><div class="cs-label">Weekly Test Avg</div><div class="cs-value">${ca.weeklyOverall}%</div></div>
+      <div class="compare-stat"><div class="cs-label">Term Exam Avg</div><div class="cs-value">${ca.termOverall}%</div></div>
+      <div class="compare-stat badge ${consistencyClass}"><div class="cs-label">Overall</div><div class="cs-value">${ca.consistency}</div></div>
+    </div>
+    <div class="remark-box">${narrative}</div>
+    ${comparableSubjects.length ? `
+      <table class="compare-table">
+        <thead><tr><th>Subject</th><th>Weekly Test Avg</th><th>Term Exam Avg</th><th>Difference</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : ''}`;
+}
+
+function renderTermExamsSection(termExams) {
+  const subjectColors = ['#04A5A7', '#1C66A1', '#FA7232', '#DE306F', '#F7B23D', '#8A5C0C', '#B4501C', '#04807F', '#921C42'];
+  const examsHtml = termExams.map(ex => {
+    const dateDisplay = new Date(ex.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const vsClass = ex.pct !== null && ex.classAverage !== null ? Math.round((ex.pct - ex.classAverage) * 10) / 10 : null;
+    const subjectRows = ex.subjects.map((s, i) => {
+      const pct = s.is_absent || s.marks === null ? null : Math.round((s.marks / s.max_marks) * 1000) / 10;
+      return `
+        <div class="subject-row">
+          <span class="subj-label">${s.subject}</span>
+          <span class="subj-bar-wrap"><span class="subj-bar" style="width:${pct ?? 0}%;background:${subjectColors[i % subjectColors.length]};display:block;"></span></span>
+          <span class="subj-pct">${s.is_absent ? 'AB' : (pct !== null ? pct + '%' : '—')}</span>
+        </div>`;
+    }).join('');
+    return `
+      <div style="margin-bottom:6mm;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3mm;">
+          <strong style="font-family:'Baloo 2',sans-serif;font-size:12.5px;color:var(--navy);">${ex.exam_name} <span style="font-weight:400;color:var(--text-mute);font-size:10.5px;">(${dateDisplay})</span></strong>
+          <span style="font-size:11.5px;">
+            <strong style="color:var(--navy);">${ex.pct !== null ? ex.pct + '%' : '—'}</strong>
+            ${ex.classAverage !== null ? ` <span style="color:var(--text-mute);">(class avg ${ex.classAverage}%${vsClass !== null ? `, ${vsClass >= 0 ? '+' : ''}${vsClass}%` : ''})</span>` : ''}
+          </span>
+        </div>
+        ${subjectRows}
+      </div>`;
+  }).join('');
+
+  return `
+    <p class="section-title">Term Examinations</p>
+    <div style="margin-bottom:8mm;">${examsHtml}</div>`;
 }
 
 function renderHotSeatSection(hs) {

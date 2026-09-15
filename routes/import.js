@@ -622,4 +622,147 @@ router.post('/weekly-test', upload.single('file'), (req, res) => {
   res.json({ total: rows.length - 1, testsCreated, inserted, updated, skipped });
 });
 
+// ---------------------------------------------------------------------------
+// Term examination marks import
+// ---------------------------------------------------------------------------
+// Expects one sheet per class/division (sheet name like "10 A"), each with a
+// header row: Adm No | Name | Class | <subject> | <subject> | ... and one row
+// per student. Marks are numeric, or "AB" for absent; blank means the column
+// doesn't apply to that student. Max marks per subject aren't in the sheet,
+// so they're inferred from the highest score seen for that subject (rounded
+// up to a standard total: 40, 50, 80, or 100) — the import result reports
+// what was detected so it can be corrected with a re-import if needed.
+
+function parseSheetClassDivision(sheetName, fallbackClassCell) {
+  const m = String(sheetName).trim().match(/^(\d+)\s*([A-Za-z])?$/);
+  if (m) return { class: m[1], division: m[2] ? m[2].toUpperCase() : '' };
+  if (fallbackClassCell) {
+    const m2 = String(fallbackClassCell).trim().match(/(\d+)\s*([A-Za-z])?/);
+    if (m2) return { class: m2[1], division: m2[2] ? m2[2].toUpperCase() : '' };
+  }
+  return { class: '', division: '' };
+}
+
+function inferMaxMarks(observedMax) {
+  if (observedMax <= 40) return 40;
+  if (observedMax <= 50) return 50;
+  if (observedMax <= 80) return 80;
+  if (observedMax <= 100) return 100;
+  return Math.ceil(observedMax / 10) * 10;
+}
+
+router.post('/term-exam', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  if (!req.body.exam_date) return res.status(400).json({ error: 'Exam date is required' });
+  let wb;
+  try {
+    wb = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
+  } catch (err) {
+    return res.status(400).json({ error: 'Could not read this file as an Excel workbook' });
+  }
+
+  const academicYearId = resolveYearId(req.body.academic_year_id);
+  const examDate = cellToString(req.body.exam_date);
+  const examName = (req.body.exam_name && req.body.exam_name.trim()) || 'Term Examination';
+
+  // Pass 1: collect every sheet's rows + column map, and track the highest
+  // mark seen per subject so we can infer a sensible max for each.
+  const sheetsParsed = [];
+  const observedMaxBySubject = {};
+
+  wb.SheetNames.forEach(sheetName => {
+    const ws = wb.Sheets[sheetName];
+    const rows = sheetToRows(ws);
+    if (!rows.length) return;
+    const map = headerIndex(rows[0]);
+    const admCol = findCol(map, 'Adm No', 'Adm No.', 'Admission No', 'Admission Number');
+    const nameCol = findCol(map, 'Name', 'First Name', 'Student Name');
+    const classCol = findCol(map, 'Class');
+    if (admCol === -1) return; // not a marklist sheet, skip quietly
+
+    const usedCols = new Set([admCol, nameCol, classCol].filter(c => c >= 0));
+    const subjectCols = rows[0].map((h, i) => ({ h, i }))
+      .filter(({ h, i }) => h && !usedCols.has(i))
+      .map(({ h, i }) => ({ subject: cellToString(h).trim(), col: i }));
+
+    const { class: cls, division } = parseSheetClassDivision(sheetName, classCol >= 0 ? rows[1] && rows[1][classCol] : null);
+
+    subjectCols.forEach(({ subject, col }) => {
+      rows.slice(1).forEach(row => {
+        const raw = cellToString(row[col]).trim();
+        const n = Number(raw);
+        if (raw && !Number.isNaN(n)) {
+          observedMaxBySubject[subject] = Math.max(observedMaxBySubject[subject] || 0, n);
+        }
+      });
+    });
+
+    sheetsParsed.push({ sheetName, rows, admCol, nameCol, subjectCols, class: cls, division });
+  });
+
+  if (!sheetsParsed.length) {
+    return res.status(400).json({ error: 'Could not find any sheet with an "Adm No" column' });
+  }
+
+  const maxMarksBySubject = {};
+  Object.entries(observedMaxBySubject).forEach(([subject, max]) => { maxMarksBySubject[subject] = inferMaxMarks(max); });
+
+  // Pass 2: write to the database, one term_exams row per class (shared
+  // across its divisions), with idempotent per-student-per-subject upserts.
+  const getStudent = db.prepare('SELECT admission_no FROM students WHERE admission_no = ?');
+  const findExam = db.prepare('SELECT * FROM term_exams WHERE exam_name = ? AND class = ? AND exam_date = ? AND academic_year_id = ?');
+  const insertExam = db.prepare('INSERT INTO term_exams (exam_name, class, exam_date, academic_year_id) VALUES (?, ?, ?, ?)');
+  const upsertMark = db.prepare(`INSERT INTO term_exam_marks (term_exam_id, admission_no, subject, marks, max_marks, is_absent)
+    VALUES (@term_exam_id, @admission_no, @subject, @marks, @max_marks, @is_absent)
+    ON CONFLICT(term_exam_id, admission_no, subject) DO UPDATE SET marks=@marks, max_marks=@max_marks, is_absent=@is_absent`);
+
+  let inserted = 0, updated = 0, examsCreated = 0;
+  const skipped = [];
+  const examCache = {};
+
+  sheetsParsed.forEach(({ sheetName, rows, admCol, nameCol, subjectCols, class: cls }) => {
+    let exam = examCache[cls];
+    if (!exam) {
+      exam = findExam.get(examName, cls, examDate, academicYearId);
+      if (!exam) {
+        const result = insertExam.run(examName, cls, examDate, academicYearId);
+        exam = { id: result.lastInsertRowid };
+        examsCreated++;
+      }
+      examCache[cls] = exam;
+    }
+
+    rows.slice(1).forEach((row, idx) => {
+      const admission_no = cellToString(row[admCol]).trim();
+      if (!admission_no) return; // blank row, nothing to import
+      if (!getStudent.get(admission_no)) {
+        skipped.push({ sheet: sheetName, row: idx + 2, admission_no, reason: 'No matching student — import students first' });
+        return;
+      }
+      subjectCols.forEach(({ subject, col }) => {
+        const raw = cellToString(row[col]).trim();
+        if (!raw) return; // subject not applicable / not yet entered for this student
+        let marks = null, is_absent = 0;
+        if (/^ab(sent)?$/i.test(raw)) {
+          is_absent = 1;
+        } else {
+          const n = Number(raw);
+          if (Number.isNaN(n)) {
+            skipped.push({ sheet: sheetName, row: idx + 2, admission_no, reason: `"${subject}" value "${raw}" isn't a number or "AB"` });
+            return;
+          }
+          marks = n;
+        }
+        const max_marks = maxMarksBySubject[subject] || 100;
+        const existing = db.prepare('SELECT id FROM term_exam_marks WHERE term_exam_id = ? AND admission_no = ? AND subject = ?').get(exam.id, admission_no, subject);
+        upsertMark.run({ term_exam_id: exam.id, admission_no, subject, marks, max_marks, is_absent });
+        if (existing) updated++; else inserted++;
+      });
+    });
+  });
+
+  const subjectsDetected = Object.entries(maxMarksBySubject).map(([subject, max_marks]) => ({ subject, max_marks }));
+  res.json({ examsCreated, inserted, updated, skipped, subjectsDetected });
+});
+
 module.exports = router;

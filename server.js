@@ -26,6 +26,7 @@ app.use('/api/timetable', require('./routes/timetable'));
 app.use('/api/classes', require('./routes/classes'));
 app.use('/api/academic-years', require('./routes/academic-years'));
 app.use('/api/weekly-tests', require('./routes/weekly-tests'));
+app.use('/api/term-exams', require('./routes/term-exams'));
 app.use('/api/hot-seats', require('./routes/hot-seats'));
 app.use('/api/import', require('./routes/import'));
 
