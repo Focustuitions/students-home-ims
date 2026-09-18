@@ -95,6 +95,23 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     ? Math.round((present.reduce((s, r) => s + r.pct, 0) / present.length) * 10) / 10
     : null;
 
+  // class rank based on each classmate's own overall weekly-test average this year
+  let weeklyRank = null, weeklyOutOf = null;
+  if (overallAverage !== null) {
+    const classmateAverages = db.prepare(`
+      SELECT m.admission_no, AVG(m.marks * 100.0 / t.max_marks) as avg_pct
+      FROM weekly_test_marks m
+      JOIN students s ON s.admission_no = m.admission_no
+      JOIN weekly_tests t ON t.id = m.weekly_test_id
+      WHERE m.is_absent = 0 AND s.class = ? AND s.division = ? AND t.academic_year_id = ?
+      GROUP BY m.admission_no
+      ORDER BY avg_pct DESC
+    `).all(student.class, student.division, yearId);
+    const idx = classmateAverages.findIndex(r => r.admission_no === req.params.admission_no);
+    weeklyRank = idx >= 0 ? idx + 1 : null;
+    weeklyOutOf = classmateAverages.length;
+  }
+
   // subject-wise breakdown
   const bySubject = {};
   present.forEach(r => {
@@ -219,10 +236,16 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
   `);
   const termExams = Object.values(examGroups).map(g => {
     const pct = g.anyPresent && g.maxTotal > 0 ? Math.round((g.total / g.maxTotal) * 1000) / 10 : null;
-    const classRows = classAvgForExam.all(g.exam_id, student.class, student.division)
-      .map(r => r.maxTotal > 0 ? (r.total / r.maxTotal) * 100 : null).filter(v => v !== null);
-    const classAverage = classRows.length ? Math.round((classRows.reduce((s, v) => s + v, 0) / classRows.length) * 10) / 10 : null;
-    return { exam_id: g.exam_id, exam_name: g.exam_name, exam_date: g.exam_date, subjects: g.subjects, total: g.total, maxTotal: g.maxTotal, pct, classAverage };
+    const classPcts = classAvgForExam.all(g.exam_id, student.class, student.division)
+      .map(r => ({ admission_no: r.admission_no, pct: r.maxTotal > 0 ? (r.total / r.maxTotal) * 100 : null }))
+      .filter(r => r.pct !== null)
+      .sort((a, b) => b.pct - a.pct);
+    const classAverage = classPcts.length
+      ? Math.round((classPcts.reduce((s, r) => s + r.pct, 0) / classPcts.length) * 10) / 10
+      : null;
+    const rankIndex = classPcts.findIndex(r => r.admission_no === req.params.admission_no);
+    const rank = rankIndex >= 0 ? rankIndex + 1 : null;
+    return { exam_id: g.exam_id, exam_name: g.exam_name, exam_date: g.exam_date, subjects: g.subjects, total: g.total, maxTotal: g.maxTotal, pct, classAverage, rank, outOf: classPcts.length };
   });
 
   // Cross-analysis: compare weekly test performance against term exam
@@ -269,12 +292,28 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     subjectComparison,
   };
 
+  // Risk flags: a quick, scannable summary of anything that might need
+  // attention, pulled from data already computed above.
+  const riskFlags = [];
+  subjects.forEach(s => { if (s.average < 35) riskFlags.push(`Weekly tests: ${s.subject} averaging ${s.average}% (below pass mark)`); });
+  termExams.forEach(ex => {
+    ex.subjects.forEach(s => {
+      if (!s.is_absent && s.marks !== null && (s.marks / s.max_marks) * 100 < 35) {
+        riskFlags.push(`${ex.exam_name}: ${s.subject} scored ${Math.round((s.marks / s.max_marks) * 1000) / 10}% (below pass mark)`);
+      }
+    });
+  });
+  if (absentCount > 1) riskFlags.push(`Missed ${absentCount} weekly tests this year`);
+  if (hotSeat.alertCount > 0) riskFlags.push(`${hotSeat.alertCount} Hot Seat session(s) flagged missing notebook/textbook`);
+
   res.json({
     student: { admission_no: student.admission_no, name: student.name, class: student.class, division: student.division },
     testsTaken: withPct.length,
     presentCount: present.length,
     absentCount,
     overallAverage,
+    weeklyRank,
+    weeklyOutOf,
     strongest,
     weakest,
     trend,
@@ -284,6 +323,7 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     hotSeat,
     termExams,
     crossAnalysis,
+    riskFlags,
   });
 });
 

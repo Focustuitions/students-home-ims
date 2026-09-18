@@ -48,6 +48,25 @@
   .student-strip .avg .v { font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
 
   .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-bottom: 8mm; }
+  .stat-grid.stat-grid-5 { grid-template-columns: repeat(5, 1fr); }
+  .risk-banner {
+    background: rgba(222,48,111,0.08);
+    border: 1px solid rgba(222,48,111,0.3);
+    border-left: 3px solid var(--pink);
+    border-radius: 4px;
+    padding: 3.5mm 5mm;
+    margin-bottom: 6mm;
+    font-size: 11px;
+  }
+  .risk-banner strong { color: #921C42; }
+  .risk-banner ul { margin: 2mm 0 0; padding-left: 5mm; }
+  .risk-banner li { margin-bottom: 1mm; }
+  .keep-together { break-inside: avoid; page-break-inside: avoid; }
+  .signoff-row { display: flex; justify-content: space-between; gap: 10mm; margin-top: 10mm; }
+  .signoff-box { flex: 1; }
+  .signoff-box .signoff-label { font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-mute); margin-bottom: 10mm; }
+  .signoff-box .signoff-line { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5px; color: var(--text-mute); }
+  .remarks-box-blank { border: 1px dashed var(--line); border-radius: 4px; min-height: 16mm; margin-top: 3mm; }
   .stat-card { background: var(--bg); border-radius: 6px; padding: 4mm 3mm; text-align: center; }
   .stat-card .l { font-family: 'Space Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); }
   .stat-card .v { font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 700; color: var(--navy); margin-top: 3px; }
@@ -119,6 +138,8 @@
     @page { size: A4; margin: 12mm; }
     table.marks-table { page-break-inside: auto; }
     table.marks-table tr { page-break-inside: avoid; }
+    .student-strip, .risk-banner, .stat-grid, .remark-box, .signoff-row { break-inside: avoid; page-break-inside: avoid; }
+    .section-title { break-after: avoid; page-break-after: avoid; }
   }
 </style>
 </head>
@@ -179,6 +200,8 @@ function buildTrendChart(timeline) {
 function render(r) {
   const trendColor = r.trend === 'Improving' ? 'good' : r.trend === 'Declining' ? 'warn' : '';
   const trendArrow = r.trend === 'Improving' ? '↑' : r.trend === 'Declining' ? '↓' : r.trend === 'Steady' ? '→' : '';
+  const trendCaveat = (r.trend === 'Improving' || r.trend === 'Declining' || r.trend === 'Steady') ? ` <span style="font-size:8px;opacity:0.75;">(${r.presentCount} tests)</span>` : '';
+  const rankText = r.weeklyRank ? `${r.weeklyRank} of ${r.weeklyOutOf}` : '—';
 
   let remarkParts = [];
   if (r.strongest) remarkParts.push(`<strong>${r.student.name.split(' ')[0]}</strong> is strongest in <strong>${r.strongest.subject}</strong>, averaging ${r.strongest.average}%.`);
@@ -188,6 +211,12 @@ function render(r) {
   else if (r.trend === 'Steady') remarkParts.push(`Performance has been fairly <strong>steady</strong> across tests.`);
   if (r.absentCount > 0) remarkParts.push(`Missed ${r.absentCount} test${r.absentCount > 1 ? 's' : ''} — regular attendance at weekly tests helps build an accurate picture of progress.`);
   const remarkText = remarkParts.length ? remarkParts.join(' ') : 'Not enough weekly test data yet to generate a performance summary.';
+
+  const riskBanner = (r.riskFlags && r.riskFlags.length) ? `
+    <div class="risk-banner">
+      <strong>Needs attention:</strong>
+      <ul>${r.riskFlags.map(f => `<li>${f}</li>`).join('')}</ul>
+    </div>` : '';
 
   const maxSubjPct = Math.max(...r.subjects.map(s => s.average), 100);
   const subjectRows = r.subjects.map((s, i) => `
@@ -226,8 +255,8 @@ function render(r) {
         </div>
       </div>
       <div class="r-title">
-        <div class="label">Individual Performance Report</div>
-        <h1>Weekly Test Summary</h1>
+        <div class="label">Academic Year Summary</div>
+        <h1>Performance Report</h1>
       </div>
     </div>
 
@@ -242,22 +271,25 @@ function render(r) {
       </div>
     </div>
 
-    <div class="stat-grid">
+    ${riskBanner}
+
+    <div class="stat-grid stat-grid-5">
       <div class="stat-card"><div class="l">Tests Taken</div><div class="v">${r.testsTaken}</div></div>
+      <div class="stat-card"><div class="l">Class Rank</div><div class="v" style="font-size:15px;">${rankText}</div></div>
       <div class="stat-card ${r.absentCount > 0 ? 'warn' : 'good'}"><div class="l">Absences</div><div class="v">${r.absentCount}</div></div>
       <div class="stat-card good"><div class="l">Strongest Subject</div><div class="v" style="font-size:13px;">${r.strongest ? r.strongest.subject : '—'}</div></div>
-      <div class="stat-card ${trendColor}"><div class="l">Trend</div><div class="v">${trendArrow} ${r.trend}</div></div>
+      <div class="stat-card ${trendColor}"><div class="l">Trend</div><div class="v">${trendArrow} ${r.trend}${trendCaveat}</div></div>
     </div>
 
     <div class="remark-box">${remarkText}</div>
 
     ${r.subjects.length ? `
-      <p class="section-title">Subject-wise Strength &amp; Weakness</p>
-      <div style="margin-bottom:8mm;">${subjectRows}</div>` : ''}
+      <p class="section-title">Weekly Test &mdash; Subject-wise Strength &amp; Weakness</p>
+      <div class="keep-together" style="margin-bottom:8mm;">${subjectRows}</div>` : ''}
 
     ${r.timeline.filter(t => !t.is_absent).length >= 2 ? `
       <p class="section-title">Performance Over Time</p>
-      <div class="chart-wrap">
+      <div class="chart-wrap keep-together">
         ${buildTrendChart(r.timeline)}
         <div class="chart-legend">
           <span><span class="dot" style="background:#04A5A7;"></span> This student</span>
@@ -276,6 +308,26 @@ function render(r) {
       <thead><tr><th>Date</th><th>Exam</th><th>Marks</th><th>%</th><th>Class Avg</th><th>vs. Class</th><th>Status</th></tr></thead>
       <tbody>${timelineRows}</tbody>
     </table>
+
+    <div class="keep-together">
+      <p class="section-title" style="margin-top:8mm;">Teacher's Remarks</p>
+      <div class="remarks-box-blank"></div>
+    </div>
+
+    <div class="signoff-row keep-together">
+      <div class="signoff-box">
+        <div class="signoff-label">Date</div>
+        <div class="signoff-line">&nbsp;</div>
+      </div>
+      <div class="signoff-box">
+        <div class="signoff-label">Class Teacher's Signature</div>
+        <div class="signoff-line">&nbsp;</div>
+      </div>
+      <div class="signoff-box">
+        <div class="signoff-label">Parent / Guardian's Signature</div>
+        <div class="signoff-line">&nbsp;</div>
+      </div>
+    </div>
 
     <div class="r-footer">
       <span>Generated by Students' Home Institution Manager</span>
@@ -344,11 +396,12 @@ function renderTermExamsSection(termExams) {
         </div>`;
     }).join('');
     return `
-      <div style="margin-bottom:6mm;">
+      <div class="keep-together" style="margin-bottom:6mm;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3mm;">
           <strong style="font-family:'Baloo 2',sans-serif;font-size:12.5px;color:var(--navy);">${ex.exam_name} <span style="font-weight:400;color:var(--text-mute);font-size:10.5px;">(${dateDisplay})</span></strong>
           <span style="font-size:11.5px;">
             <strong style="color:var(--navy);">${ex.pct !== null ? ex.pct + '%' : '—'}</strong>
+            ${ex.rank ? ` <span style="color:var(--text-mute);">&middot; Rank ${ex.rank} of ${ex.outOf}</span>` : ''}
             ${ex.classAverage !== null ? ` <span style="color:var(--text-mute);">(class avg ${ex.classAverage}%${vsClass !== null ? `, ${vsClass >= 0 ? '+' : ''}${vsClass}%` : ''})</span>` : ''}
           </span>
         </div>

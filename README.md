@@ -177,24 +177,33 @@ over (this erases all data, so only do this on a fresh install).
 - **Student Performance Report** — click **Performance Report** on a
   student's file for an individual report that pulls together every weekly
   test they've taken in the active academic year: overall average, their
-  strongest and weakest subjects, a trend indicator (Improving / Steady /
-  Declining, based on recent tests vs. earlier ones), a subject-by-subject
-  strength chart, a score-over-time chart compared against their class
-  average, a short auto-generated summary in plain language, and the full
-  test-by-test history with how each score compared to the class. If the
-  student sat any **Term Exams** this academic year, a **Term Examinations**
-  section is added automatically — every exam they took, with a subject-wise
-  breakdown, their overall percentage, and how that compares to their class
-  average. When a student has both weekly test and term exam results, an
-  **Analysis: Weekly Tests vs. Term Exams** section compares the two —
-  overall averages side by side, a plain-language verdict (Consistent /
-  Stronger in Weekly Tests / Stronger in Term Exams) with a short written
-  explanation, and a subject-by-subject table showing where the two formats
-  agree or diverge. If the student has any Hot Seat records for the year, a
-  **Classroom Engagement** section is added automatically — session count, predominant rating, a
-  checklist completion score, a missing-materials alert count, the rating
+  strongest and weakest subjects, a **class rank** (e.g. "12 of 42"), a
+  trend indicator (Improving / Steady / Declining, based on recent tests
+  vs. earlier ones, labelled with how many tests it's based on), a
+  subject-by-subject strength chart, a score-over-time chart compared
+  against their class average, a short auto-generated summary in plain
+  language, and the full test-by-test history with how each score compared
+  to the class. A **"Needs attention" banner** appears near the top
+  whenever a subject is below the pass mark, tests have been missed, or
+  Hot Seat has flagged missing materials — so the most important thing to
+  know doesn't get buried under everything else. If the student sat any
+  **Term Exams** this academic year, a **Term Examinations** section is
+  added automatically — every exam they took, with a subject-wise
+  breakdown, their overall percentage and class rank, and how that compares
+  to their class average. When a student has both weekly test and term
+  exam results, an **Analysis: Weekly Tests vs. Term Exams** section
+  compares the two — overall averages side by side, a plain-language
+  verdict (Consistent / Stronger in Weekly Tests / Stronger in Term Exams)
+  with a short written explanation, and a subject-by-subject table showing
+  where the two formats agree or diverge. If the student has any Hot Seat
+  records for the year, a **Classroom Engagement** section is added
+  automatically — session count, predominant rating, a checklist
+  completion score, a missing-materials alert count, the rating
   distribution, per-item checklist bars, and the most recent remarks and
-  parent feedback. It opens in a new tab and prints cleanly on A4 — handy
+  parent feedback. The report closes with a blank **Teacher's Remarks** box
+  and signature lines for the date, class teacher, and parent/guardian, so
+  it's ready to print and hand out as-is. It opens in a new tab and prints
+  cleanly on A4 — handy
   for parent meetings or progress reviews.
 - **Top Performing Students** — a leaderboard on the Weekly Tests page
   ranking students by their average score across every weekly test they've
