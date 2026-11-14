@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Top Performing Students — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root {
+    --navy: #182238;
+    --teal: #04A5A7;
+    --teal-deep: #04807F;
+    --pink: #DE306F;
+    --yellow: #F7B23D;
+    --line: #E6E8F0;
+    --text: #262B38;
+    --text-mute: #6B7284;
+    --bg: #F5F6FA;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; padding: 28px 16px 60px; }
+  .toolbar { width: 210mm; max-width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .toolbar .msg { font-size: 13px; color: var(--text-mute); }
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; margin-left: 8px; }
+  .btn.ghost { background: transparent; color: var(--navy); }
+
+  .sheet { width: 210mm; max-width: 100%; min-height: 297mm; background: #fff; box-shadow: 0 2px 4px rgba(24,34,56,0.08), 0 16px 40px rgba(24,34,56,0.1); padding: 16mm; }
+
+  .r-header { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 8mm; border-bottom: 2px solid var(--navy); margin-bottom: 8mm; }
+  .r-brand { display: flex; align-items: center; gap: 10px; }
+  .r-brand img { width: 40px; height: 40px; object-fit: contain; }
+  .r-brand .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); line-height: 1.2; }
+  .r-brand .addr { font-size: 10.5px; color: var(--text-mute); margin-top: 2px; }
+  .r-title { text-align: right; }
+  .r-title .label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); font-weight: 700; }
+  .r-title h1 { margin: 3px 0 0; font-family: 'Baloo 2', sans-serif; font-size: 21px; color: var(--navy); }
+  .r-title .sub { font-size: 10.5px; color: var(--text-mute); margin-top: 2px; }
+
+  .tp-columns { display: grid; gap: 6mm; }
+  .tp-class-block { break-inside: avoid; }
+  .tp-class-title { font-family: 'Baloo 2', sans-serif; font-size: 15px; font-weight: 700; color: #fff; background: var(--navy); padding: 3mm 5mm; border-radius: 5px 5px 0 0; }
+  table.tp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  table.tp-table thead th { text-align: left; font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); border-bottom: 2px solid var(--line); padding: 2mm; background: var(--bg); }
+  table.tp-table tbody td { padding: 1.8mm 2mm; border-bottom: 1px solid var(--line); }
+  table.tp-table tbody tr:nth-child(-n+3) td { font-weight: 700; }
+  .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 5.5mm; height: 5.5mm; border-radius: 50%; background: var(--bg); color: var(--navy); font-size: 9px; font-weight: 700; }
+  .rank-badge.gold { background: var(--yellow); }
+  .rank-badge.silver { background: #C7CBD6; }
+  .rank-badge.bronze { background: #E3A16B; color: #fff; }
+  .avg-cell { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--teal-deep); }
+
+  .r-footer { margin-top: 10mm; padding-top: 4mm; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 9px; color: var(--text-mute); }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .screen-wrap { padding: 0; }
+    .sheet { box-shadow: none; width: auto; min-height: auto; }
+    @page { size: A4; margin: 12mm; }
+  }
+</style>
+</head>
+<body>
+  <div class="screen-wrap">
+    <div class="toolbar no-print">
+      <span class="msg" id="toolbar-msg">Loading report…</span>
+      <div>
+        <button class="btn ghost" onclick="window.close ? window.close() : history.back()">Close</button>
+        <button class="btn" id="print-btn">Print Report</button>
+      </div>
+    </div>
+    <div class="sheet" id="report-body">
+      <p class="no-print" style="text-align:center;color:#888;padding-top:100mm;">Loading…</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const limit = params.get('limit') || '10';
+const academicYearId = params.get('academic_year_id');
+
+async function load() {
+  try {
+    let qs = `?limit=${limit}`;
+    if (academicYearId) qs += `&academic_year_id=${academicYearId}`;
+    const res = await fetch('/api/weekly-tests/top-performers' + qs);
+    if (!res.ok) throw new Error((await res.json()).error || 'Could not load report');
+    const data = await res.json();
+
+    let yearLabel = '';
+    try {
+      const yearsRes = await fetch('/api/academic-years');
+      if (yearsRes.ok) {
+        const years = await yearsRes.json();
+        const match = academicYearId ? years.find(y => String(y.id) === String(academicYearId)) : years.find(y => y.is_current);
+        if (match) yearLabel = match.label;
+      }
+    } catch (e) { /* label is optional */ }
+
+    render(data, yearLabel);
+    document.getElementById('toolbar-msg').textContent = `Top ${limit} per class${yearLabel ? ' · ' + yearLabel : ''}`;
+  } catch (err) {
+    document.getElementById('report-body').innerHTML = `<p style="text-align:center;color:#c00;">${err.message}</p>`;
+  }
+}
+
+function render(data, yearLabel) {
+  const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+  const cols = data.classes.length || 1;
+  const gridCols = cols >= 3 ? '1fr 1fr 1fr' : cols === 2 ? '1fr 1fr' : '1fr';
+
+  const blocks = data.classes.length ? data.classes.map(cls => {
+    const rows = data.byClass[cls].map((s, i) => `
+      <tr>
+        <td><span class="rank-badge ${rankClass(i)}">${s.rank}</span></td>
+        <td>${s.name}</td>
+        <td>${s.division}</td>
+        <td class="avg-cell">${s.average}%</td>
+      </tr>`).join('');
+    return `
+      <div class="tp-class-block">
+        <div class="tp-class-title">Class ${cls}</div>
+        <table class="tp-table">
+          <thead><tr><th>Rank</th><th>Name</th><th>Div.</th><th>Avg %</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }).join('') : `<p style="color:#888;text-align:center;padding:20mm 0;">No weekly test marks recorded yet.</p>`;
+
+  document.getElementById('report-body').innerHTML = `
+    <div class="r-header">
+      <div class="r-brand">
+        <img src="/images/logo-mark.png" alt="Students' Home" />
+        <div>
+          <div class="name">Students' Home</div>
+          <div class="addr">Kottakkal &middot; 9745924345</div>
+        </div>
+      </div>
+      <div class="r-title">
+        <div class="label">Weekly Test Leaderboard</div>
+        <h1>Top Performing Students</h1>
+        <div class="sub">Top ${limit} per class${yearLabel ? ' &middot; ' + yearLabel : ''}</div>
+      </div>
+    </div>
+
+    <div class="tp-columns" style="grid-template-columns:${gridCols};">
+      ${blocks}
+    </div>
+
+    <div class="r-footer">
+      <span>Generated by Students' Home Institution Manager</span>
+      <span>Ranked by average score across all weekly tests this academic year</span>
+    </div>
+  `;
+}
+
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+load();
+</script>
+</body>
+</html>

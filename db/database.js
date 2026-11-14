@@ -2,8 +2,27 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, 'institution.db');
+const configuredDbPath = process.env.DB_PATH;
+const DB_PATH = configuredDbPath
+  ? path.resolve(configuredDbPath)
+  : path.join(__dirname, 'institution.db');
+
+// In production, refuse to silently create a fresh, empty database when the
+// persistent database path is missing or misconfigured.
+if (process.env.NODE_ENV === 'production' && !configuredDbPath) {
+  throw new Error('DB_PATH must point to the existing persistent SQLite database in production.');
+}
+if (process.env.NODE_ENV === 'production' &&
+    (DB_PATH.includes(`${path.sep}hbuilds${path.sep}`) || DB_PATH.includes(`${path.sep}public_html${path.sep}`))) {
+  throw new Error('DB_PATH must be outside Hostinger deployment folders and the public web root.');
+}
+if (configuredDbPath) {
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+}
 const isNew = !fs.existsSync(DB_PATH);
+if (process.env.NODE_ENV === 'production' && isNew) {
+  throw new Error('The configured DB_PATH file does not exist. Refusing to create an empty production database. Upload the verified SQLite backup first.');
+}
 const db = new Database(DB_PATH);
 
 db.pragma('journal_mode = WAL');
@@ -98,6 +117,23 @@ try { db.exec("ALTER TABLE students ADD COLUMN remark TEXT"); } catch (e) { /* c
 try { db.exec("ALTER TABLE students ADD COLUMN academic_year_id INTEGER"); } catch (e) { /* already exists */ }
 try { db.exec("ALTER TABLE timetable ADD COLUMN academic_year_id INTEGER"); } catch (e) { /* already exists */ }
 
+// Student withdrawal/archive metadata. Existing student and fee records remain intact.
+try { db.exec("ALTER TABLE students ADD COLUMN withdrawn_at TEXT"); } catch (e) { /* already exists */ }
+try { db.exec("ALTER TABLE students ADD COLUMN withdrawal_reason TEXT"); } catch (e) { /* already exists */ }
+db.exec(`
+CREATE TABLE IF NOT EXISTS student_status_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admission_no TEXT NOT NULL,
+  previous_status TEXT NOT NULL,
+  new_status TEXT NOT NULL,
+  effective_date TEXT NOT NULL,
+  reason TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (admission_no) REFERENCES students(admission_no) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_student_status_history_adm ON student_status_history(admission_no, effective_date);
+`);
+
 // Migration: an older "classes" table (from before academic years existed) has
 // a UNIQUE(class, division, medium) constraint with no year column, which
 // would wrongly block the same class from being re-added in a new year.
@@ -186,6 +222,11 @@ CREATE INDEX IF NOT EXISTS idx_wtm_test ON weekly_test_marks(weekly_test_id);
 CREATE INDEX IF NOT EXISTS idx_wtm_adm ON weekly_test_marks(admission_no);
 `);
 
+// Mark-entry session status: tests created/continued through Quick Mark Entry
+// stay resumable until the administrator explicitly presses Finish. Existing
+// weekly tests default to completed and can still be reopened from the register.
+try { db.exec("ALTER TABLE weekly_tests ADD COLUMN entry_status TEXT NOT NULL DEFAULT 'completed'"); } catch (e) { /* already exists */ }
+
 // Hot Seat — per-session classroom observation records
 db.exec(`
 CREATE TABLE IF NOT EXISTS hot_seats (
@@ -211,6 +252,124 @@ CREATE INDEX IF NOT EXISTS idx_hotseat_adm ON hot_seats(admission_no);
 CREATE INDEX IF NOT EXISTS idx_hotseat_date ON hot_seats(date);
 `);
 
+// Impositions and other student assignments. Teacher choices are stored per
+// subject so administrators can add a new teacher without changing the staff
+// payroll/timetable profile records.
+db.exec(`
+CREATE TABLE IF NOT EXISTS assignment_teachers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject TEXT NOT NULL,
+  teacher_name TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(subject, teacher_name)
+);
+
+CREATE TABLE IF NOT EXISTS student_assignments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admission_no TEXT NOT NULL,
+  student_name TEXT NOT NULL,
+  student_class TEXT NOT NULL,
+  student_division TEXT NOT NULL,
+  assignment_type TEXT NOT NULL DEFAULT 'Imposition',
+  subject TEXT NOT NULL,
+  teacher_name TEXT NOT NULL,
+  teacher_account_id INTEGER,
+  given_date TEXT NOT NULL,
+  due_date TEXT,
+  submission_status TEXT NOT NULL DEFAULT 'Pending',
+  submitted_date TEXT,
+  submitted_by TEXT,
+  details TEXT NOT NULL DEFAULT '',
+  academic_year_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (admission_no) REFERENCES students(admission_no) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_student_assignments_year_date ON student_assignments(academic_year_id, given_date);
+CREATE INDEX IF NOT EXISTS idx_student_assignments_adm ON student_assignments(admission_no);
+`);
+try { db.exec('ALTER TABLE student_assignments ADD COLUMN teacher_account_id INTEGER'); } catch (e) { /* already exists */ }
+try { db.exec('ALTER TABLE student_assignments ADD COLUMN due_date TEXT'); } catch (e) { /* already exists */ }
+try { db.exec("ALTER TABLE student_assignments ADD COLUMN submission_status TEXT NOT NULL DEFAULT 'Pending'"); } catch (e) { /* already exists */ }
+try { db.exec('ALTER TABLE student_assignments ADD COLUMN submitted_date TEXT'); } catch (e) { /* already exists */ }
+try { db.exec('ALTER TABLE student_assignments ADD COLUMN submitted_by TEXT'); } catch (e) { /* already exists */ }
+// Existing assignments remain pending until an administrator records submission.
+db.exec("UPDATE student_assignments SET due_date = date(given_date, '+1 day') WHERE due_date IS NULL OR due_date = ''");
+db.exec("UPDATE student_assignments SET submission_status = 'Pending' WHERE submission_status IS NULL OR submission_status = ''");
+db.exec('CREATE INDEX IF NOT EXISTS idx_student_assignments_due_status ON student_assignments(academic_year_id, submission_status, due_date)');
+
+// Additional work assigned to students who arrive late. Kept separately from
+// subject/teacher assignments, but included in the same student performance report.
+db.exec(`
+CREATE TABLE IF NOT EXISTS late_arrival_works (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admission_no TEXT NOT NULL,
+  student_name TEXT NOT NULL,
+  student_class TEXT NOT NULL,
+  student_division TEXT NOT NULL,
+  late_date TEXT NOT NULL,
+  due_date TEXT NOT NULL,
+  details TEXT NOT NULL DEFAULT 'Additional work assigned for late arrival',
+  submission_status TEXT NOT NULL DEFAULT 'Pending',
+  submitted_date TEXT,
+  submitted_by TEXT,
+  academic_year_id INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (admission_no) REFERENCES students(admission_no) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_late_arrival_year_date ON late_arrival_works(academic_year_id, late_date);
+CREATE INDEX IF NOT EXISTS idx_late_arrival_admission ON late_arrival_works(admission_no);
+CREATE INDEX IF NOT EXISTS idx_late_arrival_due_status ON late_arrival_works(academic_year_id, submission_status, due_date);
+`);
+
+
+const defaultAssignmentTeachers = {
+  English: ['SN', 'NF', 'MA'],
+  Hindi: ['KR', 'AR'],
+  History: ['UN', 'MN', 'SH'],
+  Geography: ['SQ'],
+  Physics: ['RM', 'UK'],
+  Chemistry: ['FZ', 'HK', 'MN'],
+  Biology: ['SR', 'SH PKD', 'SH KTR'],
+  Mathematics: ['SF', 'SR'],
+};
+const insertAssignmentTeacher = db.prepare(`
+  INSERT OR IGNORE INTO assignment_teachers (subject, teacher_name) VALUES (?, ?)
+`);
+for (const [subject, names] of Object.entries(defaultAssignmentTeachers)) {
+  for (const name of names) insertAssignmentTeacher.run(subject, name);
+}
+
+// Teacher Portal accounts are separate from payroll/timetable teacher profiles.
+// Passwords are stored as bcrypt hashes; initial credentials are issued once by Admin.
+db.exec(`
+CREATE TABLE IF NOT EXISTS teacher_portal_accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  teacher_code TEXT NOT NULL COLLATE NOCASE UNIQUE,
+  subjects_json TEXT NOT NULL DEFAULT '[]',
+  classes_json TEXT NOT NULL DEFAULT '[]',
+  password_hash TEXT NOT NULL,
+  must_change_password INTEGER NOT NULL DEFAULT 1,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS teacher_portal_sessions (
+  token TEXT PRIMARY KEY,
+  teacher_id INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL,
+  FOREIGN KEY (teacher_id) REFERENCES teacher_portal_accounts(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_teacher_portal_sessions_expires ON teacher_portal_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_teacher_portal_sessions_teacher ON teacher_portal_sessions(teacher_id);
+CREATE TABLE IF NOT EXISTS teacher_login_attempts (
+  key_hash TEXT PRIMARY KEY,
+  window_started_ms INTEGER NOT NULL,
+  attempt_count INTEGER NOT NULL DEFAULT 0
+);
+`);
+
 // Administrator login
 db.exec(`
 CREATE TABLE IF NOT EXISTS admin_users (
@@ -229,6 +388,34 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+
+-- Parent portal accounts use the registered mother's phone as the initial password.
+-- The first successful login must set a private password before seeing student records.
+CREATE TABLE IF NOT EXISTS parent_accounts (
+  admission_no TEXT PRIMARY KEY,
+  password_hash TEXT NOT NULL,
+  must_change_password INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (admission_no) REFERENCES students(admission_no) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS parent_sessions (
+  token TEXT PRIMARY KEY,
+  admission_no TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL,
+  FOREIGN KEY (admission_no) REFERENCES students(admission_no) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_parent_sessions_expires ON parent_sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_parent_sessions_adm ON parent_sessions(admission_no);
+
+-- Failed-login counters store hashed IP/account keys, not raw IP addresses or phone numbers.
+CREATE TABLE IF NOT EXISTS parent_login_attempts (
+  key_hash TEXT PRIMARY KEY,
+  window_started_ms INTEGER NOT NULL,
+  attempt_count INTEGER NOT NULL DEFAULT 0
+);
 `);
 
 // Term examinations (multi-subject, per-class marklists)

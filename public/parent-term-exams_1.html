@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Term Exam Reports — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+:root { --navy:#182238; --teal:#04A5A7; --teal-deep:#04807F; --line:#E6E8F0; --text:#262B38; --mute:#6B7284; --bg:#F5F6FA; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,sans-serif; }
+header { background:var(--navy); color:#fff; padding:18px max(20px, calc((100vw - 1120px)/2)); display:flex; gap:14px; align-items:center; justify-content:space-between; }
+.brand { display:flex; align-items:center; gap:10px; min-width:0; }
+.brand img.logo { width:42px; height:42px; object-fit:contain; background:#fff; border-radius:10px; padding:3px; }
+.brand img.mascot { width:48px; height:48px; object-fit:contain; }
+.brand-title { font-family:'Baloo 2',sans-serif; font-size:20px; font-weight:800; line-height:1.1; }
+.brand-sub { font-size:11px; opacity:.78; margin-top:4px; }
+.header-actions { display:flex; gap:8px; align-items:center; }
+.header-btn { flex-shrink:0; border:1px solid rgba(255,255,255,.35); background:transparent; color:#fff; border-radius:7px; padding:10px 13px; font:600 12.5px Inter,sans-serif; cursor:pointer; text-decoration:none; }
+.header-btn:hover { background:rgba(255,255,255,.1); }
+main { max-width:1120px; margin:24px auto 52px; padding:0 20px; }
+.back { display:inline-flex; align-items:center; gap:7px; color:var(--teal-deep); font-size:12px; font-weight:700; text-decoration:none; margin:0 0 14px; }
+.back:hover { text-decoration:underline; }
+.page-title { background:#fff; border:1px solid var(--line); border-radius:13px; padding:21px 23px; box-shadow:0 3px 14px rgba(24,34,56,.04); margin-bottom:16px; }
+.eyebrow { color:var(--teal-deep); font-size:10.5px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; margin:0 0 5px; }
+h1 { font:800 27px 'Baloo 2',sans-serif; color:var(--navy); margin:0 0 4px; line-height:1.2; }
+.muted { color:var(--mute); font-size:13px; line-height:1.55; margin:0; }
+.student-tag { display:inline-block; margin-top:11px; background:#E8F7F6; color:var(--teal-deep); border-radius:7px; padding:8px 11px; font-size:11px; font-weight:700; }
+.card { background:#fff; border:1px solid var(--line); border-radius:11px; padding:19px 20px; min-width:0; box-shadow:0 2px 10px rgba(24,34,56,.025); }
+.card-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
+h2 { font:800 18px 'Baloo 2',sans-serif; color:var(--navy); margin:0; }
+.count { display:inline-flex; align-items:center; justify-content:center; min-width:31px; height:29px; padding:0 9px; border-radius:20px; background:#E8F7F6; color:var(--teal-deep); font:700 11px Inter,sans-serif; }
+.table-wrap { overflow-x:auto; width:100%; }
+table { border-collapse:collapse; width:100%; font-size:12.5px; min-width:500px; }
+th { background:var(--navy); color:#fff; text-align:left; padding:11px 10px; font-size:11px; white-space:nowrap; }
+td { border-bottom:1px solid var(--line); padding:11px 10px; vertical-align:top; }
+tbody tr:last-child td { border-bottom:0; }
+.mono { font-variant-numeric:tabular-nums; white-space:nowrap; }
+.empty,.loading,.error { text-align:center; color:var(--mute); font-size:12.5px; padding:24px 12px; }
+.loading,.error { background:#fff; border:1px solid var(--line); border-radius:11px; }
+.error { color:#921C42; background:#FFF5F8; border-color:#F1CAD7; text-align:left; line-height:1.55; }
+footer { color:var(--mute); text-align:center; font-size:11px; padding:0 20px 26px; }
+@media(max-width:760px) { header { padding:14px 16px; } .brand img.mascot { display:none; } .brand-title { font-size:18px; } .header-btn { padding:9px 10px; font-size:11px; } main { margin-top:15px; padding:0 12px; } .page-title { padding:18px; } .card { padding:16px 13px; } h1 { font-size:24px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img class="logo" src="/images/logo-mark.png" alt="Students' Home" />
+    <div><div class="brand-title">Students' Home</div><div class="brand-sub">Parent Portal · Kottakkal</div></div>
+    <img class="mascot" src="/images/mascot-main.png" alt="Nubo" />
+  </div>
+  <div class="header-actions">
+    <a class="header-btn" href="/parent.html">Home</a>
+    <button class="header-btn" id="logout-btn" type="button">Log Out</button>
+  </div>
+</header>
+<main>
+  <a class="back" href="/parent.html">← Back to Parent Portal</a>
+  <section class="page-title">
+    <p class="eyebrow">Academic Records</p>
+    <h1>Term Exam Reports</h1>
+    <p class="muted">View subject-wise marks recorded for your child in term examinations.</p>
+    <div class="student-tag" id="student-tag">Loading student details…</div>
+  </section>
+  <section class="card">
+    <div class="card-heading"><h2>Term Examination Results</h2><span class="count" id="record-count">—</span></div>
+    <div id="records" class="table-wrap"><div class="loading">Loading your child's records…</div></div>
+  </section>
+</main>
+<footer>Students' Home · Kottakkal</footer>
+<script>
+const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dateText = value => value ? esc(value) : '—';
+const markText = row => row.is_absent ? 'Absent' : (row.marks == null ? '—' : `${esc(row.marks)} / ${esc(row.max_marks)}`);
+function table(headers, rows, emptyText) {
+  if (!rows.length) return `<div class="empty">${esc(emptyText)}</div>`;
+  return `<table><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+async function loadRecords() {
+  try {
+    const meResponse = await fetch('/api/parents/me', { cache:'no-store', credentials:'same-origin' });
+    if (meResponse.status === 401) { location.replace('/parent-login.html'); return; }
+    if (!meResponse.ok) throw new Error('Unable to verify your parent session.');
+    const me = await meResponse.json();
+    if (me.mustChangePassword) { location.replace('/parent.html'); return; }
+
+    const response = await fetch('/api/parents/dashboard', { cache:'no-store', credentials:'same-origin' });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) { location.replace('/parent-login.html'); return; }
+    if (response.status === 403 && data.mustChangePassword) { location.replace('/parent.html'); return; }
+    if (!response.ok) throw new Error(data.error || 'Unable to load the academic records.');
+
+    const student = data.student || {};
+    document.getElementById('student-tag').textContent = `${student.name || 'Student'} · Admission No. ${student.admission_no || '—'} · Class ${student.class || '—'}-${student.division || '—'}`;
+    const rows = (data.termExams || []).map(t => `<tr><td class="mono">${dateText(t.exam_date)}</td><td>${esc(t.exam_name || '—')}</td><td>${esc(t.subject || '—')}</td><td class="mono">${markText(t)}</td></tr>`);
+    document.getElementById('record-count').textContent = rows.length;
+    document.getElementById('records').innerHTML = table(['Date','Examination','Subject','Marks'], rows, 'No term examination results are available yet.');
+    document.title = `${student.name || 'Student'} — Term Exam Reports`;
+  } catch (error) {
+    document.getElementById('records').innerHTML = `<div class="error">${esc(error.message || 'Unable to load records.')}<br><a href="/parent.html">Return to Parent Portal</a></div>`;
+  }
+}
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  try { await fetch('/api/parents/logout', { method:'POST', cache:'no-store', credentials:'same-origin' }); }
+  finally { location.replace('/parent-login.html'); }
+});
+loadRecords();
+</script>
+</body>
+</html>

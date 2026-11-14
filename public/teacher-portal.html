@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher Portal — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png">
+<style>
+:root{--navy:#182238;--teal:#04a5a7;--deep:#047f80;--bg:#f4f6fa;--line:#e2e8ef;--muted:#718096;--text:#293449;--green:#18764c;--red:#b8324b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,sans-serif}.top{background:var(--navy);color:#fff;padding:13px max(18px,calc((100vw - 1100px)/2));display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{display:flex;align-items:center;gap:10px}.brand img{width:38px;height:38px;object-fit:contain}.brand strong{font:800 19px 'Baloo 2',sans-serif}.user{display:flex;align-items:center;gap:12px;font-size:12px;color:#d6deeb}.user button{border:1px solid #ffffff44;background:transparent;color:#fff;border-radius:7px;padding:7px 12px;cursor:pointer}.wrap{width:min(1100px,calc(100% - 30px));margin:25px auto 50px}.welcome{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 0 18px}.welcome h1{font:800 27px 'Baloo 2',sans-serif;color:var(--navy);margin:0}.welcome p{font-size:12px;color:var(--muted);margin:3px 0 0}.badge{background:#e8f7f4;color:var(--deep);border-radius:99px;padding:7px 11px;font-size:11px;font-weight:700}.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:20px;margin-bottom:16px;box-shadow:0 3px 12px #18223808}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:17px}.card h2{font:700 18px 'Baloo 2',sans-serif;color:var(--navy);margin:0}.hint{font-size:11px;color:var(--muted);margin:5px 0 0;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:7px;color:#46546b;font-size:12px;font-weight:700}.field input,.field select,.field textarea{height:44px;border:1px solid #d7e0e9;border-radius:8px;padding:9px 11px;background:#fff;color:var(--text);font:500 13px Inter,sans-serif;min-width:0}.field textarea{height:auto;min-height:130px;resize:vertical;line-height:1.55}.field input:focus,.field select:focus,.field textarea:focus{outline:3px solid #04a5a720;border-color:var(--teal)}.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;align-items:end}.admission input{font:600 16px ui-monospace,monospace;letter-spacing:.2px}.field small{font-weight:400;color:var(--muted);font-size:10.5px;line-height:1.4}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:8px;padding:11px 16px;background:var(--teal);color:#fff;font:700 12.5px Inter,sans-serif;cursor:pointer}.btn:hover{background:var(--deep)}.btn:disabled{opacity:.5;cursor:not-allowed}.btn-ghost{background:#fff;border-color:var(--line);color:var(--navy)}.btn-ghost:hover{background:#f5f8fb}.buttons{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.status{min-height:20px;margin:12px 0 0;color:var(--muted);font-size:11.5px}.status.error{color:var(--red)}.matches{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:12px}.match{display:flex;flex-direction:column;gap:3px;text-align:left;background:#f8fbfc;border:1px solid var(--line);border-radius:9px;padding:12px;cursor:pointer;color:var(--text)}.match:hover{border-color:var(--teal);background:#f0fbfa}.match strong{font:700 13px ui-monospace,monospace}.match small{color:var(--muted)}.selected{display:flex;flex-direction:column;gap:4px;padding:13px;border:1px solid #bfe7db;background:#f0faf6;border-radius:9px;margin-top:12px}.selected strong{color:var(--green)}.selected span{font-size:11px;color:var(--muted)}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:620px}th{background:#f5f8fa;color:#64748b;text-transform:uppercase;letter-spacing:.4px;font-size:10px;text-align:left}td,th{padding:11px 12px;border-bottom:1px solid #edf1f4;font-size:12px;text-align:left}td.mono{font-family:ui-monospace,monospace}.preview-summary{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}.summary-pill{border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:#f8fafc;font-size:11px;color:var(--muted)}.summary-pill strong{display:block;font-size:18px;color:var(--navy);margin-top:2px}.preview-status{display:inline-flex;border-radius:99px;padding:5px 8px;font-size:10px;font-weight:700;white-space:nowrap}.preview-status.ready{background:#e8f7ef;color:#18764c}.preview-status.warn{background:#fff6df;color:#986a11}.preview-status.bad{background:#fff0f2;color:#b8324b}.preview-status.done{background:#edf2f7;color:#526174}.preview-table table{min-width:760px}.preview-table td{vertical-align:top}.preview-table .candidates{font-size:10px;color:var(--muted);margin-top:4px}.helper-box{padding:12px 14px;border-radius:9px;background:#f2f8fb;border:1px solid #dcebf2;color:#53677c;font-size:11px;line-height:1.55;margin-top:12px}.empty{text-align:center;color:var(--muted);padding:24px;font-size:12px}.overlay{position:fixed;inset:0;background:#101b2ee8;display:none;place-items:center;padding:20px;z-index:10}.overlay.show{display:grid}.pw-card{width:min(420px,100%);background:#fff;border-radius:14px;padding:25px}.pw-card h2{font:800 21px 'Baloo 2',sans-serif;color:var(--navy);margin:0 0 8px}.pw-card p{color:var(--muted);font-size:12px;line-height:1.5}.pw-card .field{margin:13px 0}.error-box{display:none;background:#fff0f2;color:var(--red);padding:10px;border-radius:8px;font-size:12px;margin-top:10px}.error-box.show{display:block}.hidden{display:none!important}@media(max-width:760px){.top{align-items:flex-start;padding:12px 15px}.brand strong{font-size:16px}.user{flex-direction:column;align-items:flex-end;gap:6px}.wrap{margin-top:17px}.welcome{align-items:flex-start;flex-direction:column}.welcome h1{font-size:23px}.grid{grid-template-columns:1fr 1fr}.entry-grid{grid-template-columns:1fr}.card{padding:16px}.buttons .btn{flex:1}}@media(max-width:480px){.grid{grid-template-columns:1fr}.top{gap:8px}.user span{max-width:125px;text-align:right}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><img src="/images/logo-mark.png" alt=""><strong>Students' Home · Teacher Portal</strong></div><div class="user"><span id="teacher-name">Loading…</span><button id="logout" type="button">Log Out</button></div></header>
+<main class="wrap hidden" id="portal">
+  <div class="welcome">
+    <div><h1>Imposition Entry</h1><p>Record the same imposition or assignment for multiple students in one batch.</p></div>
+    <span class="badge" id="teacher-code"></span>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><div><h2>01 · Work Details</h2><p class="hint">Choose the date, class, division and subject. Only your assigned classes and subjects are available.</p></div></div>
+    <div class="grid">
+      <label class="field">Given Date<input id="given-date" type="date" required></label>
+      <label class="field">Class<select id="class" required><option value="">Select class</option></select></label>
+      <label class="field">Division<select id="division" required disabled><option value="">Select class first</option></select></label>
+      <label class="field">Subject<select id="subject" required><option value="">Select subject</option></select></label>
+    </div>
+    <label class="field" style="margin-top:14px">Imposition / Work Details <span style="font-weight:400;color:var(--muted)">(Optional)</span><input id="details" type="text" maxlength="250" placeholder="e.g. Complete exercise 3.2, learn the poem, write answers" /></label>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>02 · Add Students</h2><p class="hint">Enter or paste multiple Admission Numbers. Use one per line, or separate them with commas or spaces.</p></div><span class="badge">Batch entry</span></div>
+    <label class="field">Admission Numbers
+      <textarea id="admissions" rows="5" placeholder="Example:
+123
+145
+178
+
+Class 10: first 3 digits · Classes 8 and 9: first 4 digits. Full Admission Numbers are also accepted."></textarea>
+      <small id="prefix-hint">Select a class to see the required Admission Number prefix length.</small>
+    </label>
+    <div class="helper-box"><strong>Before preview:</strong> Make sure all students belong to the selected class and division. The system checks active student records and flags unmatched or ambiguous entries before saving.</div>
+    <div class="buttons">
+      <button class="btn" id="preview-btn" type="button">Preview Students</button>
+      <button class="btn btn-ghost" id="clear-btn" type="button">Clear List</button>
+    </div>
+    <p class="status" id="status" aria-live="polite">Select the work details and enter Admission Numbers to begin.</p>
+  </section>
+
+  <section class="card hidden" id="preview-card">
+    <div class="card-head"><div><h2>03 · Preview &amp; Confirm</h2><p class="hint">Review the matched student list before recording the impositions.</p></div><span class="badge" id="preview-badge">Awaiting confirmation</span></div>
+    <div id="preview-summary" class="preview-summary"></div>
+    <div id="preview-table" class="table-wrap preview-table"></div>
+    <div class="buttons">
+      <button class="btn" id="confirm-btn" type="button" disabled>Confirm &amp; Save Impositions</button>
+      <button class="btn btn-ghost" id="edit-list-btn" type="button">Edit Admission List</button>
+    </div>
+    <p class="hint">Only students marked “Ready to save” will be recorded. Entries already recorded, unmatched numbers and ambiguous matches will be skipped.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>04 · My Recent Impositions</h2><p class="hint" id="record-count">Loading your recent records…</p></div></div>
+    <div id="records" class="table-wrap"><p class="empty">Loading…</p></div>
+  </section>
+</main>
+<div id="password-overlay" class="overlay"><form class="pw-card" id="password-form"><h2>Set Your Password</h2><p>This is your first sign-in. Create a private password before using the Teacher Portal. Use at least 8 characters.</p><label class="field">New Password<input id="new-password" type="password" minlength="8" required autocomplete="new-password"></label><label class="field">Confirm Password<input id="confirm-password" type="password" minlength="8" required autocomplete="new-password"></label><div id="password-error" class="error-box"></div><button class="btn" type="submit" style="width:100%;margin-top:14px">Save Password</button></form></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let teacher=null,working=false,previewState=null;
+async function api(path,options={}){
+  const r=await fetch('/api/teacher-portal'+path,{headers:{'Content-Type':'application/json'},...options});
+  let d={};try{d=await r.json()}catch{}
+  if(r.status===401){location.replace('/teacher-login.html');throw new Error('Session expired. Please sign in again.')}
+  if(r.status===403&&d.code==='MUST_CHANGE_PASSWORD'){showPasswordForm();throw new Error(d.error)}
+  if(!r.ok)throw new Error(d.error||'Request failed');
+  return d;
+}
+function setStatus(message,isError=false){$('#status').textContent=message;$('#status').classList.toggle('error',isError)}
+function showPasswordForm(){$('#password-overlay').classList.add('show');$('#portal').classList.add('hidden')}
+function minPrefix(cls){return cls==='10'?3:((cls==='9'||cls==='8')?4:3)}
+function todayLocal(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function currentMeta(){return {given_date:$('#given-date').value,class:$('#class').value,division:$('#division').value,subject:$('#subject').value,details:$('#details').value.trim(),admissions:$('#admissions').value.trim()}}
+function invalidatePreview(){previewState=null;$('#preview-card').classList.add('hidden');$('#confirm-btn').disabled=true;$('#preview-badge').textContent='Awaiting confirmation'}
+function validateMeta(meta){if(!meta.given_date||!meta.class||!meta.division||!meta.subject){setStatus('Enter the date and select class, division and subject.',true);return false}if(!meta.admissions){setStatus('Enter at least one Admission Number.',true);return false}return true}
+function statusLabel(status){const map={matched:['Ready to save','ready'],already_recorded:['Already recorded','done'],not_found:['Not found','bad'],wrong_division:['Wrong division','warn'],ambiguous:['Ambiguous','warn'],invalid:['Invalid number','bad'],duplicate_input:['Repeated in list','done']};return map[status]||[status,'done']}
+function renderPreview(data){
+  previewState={data,meta:JSON.stringify(currentMeta())};
+  const rows=data.rows||[],summary=data.summary||{},ready=data.ready_count||0;
+  const pill=(label,value)=>`<div class="summary-pill">${esc(label)}<strong>${Number(value)||0}</strong></div>`;
+  $('#preview-summary').innerHTML=pill('Ready to save',ready)+pill('Already recorded',summary.already_recorded)+pill('Not found',summary.not_found)+pill('Wrong division',summary.wrong_division)+pill('Ambiguous / invalid',Number(summary.ambiguous||0)+Number(summary.invalid||0)+Number(summary.duplicate_input||0));
+  $('#preview-table').innerHTML=`<table><thead><tr><th>Entered No.</th><th>Admission Number</th><th>Student</th><th>Division</th><th>Status</th><th>Remarks</th></tr></thead><tbody>${rows.map(r=>{const [label,cls]=statusLabel(r.status);const candidateText=(r.candidates||[]).map(c=>`${esc(c.admission_no)} · ${esc(c.name)}`).join('<br>');return `<tr><td class="mono">${esc(r.input)}</td><td class="mono">${esc(r.admission_no||'—')}</td><td>${esc(r.name||'—')}${candidateText?`<div class="candidates">${candidateText}</div>`:''}</td><td>${esc(r.division||'—')}</td><td><span class="preview-status ${cls}">${esc(label)}</span></td><td>${esc(r.message||'')}</td></tr>`}).join('')}</tbody></table>`;
+  $('#preview-card').classList.remove('hidden');
+  $('#confirm-btn').disabled=ready===0;
+  $('#confirm-btn').textContent=ready?`Confirm & Save ${ready} Student${ready===1?'':'s'}`:'No Students Ready to Save';
+  $('#preview-badge').textContent=`${ready} ready · ${rows.length} entered`;
+  $('#preview-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function loadRecords(){try{const rows=await api('/impositions');$('#record-count').textContent=`${rows.length} recent imposition record(s)`;$('#records').innerHTML=rows.length?`<table><thead><tr><th>Date</th><th>Admission No.</th><th>Student</th><th>Class</th><th>Subject</th><th>Details</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.given_date)}</td><td class="mono">${esc(r.admission_no)}</td><td>${esc(r.student_name)}</td><td>${esc(r.student_class)}-${esc(r.student_division)}</td><td>${esc(r.subject)}</td><td>${esc(r.details||'—')}</td></tr>`).join('')}</tbody></table>`:'<p class="empty">No impositions recorded by you yet.</p>'}catch(err){$('#records').innerHTML=`<p class="empty">${esc(err.message)}</p>`}}
+async function loadDivisions(cls){$('#division').disabled=true;$('#division').innerHTML='<option value="">Loading divisions…</option>';if(!cls){$('#division').innerHTML='<option value="">Select class first</option>';return}try{const rows=await api(`/divisions?class=${encodeURIComponent(cls)}`);$('#division').innerHTML='<option value="">Select division</option>'+rows.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('');$('#division').disabled=rows.length===0;if(!rows.length)setStatus('No active divisions found for this class.',true)}catch(err){$('#division').innerHTML='<option value="">Could not load divisions</option>';setStatus(err.message,true)}}
+async function previewStudents(){if(working)return;const meta=currentMeta();if(!validateMeta(meta))return;working=true;$('#preview-btn').disabled=true;setStatus('Checking Admission Numbers and preparing preview…');invalidatePreview();try{const result=await api('/impositions/preview',{method:'POST',body:JSON.stringify({given_date:meta.given_date,class:meta.class,division:meta.division,subject:meta.subject,details:meta.details,admission_numbers:meta.admissions.split(/[\s,;]+/).filter(Boolean)})});renderPreview(result);setStatus(`${result.ready_count} student(s) ready to save. Review the preview and confirm.`)}catch(err){setStatus(err.message,true)}finally{working=false;$('#preview-btn').disabled=false}}
+async function confirmBatch(){if(working||!previewState)return;if(previewState.meta!==JSON.stringify(currentMeta())){invalidatePreview();setStatus('The form changed after preview. Please preview the student list again.',true);return}const students=previewState.data.rows.filter(r=>r.status==='matched');if(!students.length)return;const ok=window.confirm(`Confirm imposition entry for ${students.length} student(s)?\n\nDate: ${currentMeta().given_date}\nClass & Division: ${currentMeta().class}-${currentMeta().division}\nSubject: ${currentMeta().subject}\n\nOnly the previewed matched students will be saved.`);if(!ok)return;working=true;$('#confirm-btn').disabled=true;setStatus('Saving impositions…');try{const meta=currentMeta();const result=await api('/impositions/batch',{method:'POST',body:JSON.stringify({given_date:meta.given_date,class:meta.class,division:meta.division,subject:meta.subject,details:meta.details,admission_nos:students.map(r=>r.admission_no)})});setStatus(`Completed: ${result.saved_count} imposition(s) saved${result.skipped_count?`, ${result.skipped_count} duplicate(s) skipped`:''}.`);$('#admissions').value='';invalidatePreview();await loadRecords();$('#admissions').focus()}catch(err){setStatus(err.message,true);$('#confirm-btn').disabled=false}finally{working=false}}
+async function init(){try{const r=await fetch('/api/teacher-auth/status');const s=await r.json();if(!s.loggedIn){location.replace('/teacher-login.html');return}teacher=s.teacher;$('#teacher-name').textContent=teacher.name;$('#teacher-code').textContent=teacher.teacher_code;if(teacher.must_change_password){showPasswordForm();return}const me=await api('/me');teacher=me;$('#portal').classList.remove('hidden');$('#class').innerHTML='<option value="">Select class</option>'+me.classes.map(c=>`<option value="${esc(c)}">Class ${esc(c)}</option>`).join('');$('#subject').innerHTML='<option value="">Select subject</option>'+me.subjects.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');$('#given-date').value=todayLocal();await loadRecords()}catch(err){if(err.message)console.error(err)}}
+$('#class').addEventListener('change',async()=>{invalidatePreview();await loadDivisions($('#class').value);$('#prefix-hint').textContent=$('#class').value?`Class ${$('#class').value}: Class 10 accepts the first 3 digits; Classes 8 and 9 accept the first 4 digits. Full Admission Numbers are also accepted.`:'Select a class first.'});
+['given-date','division','subject','details','admissions'].forEach(id=>$('#'+id).addEventListener('input',invalidatePreview));
+$('#preview-btn').addEventListener('click',previewStudents);
+$('#clear-btn').addEventListener('click',()=>{$('#admissions').value='';invalidatePreview();setStatus('Admission Number list cleared.');$('#admissions').focus()});
+$('#confirm-btn').addEventListener('click',confirmBatch);
+$('#edit-list-btn').addEventListener('click',()=>{invalidatePreview();setStatus('Edit the Admission Number list or work details, then preview again.');$('#admissions').focus()});
+$('#logout').addEventListener('click',async()=>{await fetch('/api/teacher-auth/logout',{method:'POST'});location.replace('/teacher-login.html')});
+$('#password-form').addEventListener('submit',async e=>{e.preventDefault();const pw=$('#new-password').value,confirmPw=$('#confirm-password').value,box=$('#password-error');box.classList.remove('show');if(pw.length<8){box.textContent='Password must be at least 8 characters.';box.classList.add('show');return}if(pw!==confirmPw){box.textContent='Passwords do not match.';box.classList.add('show');return}try{const r=await fetch('/api/teacher-auth/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({new_password:pw})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not save password.');$('#password-overlay').classList.remove('show');$('#new-password').value='';$('#confirm-password').value='';await init()}catch(err){box.textContent=err.message;box.classList.add('show')}});
+init();
+</script>
+</body></html>

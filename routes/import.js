@@ -209,6 +209,113 @@ router.post('/students', upload.single('file'), (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Student division update import
+// ---------------------------------------------------------------------------
+// This import intentionally changes ONLY students.division. Admission Number
+// is the match key; withdrawn students are kept in the archive and are not
+// changed by this active-student workflow.
+router.post('/student-divisions', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  let wb;
+  try {
+    wb = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: true });
+  } catch (err) {
+    return res.status(400).json({ error: 'Could not read this file as an Excel workbook' });
+  }
+
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = sheetToRows(ws);
+  if (!rows.length) return res.status(400).json({ error: 'The sheet appears to be empty' });
+
+  const map = headerIndex(rows[0]);
+  const admissionCol = findCol(map, 'Admission No', 'Adm No', 'Admission Number', 'Admission No.');
+  const divisionCol = findCol(map, 'New Division', 'Updated Division', 'To Division', 'Division');
+  const classCol = findCol(map, 'Class', 'Class Optional', 'Current Class');
+
+  if (admissionCol === -1 || divisionCol === -1) {
+    return res.status(400).json({
+      error: 'The sheet must contain "Admission No" and "New Division" columns. You may download the Division Update sample template.'
+    });
+  }
+
+  // Count admission numbers first. If a student appears more than once, skip
+  // every occurrence rather than applying an ambiguous last-row-wins update.
+  const parsed = [];
+  const counts = new Map();
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i] || [];
+    if (row.every(c => c === null || c === undefined || String(c).trim() === '')) continue;
+    const admission_no = cellToString(row[admissionCol]).trim();
+    const division = cellToString(row[divisionCol]).trim().toUpperCase();
+    const classValue = classCol >= 0 ? normalizeClass(row[classCol]) : '';
+    const record = { rowNumber: i + 1, admission_no, division, classValue };
+    parsed.push(record);
+    if (admission_no) counts.set(admission_no, (counts.get(admission_no) || 0) + 1);
+  }
+
+  const getStudent = db.prepare(`SELECT admission_no, class, division, status
+    FROM students WHERE admission_no = ?`);
+  const updateDivision = db.prepare(`UPDATE students SET division = ?
+    WHERE admission_no = ? AND COALESCE(status, 'Active') <> 'Withdrawn'`);
+
+  let updated = 0;
+  let unchanged = 0;
+  const skipped = [];
+
+  const applyUpdates = db.transaction(() => {
+    for (const item of parsed) {
+      const { rowNumber, admission_no, division, classValue } = item;
+      if (!admission_no) {
+        skipped.push({ row: rowNumber, reason: 'Missing Admission No' });
+        continue;
+      }
+      if (!division) {
+        skipped.push({ row: rowNumber, admission_no, reason: 'Missing New Division' });
+        continue;
+      }
+      if (!/^[A-Z0-9][A-Z0-9 _/-]{0,19}$/.test(division)) {
+        skipped.push({ row: rowNumber, admission_no, value: division, reason: 'Division must use letters, numbers, spaces, hyphens, underscores or slashes (maximum 20 characters)' });
+        continue;
+      }
+      if (counts.get(admission_no) > 1) {
+        skipped.push({ row: rowNumber, admission_no, value: division, reason: 'Duplicate Admission No in this workbook; all duplicate rows were skipped' });
+        continue;
+      }
+
+      const student = getStudent.get(admission_no);
+      if (!student) {
+        skipped.push({ row: rowNumber, admission_no, reason: 'No matching student found' });
+        continue;
+      }
+      if (String(student.status || 'Active').toLowerCase() === 'withdrawn') {
+        skipped.push({ row: rowNumber, admission_no, reason: 'Student is in the Left / Withdrawn register; division was not changed' });
+        continue;
+      }
+      if (classValue && String(student.class || '').trim() !== classValue) {
+        skipped.push({ row: rowNumber, admission_no, value: classValue, reason: `Class mismatch (student is in Class ${student.class || '—'})` });
+        continue;
+      }
+      if (String(student.division || '').trim().toUpperCase() === division) {
+        unchanged++;
+        continue;
+      }
+
+      updateDivision.run(division, admission_no);
+      updated++;
+    }
+  });
+
+  try {
+    applyUpdates();
+  } catch (err) {
+    return res.status(500).json({ error: `Division update failed; no changes were committed. ${err.message}` });
+  }
+
+  res.json({ total: parsed.length, inserted: 0, updated, unchanged, skipped });
+});
+
+// ---------------------------------------------------------------------------
 // Teachers import
 // ---------------------------------------------------------------------------
 
@@ -677,7 +784,7 @@ router.post('/term-exam', upload.single('file'), (req, res) => {
     const map = headerIndex(rows[0]);
     const admCol = findCol(map, 'Adm No', 'Adm No.', 'Admission No', 'Admission Number');
     const nameCol = findCol(map, 'Name', 'First Name', 'Student Name');
-    const classCol = findCol(map, 'Class');
+    const classCol = findCol(map, 'Class', 'Class Optional', 'Current Class');
     if (admCol === -1) return; // not a marklist sheet, skip quietly
 
     const usedCols = new Set([admCol, nameCol, classCol].filter(c => c >= 0));

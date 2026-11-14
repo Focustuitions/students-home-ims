@@ -30,7 +30,10 @@ router.get('/', (req, res) => {
   if (division) { sql += ' AND division = ?'; params.push(division); }
   if (medium) { sql += ' AND medium = ?'; params.push(medium); }
   if (school) { sql += ' AND school = ?'; params.push(school); }
+  // The normal student list (and dashboard) contains current students only.
+  // Withdrawn students are accessible through the dedicated /withdrawn route.
   if (status) { sql += ' AND status = ?'; params.push(status); }
+  else { sql += " AND COALESCE(status, 'Active') <> 'Withdrawn'"; }
   sql += ' ORDER BY id DESC';
   const students = db.prepare(sql).all(...params);
   const withFees = students.map(s => {
@@ -38,6 +41,27 @@ router.get('/', (req, res) => {
     return { ...s, paid, balance: Math.max(s.net_fees - paid, 0) };
   });
   res.json(withFees);
+});
+
+// Withdrawn students are shown in a separate register and never included in
+// the active student list or fee-pending summaries. Their fee ledger is retained.
+router.get('/withdrawn', (req, res) => {
+  const { q, academic_year_id } = req.query;
+  const yearId = resolveYearId(academic_year_id);
+  let sql = "SELECT * FROM students WHERE status = 'Withdrawn'";
+  const params = [];
+  if (yearId) { sql += ' AND academic_year_id = ?'; params.push(yearId); }
+  if (q) {
+    sql += ' AND (admission_no LIKE ? OR name LIKE ? OR father_name LIKE ? OR mother_name LIKE ? OR place LIKE ?)';
+    const like = `%${q}%`;
+    params.push(like, like, like, like, like);
+  }
+  sql += ' ORDER BY COALESCE(withdrawn_at, joining_date) DESC, name COLLATE NOCASE';
+  const students = db.prepare(sql).all(...params).map(student => {
+    const paid = paidTotal(student.admission_no);
+    return { ...student, paid, balance: Math.max(Number(student.net_fees || 0) - paid, 0) };
+  });
+  res.json(students);
 });
 
 // Get single student (with payment history)
@@ -71,7 +95,7 @@ router.get('/:admission_no/hot-seats', (req, res) => {
 
 // A student's overall academic performance report: subject strengths/weaknesses,
 // trend over time, and how they compare to their classmates on each test.
-router.get('/:admission_no/weekly-test-report', (req, res) => {
+function weeklyTestReportHandler(req, res) {
   const student = db.prepare('SELECT * FROM students WHERE admission_no = ?').get(req.params.admission_no);
   if (!student) return res.status(404).json({ error: 'Student not found' });
 
@@ -292,6 +316,23 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     subjectComparison,
   };
 
+  // Work tracking: regular assignments and late-arrival additional work are
+  // included in the same student performance report for Admin and Parent views.
+  const assignments = db.prepare(`
+    SELECT assignment_type, subject, teacher_name, given_date, due_date,
+      submission_status, submitted_date, details
+    FROM student_assignments
+    WHERE admission_no = ? AND academic_year_id = ?
+    ORDER BY given_date DESC, id DESC
+  `).all(req.params.admission_no, yearId);
+
+  const lateArrivalWorks = db.prepare(`
+    SELECT late_date, due_date, submission_status, submitted_date, details
+    FROM late_arrival_works
+    WHERE admission_no = ? AND academic_year_id = ?
+    ORDER BY late_date DESC, id DESC
+  `).all(req.params.admission_no, yearId);
+
   // Risk flags: a quick, scannable summary of anything that might need
   // attention, pulled from data already computed above.
   const riskFlags = [];
@@ -305,6 +346,10 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
   });
   if (absentCount > 1) riskFlags.push(`Missed ${absentCount} weekly tests this year`);
   if (hotSeat.alertCount > 0) riskFlags.push(`${hotSeat.alertCount} Hot Seat session(s) flagged missing notebook/textbook`);
+  const pendingAssignmentCount = assignments.filter(a => (a.submission_status || 'Pending') === 'Pending').length;
+  const pendingLateWorkCount = lateArrivalWorks.filter(a => (a.submission_status || 'Pending') === 'Pending').length;
+  if (pendingAssignmentCount > 0) riskFlags.push(`${pendingAssignmentCount} assignment(s) awaiting submission`);
+  if (pendingLateWorkCount > 0) riskFlags.push(`${pendingLateWorkCount} late-arrival additional work item(s) awaiting submission`);
 
   res.json({
     student: { admission_no: student.admission_no, name: student.name, class: student.class, division: student.division },
@@ -322,10 +367,14 @@ router.get('/:admission_no/weekly-test-report', (req, res) => {
     timeline,
     hotSeat,
     termExams,
+    assignments,
+    lateArrivalWorks,
     crossAnalysis,
     riskFlags,
   });
-});
+}
+
+router.get('/:admission_no/weekly-test-report', weeklyTestReportHandler);
 
 // Create student
 router.post('/', (req, res) => {
@@ -406,6 +455,46 @@ router.put('/:admission_no', (req, res) => {
   res.json({ message: 'Student updated' });
 });
 
+// Move a student into the withdrawn register without deleting any history.
+router.post('/:admission_no/withdraw', (req, res) => {
+  const student = db.prepare('SELECT * FROM students WHERE admission_no = ?').get(req.params.admission_no);
+  if (!student) return res.status(404).json({ error: 'Student not found' });
+  if (student.status === 'Withdrawn') return res.status(409).json({ error: 'Student is already in the withdrawn register' });
+  const effectiveDate = /^\d{4}-\d{2}-\d{2}$/.test(String(req.body.effective_date || ''))
+    ? req.body.effective_date
+    : new Date().toISOString().slice(0, 10);
+  const reason = String(req.body.reason || '').trim().slice(0, 500);
+  const move = db.transaction(() => {
+    db.prepare(`UPDATE students SET status = 'Withdrawn', withdrawn_at = ?, withdrawal_reason = ? WHERE admission_no = ?`)
+      .run(effectiveDate, reason || null, req.params.admission_no);
+    db.prepare(`INSERT INTO student_status_history (admission_no, previous_status, new_status, effective_date, reason)
+      VALUES (?, ?, 'Withdrawn', ?, ?)`)
+      .run(req.params.admission_no, student.status || 'Active', effectiveDate, reason || null);
+  });
+  move();
+  res.json({ message: 'Student moved to the withdrawn register. Student details, payments and academic records have been preserved.' });
+});
+
+// Restore a student to the active register if they rejoin.
+router.post('/:admission_no/reactivate', (req, res) => {
+  const student = db.prepare('SELECT * FROM students WHERE admission_no = ?').get(req.params.admission_no);
+  if (!student) return res.status(404).json({ error: 'Student not found' });
+  if (student.status !== 'Withdrawn') return res.status(409).json({ error: 'Student is not in the withdrawn register' });
+  const effectiveDate = /^\d{4}-\d{2}-\d{2}$/.test(String(req.body.effective_date || ''))
+    ? req.body.effective_date
+    : new Date().toISOString().slice(0, 10);
+  const reason = String(req.body.reason || 'Rejoined').trim().slice(0, 500);
+  const restore = db.transaction(() => {
+    db.prepare(`UPDATE students SET status = 'Active', withdrawn_at = NULL, withdrawal_reason = NULL WHERE admission_no = ?`)
+      .run(req.params.admission_no);
+    db.prepare(`INSERT INTO student_status_history (admission_no, previous_status, new_status, effective_date, reason)
+      VALUES (?, 'Withdrawn', 'Active', ?, ?)`)
+      .run(req.params.admission_no, effectiveDate, reason || null);
+  });
+  restore();
+  res.json({ message: 'Student restored to the active register.' });
+});
+
 // Delete student
 router.delete('/:admission_no', (req, res) => {
   const result = db.prepare('DELETE FROM students WHERE admission_no = ?').run(req.params.admission_no);
@@ -416,7 +505,7 @@ router.delete('/:admission_no', (req, res) => {
 // Fee-pending export data (JSON; used by the in-page table/CSV fallback)
 router.get('/reports/fee-pending', (req, res) => {
   const yearId = resolveYearId(req.query.academic_year_id);
-  const sql = yearId ? 'SELECT * FROM students WHERE academic_year_id = ?' : 'SELECT * FROM students';
+  const sql = yearId ? "SELECT * FROM students WHERE academic_year_id = ? AND COALESCE(status, 'Active') <> 'Withdrawn'" : "SELECT * FROM students WHERE COALESCE(status, 'Active') <> 'Withdrawn'";
   const students = yearId ? db.prepare(sql).all(yearId) : db.prepare(sql).all();
   const pending = students.map(s => {
     const paid = paidTotal(s.admission_no);
@@ -430,7 +519,7 @@ router.get('/reports/fee-pending', (req, res) => {
 router.get('/reports/fee-pending/export', (req, res) => {
   const XLSX = require('xlsx');
   const yearId = resolveYearId(req.query.academic_year_id);
-  const sql = yearId ? 'SELECT * FROM students WHERE academic_year_id = ?' : 'SELECT * FROM students';
+  const sql = yearId ? "SELECT * FROM students WHERE academic_year_id = ? AND COALESCE(status, 'Active') <> 'Withdrawn'" : "SELECT * FROM students WHERE COALESCE(status, 'Active') <> 'Withdrawn'";
   const students = yearId ? db.prepare(sql).all(yearId) : db.prepare(sql).all();
   const pending = students.map(s => {
     const paid = paidTotal(s.admission_no);
@@ -554,4 +643,5 @@ router.get('/reports/details/export', (req, res) => {
   res.send(buf);
 });
 
+router.weeklyTestReportHandler = weeklyTestReportHandler;
 module.exports = router;

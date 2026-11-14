@@ -303,6 +303,8 @@ function render(r) {
 
     ${r.hotSeat && r.hotSeat.sessionCount > 0 ? renderHotSeatSection(r.hotSeat) : ''}
 
+    ${renderStudentWorkSection(r.assignments || [], r.lateArrivalWorks || [])}
+
     <p class="section-title">Full Test History</p>
     <table class="marks-table">
       <thead><tr><th>Date</th><th>Exam</th><th>Marks</th><th>%</th><th>Class Avg</th><th>vs. Class</th><th>Status</th></tr></thead>
@@ -334,6 +336,51 @@ function render(r) {
       <span>Pass mark: 35% &middot; Dashed line = class average</span>
     </div>
   `;
+}
+
+function reportText(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+
+function workStatusBadge(row) {
+  if ((row.submission_status || 'Pending') === 'Submitted') return '<span class="status-pill status-pass">Submitted</span>';
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return row.due_date && row.due_date < today
+    ? '<span class="status-pill status-fail">Overdue</span>'
+    : '<span class="status-pill status-absent">Pending</span>';
+}
+
+function renderStudentWorkSection(assignments, lateArrivalWorks) {
+  if (!assignments.length && !lateArrivalWorks.length) return '';
+  const assignmentRows = assignments.map(a => `<tr>
+    <td>${reportText(a.given_date)}</td><td>${reportText(a.due_date || '—')}</td>
+    <td>${reportText(a.assignment_type || 'Assignment')}${a.details ? `<br><small>${reportText(a.details)}</small>` : ''}</td>
+    <td>${reportText(a.subject || '—')}</td><td>${reportText(a.teacher_name || '—')}</td>
+    <td>${workStatusBadge(a)}${a.submitted_date ? `<br><small>${reportText(a.submitted_date)}</small>` : ''}</td>
+  </tr>`).join('');
+  const lateRows = lateArrivalWorks.map(a => `<tr>
+    <td>${reportText(a.late_date)}</td><td>${reportText(a.due_date || '—')}</td>
+    <td>${reportText(a.details || 'Additional work for late arrival')}</td>
+    <td>${workStatusBadge(a)}${a.submitted_date ? `<br><small>${reportText(a.submitted_date)}</small>` : ''}</td>
+  </tr>`).join('');
+  const pendingAssignments = assignments.filter(a => (a.submission_status || 'Pending') === 'Pending').length;
+  const pendingLate = lateArrivalWorks.filter(a => (a.submission_status || 'Pending') === 'Pending').length;
+  return `
+    <p class="section-title">Assignments &amp; Work Completion</p>
+    <div class="remark-box">Regular assignments: <strong>${assignments.length}</strong> (${pendingAssignments} pending) &nbsp; · &nbsp; Late-arrival additional work: <strong>${lateArrivalWorks.length}</strong> (${pendingLate} pending).</div>
+    ${assignments.length ? `
+      <p style="font-size:11px;font-weight:700;color:var(--navy);margin:0 0 3mm;">Regular Impositions &amp; Assignments</p>
+      <table class="marks-table" style="margin-bottom:6mm;">
+        <thead><tr><th>Given Date</th><th>Due Date</th><th>Work</th><th>Subject</th><th>Teacher</th><th>Submission</th></tr></thead>
+        <tbody>${assignmentRows}</tbody>
+      </table>` : ''}
+    ${lateArrivalWorks.length ? `
+      <p style="font-size:11px;font-weight:700;color:var(--navy);margin:0 0 3mm;">Late Arrival Additional Work</p>
+      <table class="marks-table" style="margin-bottom:6mm;">
+        <thead><tr><th>Late Date</th><th>Due Date</th><th>Additional Work</th><th>Submission</th></tr></thead>
+        <tbody>${lateRows}</tbody>
+      </table>` : ''}`;
 }
 
 function perfChipClass(perf) {

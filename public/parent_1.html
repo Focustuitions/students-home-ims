@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Parent Portal — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root { --navy:#182238; --teal:#04A5A7; --teal-deep:#04807F; --pink:#DE306F; --line:#E6E8F0; --text:#262B38; --mute:#6B7284; --bg:#F5F6FA; --green:#17845D; --orange:#B4501C; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,sans-serif; }
+  header { background:var(--navy); color:#fff; padding:18px max(20px, calc((100vw - 1120px)/2)); display:flex; gap:14px; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:center; gap:10px; min-width:0; }
+  .brand img.logo { width:42px; height:42px; object-fit:contain; background:#fff; border-radius:10px; padding:3px; }
+  .brand img.mascot { width:48px; height:48px; object-fit:contain; }
+  .brand-title { font-family:'Baloo 2',sans-serif; font-size:20px; font-weight:800; line-height:1.1; }
+  .brand-sub { font-size:11px; opacity:.78; margin-top:4px; }
+  .logout { flex-shrink:0; border:1px solid rgba(255,255,255,.35); background:transparent; color:#fff; border-radius:7px; padding:10px 13px; font:600 12.5px Inter,sans-serif; cursor:pointer; }
+  .logout:hover { background:rgba(255,255,255,.1); }
+  main { max-width:1120px; margin:24px auto 52px; padding:0 20px; }
+  .welcome { background:#fff; border:1px solid var(--line); border-radius:13px; padding:22px 24px; display:flex; justify-content:space-between; gap:16px; align-items:center; box-shadow:0 3px 14px rgba(24,34,56,.04); }
+  .eyebrow { color:var(--teal-deep); font-size:10.5px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; margin:0 0 5px; }
+  h1,h2,h3,p { margin-top:0; }
+  h1 { font:800 27px 'Baloo 2',sans-serif; color:var(--navy); margin-bottom:4px; line-height:1.2; }
+  .muted { color:var(--mute); font-size:13px; line-height:1.55; margin-bottom:0; }
+  .admission-tag { background:#E8F7F6; color:var(--teal-deep); border-radius:7px; padding:9px 12px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .welcome-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .download-report { display:inline-flex; align-items:center; justify-content:center; gap:7px; background:var(--teal); color:#fff; border:0; border-radius:7px; padding:10px 13px; font:700 12px Inter,sans-serif; text-decoration:none; white-space:nowrap; }
+  .download-report:hover { background:var(--teal-deep); }
+  .section-intro { color:var(--mute); font-size:12px; line-height:1.5; margin:-7px 0 12px; }
+  .section-count { display:inline-block; margin-left:7px; vertical-align:2px; padding:3px 8px; border-radius:20px; background:#E8F7F6; color:var(--teal-deep); font:700 10px Inter,sans-serif; }
+  .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:17px 0; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:11px; padding:17px 18px; min-width:0; }
+  .stat .label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--mute); font-weight:700; }
+  .stat .value { color:var(--navy); font:800 23px 'Baloo 2',sans-serif; margin-top:6px; overflow-wrap:anywhere; }
+  .stat.alert .value { color:var(--pink); }
+  .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+  .portal-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:16px 0; }
+  .portal-link { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 20px; background:#fff; border:1px solid var(--line); border-radius:11px; color:var(--text); text-decoration:none; box-shadow:0 3px 14px rgba(24,34,56,.035); transition:border-color .15s, transform .15s; }
+  .portal-link:hover { border-color:var(--teal); transform:translateY(-1px); }
+  .portal-link h2 { margin:0 0 4px; }
+  .portal-link p { color:var(--mute); font-size:12px; line-height:1.45; margin:0; }
+  .portal-link .link-count { flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 10px; border-radius:20px; background:#E8F7F6; color:var(--teal-deep); font-size:12px; font-weight:800; }
+  .portal-link .arrow { color:var(--teal-deep); font-size:20px; margin-left:4px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:11px; padding:19px 20px; margin-bottom:16px; min-width:0; }
+  h2 { font:800 18px 'Baloo 2',sans-serif; color:var(--navy); margin-bottom:13px; }
+  .profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+  .profile-item .k { color:var(--mute); font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; margin-bottom:4px; }
+  .profile-item .v { color:var(--text); font-size:13px; font-weight:600; overflow-wrap:anywhere; }
+  .table-wrap { overflow-x:auto; width:100%; }
+  table { border-collapse:collapse; width:100%; font-size:12.5px; min-width:450px; }
+  th { background:var(--navy); color:#fff; text-align:left; padding:10px; font-size:11px; white-space:nowrap; }
+  td { border-bottom:1px solid var(--line); padding:10px; vertical-align:top; }
+  tbody tr:last-child td { border-bottom:0; }
+  .mono { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .empty { text-align:center; color:var(--mute); font-size:12.5px; padding:19px 10px; }
+  .pill { display:inline-block; border-radius:20px; background:#E8F7F6; color:var(--teal-deep); font-size:10.5px; font-weight:700; padding:4px 8px; white-space:nowrap; }
+  .danger { color:#A92050; }
+  .loading,.top-error { text-align:center; background:#fff; border:1px solid var(--line); border-radius:11px; padding:30px 20px; color:var(--mute); }
+  .top-error { color:#921C42; background:#FFF5F8; border-color:#F1CAD7; }
+  .hidden { display:none !important; }
+  .password-card { max-width:540px; margin:30px auto; }
+  .password-card label { display:block; font-size:12px; font-weight:700; margin:14px 0 6px; color:#2A3B5C; }
+  .password-card input { display:block; width:100%; border:1px solid var(--line); border-radius:7px; padding:11px 12px; font:14px Inter,sans-serif; }
+  .password-card input:focus { outline:2px solid var(--teal); outline-offset:1px; }
+  .btn { background:var(--teal); color:#fff; border:0; border-radius:7px; padding:11px 14px; font:700 13px Inter,sans-serif; cursor:pointer; }
+  .btn:disabled { opacity:.6; cursor:default; }
+  .form-error { color:#921C42; background:#FFF5F8; border:1px solid #F1CAD7; border-radius:7px; padding:9px 11px; font-size:12px; margin-top:12px; }
+  .form-success { color:#176B4A; background:#EDFAF4; border:1px solid #BDE8D4; border-radius:7px; padding:9px 11px; font-size:12px; margin-top:12px; }
+  footer { color:var(--mute); text-align:center; font-size:11px; padding:0 20px 26px; }
+  @media(max-width:760px) { header { padding:14px 16px; } .brand img.mascot { display:none; } .brand-title { font-size:18px; } .welcome { align-items:flex-start; flex-direction:column; padding:18px; } .welcome-actions { width:100%; justify-content:flex-start; } .stats { grid-template-columns:1fr; gap:9px; } .stat { display:flex; align-items:center; justify-content:space-between; padding:13px 15px; gap:12px; } .stat .value { font-size:20px; margin-top:0; text-align:right; } .grid { grid-template-columns:1fr; gap:0; } .portal-links { grid-template-columns:1fr; gap:10px; } .portal-link { padding:16px; } main { margin-top:15px; padding:0 12px; } .card { padding:16px 13px; } .profile-grid { gap:12px; } h1 { font-size:24px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img class="logo" src="/images/logo-mark.png" alt="Students' Home" />
+    <div><div class="brand-title">Students' Home</div><div class="brand-sub">Parent Portal · Kottakkal</div></div>
+    <img class="mascot" src="/images/mascot-main.png" alt="Nubo" />
+  </div>
+  <button class="logout" id="logout-btn" type="button">Log Out</button>
+</header>
+<main>
+  <div id="loading" class="loading">Loading your child's records…</div>
+  <div id="error-state" class="top-error hidden"></div>
+  <section id="password-panel" class="card password-card hidden">
+    <p class="eyebrow">First-time sign-in</p>
+    <h1>Create a private password</h1>
+    <p class="muted">For your child's privacy, you must change the initial password before opening the Parent Portal. Choose at least 8 characters and do not reuse the mother's registered mobile number.</p>
+    <form id="password-form">
+      <label for="current-password">Current password (mother's registered mobile number)</label>
+      <input id="current-password" type="password" autocomplete="current-password" required />
+      <label for="new-password">New password</label>
+      <input id="new-password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
+      <label for="confirm-password">Confirm new password</label>
+      <input id="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
+      <div id="password-message" class="hidden" role="status"></div>
+      <button class="btn" id="change-password-btn" style="margin-top:15px" type="submit">Save New Password</button>
+    </form>
+  </section>
+  <div id="portal-content" class="hidden">
+    <section class="welcome">
+      <div><p class="eyebrow">Welcome to your Parent Portal</p><h1 id="student-name">Your child</h1><p class="muted" id="student-subtitle">Student details and academic progress</p></div>
+      <div class="welcome-actions">
+        <div class="admission-tag" id="admission-tag">Admission No. —</div>
+        <a class="download-report" href="/parent-performance-report.html" target="_blank" rel="noopener">↓ Download Student Performance Sheet</a>
+      </div>
+    </section>
+    <section class="stats">
+      <div class="stat"><div class="label">Total fees after discount</div><div class="value" id="fee-total">₹0</div></div>
+      <div class="stat"><div class="label">Fees paid</div><div class="value" id="fee-paid">₹0</div></div>
+      <div class="stat alert"><div class="label">Balance due</div><div class="value" id="fee-balance">₹0</div></div>
+    </section>
+    <div class="grid">
+      <section class="card"><h2>Student Details</h2><div id="student-profile" class="profile-grid"></div></section>
+      <section class="card"><h2>Fee Payment History</h2><div id="payments-table" class="table-wrap"></div></section>
+    </div>
+    <section class="portal-links" aria-label="Academic records">
+      <a class="portal-link" href="/parent-weekly-tests.html">
+        <div><h2>Weekly Tests</h2><p>Open individual weekly test and chapter assessment marks.</p></div>
+        <span style="display:flex;align-items:center;gap:8px"><span class="link-count" id="weekly-count">0</span><span class="arrow" aria-hidden="true">›</span></span>
+      </a>
+      <a class="portal-link" href="/parent-term-exams.html">
+        <div><h2>Term Exam Reports</h2><p>Open subject-wise results for term examinations.</p></div>
+        <span style="display:flex;align-items:center;gap:8px"><span class="link-count" id="term-count">0</span><span class="arrow" aria-hidden="true">›</span></span>
+      </a>
+    </section>
+    <section class="card"><h2>Teacher Observations</h2><div id="observations-table" class="table-wrap"></div></section>
+  </div>
+</main>
+<footer>Students' Home · Kottakkal</footer>
+<script>
+const $ = id => document.getElementById(id);
+const rupee = value => '₹' + Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dateText = value => value ? esc(value) : '—';
+const markText = row => row.is_absent ? 'Absent' : (row.marks == null ? '—' : `${esc(row.marks)} / ${esc(row.max_marks)}`);
+function table(headers, rows, emptyText) {
+  if (!rows.length) return `<div class="empty">${esc(emptyText)}</div>`;
+  return `<table><thead><tr>${headers.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function profileItem(label, value) {
+  return `<div class="profile-item"><div class="k">${esc(label)}</div><div class="v">${esc(value || '—')}</div></div>`;
+}
+function showError(message) {
+  $('loading').classList.add('hidden');
+  $('portal-content').classList.add('hidden');
+  $('password-panel').classList.add('hidden');
+  $('error-state').textContent = message;
+  $('error-state').classList.remove('hidden');
+}
+async function request(url, options = {}) {
+  const response = await fetch(url, { cache: 'no-store', ...options });
+  const result = await response.json().catch(() => ({}));
+  if (response.status === 401) { location.replace('/parent-login.html'); throw new Error('Please sign in again.'); }
+  if (!response.ok) {
+    const err = new Error(result.error || 'The request could not be completed.');
+    err.data = result;
+    throw err;
+  }
+  return result;
+}
+function showPasswordChange() {
+  $('loading').classList.add('hidden');
+  $('portal-content').classList.add('hidden');
+  $('error-state').classList.add('hidden');
+  $('password-panel').classList.remove('hidden');
+}
+function renderDashboard(data) {
+  const s = data.student;
+  $('student-name').textContent = s.name || 'Student';
+  $('student-subtitle').textContent = `Class ${s.class || '—'}-${s.division || '—'} · ${s.school || 'School not recorded'}`;
+  $('admission-tag').textContent = `Admission No. ${s.admission_no}`;
+  $('fee-total').textContent = rupee(data.fees.net_fees);
+  $('fee-paid').textContent = rupee(data.fees.paid);
+  $('fee-balance').textContent = rupee(Math.max(0, data.fees.balance));
+  $('student-profile').innerHTML = [
+    profileItem('Name', s.name), profileItem('Admission Number', s.admission_no),
+    profileItem('Class & Division', `${s.class || ''}-${s.division || ''}`), profileItem('Medium', s.medium),
+    profileItem('School', s.school), profileItem('Joining Date', s.joining_date),
+    profileItem('Fee Discount', rupee(s.discount)), profileItem('Status', s.status),
+  ].join('');
+  $('payments-table').innerHTML = table(['Date','Receipt No.','Amount'], data.payments.map(p =>
+    `<tr><td class="mono">${dateText(p.payment_date)}</td><td class="mono">${esc(p.receipt_no)}</td><td class="mono">${rupee(p.amount)}</td></tr>`
+  ), 'No fee payments are recorded yet.');
+  $('weekly-count').textContent = data.weeklyTests.length;
+  $('term-count').textContent = data.termExams.length;
+  $('observations-table').innerHTML = table(['Date','Subject','Performance','Classroom Checklist'], data.observations.map(o => {
+    const checks = [];
+    if (o.notes_completed) checks.push('Notes complete');
+    if (o.notebook_neat) checks.push('Notebook neat');
+    if (o.questions_answered) checks.push('Answered questions');
+    if (o.good_attention_span) checks.push('Good attention');
+    if (o.no_notebook) checks.push('No notebook');
+    if (o.no_textbook) checks.push('No textbook');
+    return `<tr><td class="mono">${dateText(o.date)}</td><td>${esc(o.subject || '—')}</td><td>${esc(o.performance || '—')}</td><td>${esc(checks.join(' · ') || '—')}</td></tr>`;
+  }), 'No teacher observations have been recorded yet.');
+  $('loading').classList.add('hidden');
+  $('error-state').classList.add('hidden');
+  $('password-panel').classList.add('hidden');
+  $('portal-content').classList.remove('hidden');
+}
+async function loadPage() {
+  try {
+    const me = await request('/api/parents/me');
+    if (me.mustChangePassword) { showPasswordChange(); return; }
+    const data = await request('/api/parents/dashboard');
+    renderDashboard(data);
+  } catch (error) {
+    if (error.message !== 'Please sign in again.') showError(error.message || 'Unable to load your records.');
+  }
+}
+$('password-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const currentPassword = $('current-password').value;
+  const newPassword = $('new-password').value;
+  const confirmPassword = $('confirm-password').value;
+  const message = $('password-message');
+  message.className = 'hidden';
+  if (newPassword !== confirmPassword) {
+    message.textContent = 'The new password and confirmation do not match.';
+    message.className = 'form-error';
+    return;
+  }
+  if (newPassword.length < 8) {
+    message.textContent = 'Choose a password with at least 8 characters.';
+    message.className = 'form-error';
+    return;
+  }
+  const button = $('change-password-btn');
+  button.disabled = true; button.textContent = 'Saving…';
+  try {
+    await request('/api/parents/change-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    $('current-password').value = ''; $('new-password').value = ''; $('confirm-password').value = '';
+    message.textContent = 'Password updated. Loading your child’s records…';
+    message.className = 'form-success';
+    await loadPage();
+  } catch (error) {
+    message.textContent = error.message || 'Unable to update password.';
+    message.className = 'form-error';
+  } finally {
+    button.disabled = false; button.textContent = 'Save New Password';
+  }
+});
+$('logout-btn').addEventListener('click', async () => {
+  try { await fetch('/api/parents/logout', { method: 'POST', cache: 'no-store' }); } finally { location.replace('/parent-login.html'); }
+});
+loadPage();
+</script>
+</body>
+</html>

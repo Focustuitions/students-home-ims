@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Students' Home &mdash; Institution Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css" />
 <link rel="icon" type="image/png" href="/images/logo-mark.png" />
 </head>
@@ -30,16 +30,23 @@
     <nav class="tabs" id="nav-tabs">
       <button class="tab" data-route="dashboard"><span class="tab-idx">01</span>Dashboard</button>
       <button class="tab" data-route="students"><span class="tab-idx">02</span>Students</button>
-      <button class="tab" data-route="add-student"><span class="tab-idx">03</span>Admit Student</button>
-      <button class="tab" data-route="payment"><span class="tab-idx">04</span>Fee Payment</button>
-      <button class="tab" data-route="payment-history"><span class="tab-idx">05</span>Payment History</button>
-      <button class="tab" data-route="classes"><span class="tab-idx">06</span>Classes</button>
-      <button class="tab" data-route="teachers"><span class="tab-idx">07</span>Teachers</button>
-      <button class="tab" data-route="timetable"><span class="tab-idx">08</span>Timetable</button>
-      <button class="tab" data-route="weekly-tests"><span class="tab-idx">09</span>Weekly Tests</button>
-      <button class="tab" data-route="term-exams"><span class="tab-idx">10</span>Term Exams</button>
-      <button class="tab" data-route="hot-seat"><span class="tab-idx">11</span>Hot Seat</button>
-      <button class="tab" data-route="import"><span class="tab-idx">12</span>Import Data</button>
+      <button class="tab" data-route="withdrawn-students"><span class="tab-idx">03</span>Left / Withdrawn</button>
+      <button class="tab" data-route="add-student"><span class="tab-idx">04</span>Admit Student</button>
+      <button class="tab" data-route="payment"><span class="tab-idx">05</span>Fee Payment</button>
+      <button class="tab" data-route="fee-pending-slips"><span class="tab-idx">06</span>Fee Pending Slips</button>
+      <button class="tab" data-route="payment-history"><span class="tab-idx">07</span>Payment History</button>
+      <button class="tab" data-route="finance-details"><span class="tab-idx">08</span>Finance Details</button>
+      <button class="tab" data-route="classes"><span class="tab-idx">09</span>Classes</button>
+      <button class="tab" data-route="teachers"><span class="tab-idx">10</span>Teachers</button>
+      <button class="tab" data-route="teacher-accounts"><span class="tab-idx">11</span>Teacher Portal Accounts</button>
+      <button class="tab" data-route="timetable"><span class="tab-idx">12</span>Timetable</button>
+      <button class="tab" data-route="mark-entry"><span class="tab-idx">13</span>Mark Entry</button>
+      <button class="tab" data-route="assignments"><span class="tab-idx">14</span>Impositions &amp; Assignments</button>
+      <button class="tab" data-route="late-arrival-work"><span class="tab-idx">15</span>Late Arrival Work</button>
+      <button class="tab" data-route="weekly-tests"><span class="tab-idx">16</span>Weekly Tests</button>
+      <button class="tab" data-route="term-exams"><span class="tab-idx">17</span>Term Exams</button>
+      <button class="tab" data-route="hot-seat"><span class="tab-idx">18</span>Hot Seat</button>
+      <button class="tab" data-route="import"><span class="tab-idx">19</span>Import Data</button>
     </nav>
     <div class="spine-mascot">
       <img src="/images/mascot-main.png" alt="Nubo the Book Sprite" />
@@ -68,30 +75,93 @@
     <img src="/images/mascot-main.png" alt="Nubo" />
     <div class="wb-text">
       <h3 id="wb-greeting">Welcome back!</h3>
-      <p>Here's how Students' Home is doing today.</p>
+      <p>Your academic overview for the selected academic year.</p>
     </div>
   </div>
-  <header class="page-head">
+  <header class="page-head dashboard-page-head">
     <div>
-      <p class="eyebrow">Overview</p>
-      <h1>Today's Standing</h1>
+      <p class="eyebrow">Academic Overview</p>
+      <h1>Academic Summary</h1>
+      <p class="hint">A snapshot of student performance, examinations and follow-up work.</p>
     </div>
   </header>
-  <div class="stat-row" id="stat-row"></div>
+  <div class="stat-row dashboard-academic-stats" id="academic-stat-row"></div>
+
+  <div class="two-col dashboard-academic-grid">
+    <section class="card">
+      <div class="card-head-row dashboard-card-head">
+        <div>
+          <h2>Weekly Test Performance</h2>
+          <p class="hint">Latest tests and their class-level results.</p>
+        </div>
+        <a class="btn btn-small btn-ghost" href="#weekly-tests">View all</a>
+      </div>
+      <div id="dashboard-weekly-tests" class="table-wrap"></div>
+    </section>
+    <section class="card">
+      <div class="card-head-row dashboard-card-head">
+        <div>
+          <h2>Recent Term Exams</h2>
+          <p class="hint">Summary of imported term examination results.</p>
+        </div>
+        <a class="btn btn-small btn-ghost" href="#term-exams">View all</a>
+      </div>
+      <div id="dashboard-term-exams" class="table-wrap"></div>
+    </section>
+  </div>
+
+  <div class="two-col dashboard-academic-grid">
+    <section class="card">
+      <div class="card-head-row dashboard-card-head">
+        <div>
+          <h2>Class-wise Top Performers</h2>
+          <p class="hint">Based on average percentage across weekly tests.</p>
+        </div>
+        <a class="btn btn-small btn-ghost" href="#weekly-tests">Leaderboard</a>
+      </div>
+      <div id="dashboard-top-performers"></div>
+    </section>
+    <section class="card">
+      <div class="card-head-row dashboard-card-head">
+        <div>
+          <h2>Academic Follow-up</h2>
+          <p class="hint">Work that still needs student attention.</p>
+        </div>
+      </div>
+      <div id="dashboard-academic-follow-up" class="dashboard-work-grid"></div>
+    </section>
+  </div>
+</template>
+
+<template id="tpl-finance-details">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Finance Overview</p>
+      <h1>Finance Details</h1>
+      <p class="hint">Fee collection, outstanding balances and recent receipts for the selected academic year.</p>
+    </div>
+  </header>
+  <div class="stat-row" id="finance-stat-row"></div>
   <div class="two-col">
     <section class="card">
       <h2>Fee Balance by Class</h2>
       <div id="fee-by-class" class="table-wrap"></div>
     </section>
     <section class="card">
-      <h2>Recent Admissions</h2>
-      <div id="recent-admissions" class="table-wrap"></div>
+      <h2>Recent Payments</h2>
+      <div id="recent-payments" class="table-wrap"></div>
     </section>
   </div>
-  <div class="card">
-    <h2>Recent Payments</h2>
-    <div id="recent-payments" class="table-wrap"></div>
-  </div>
+  <section class="card">
+    <div class="card-head-row">
+      <div>
+        <h2>Top 20 Students with Highest Pending Fee</h2>
+        <p class="hint" style="margin:6px 0 0;">Ranked by outstanding balance, highest first.</p>
+      </div>
+      <span class="tag due">Top 20</span>
+    </div>
+    <div id="top-pending-fees" class="table-wrap"></div>
+  </section>
 </template>
 
 <template id="tpl-students">
@@ -115,6 +185,24 @@
   <div class="pagination-bar" id="students-pagination"></div>
 </template>
 
+<template id="tpl-withdrawn-students">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Student Register &mdash; Archive</p>
+      <h1>Left / Withdrawn Students</h1>
+      <p class="hint">Student profiles, payments and academic records are retained here. Their unpaid balance is kept for historical reference but excluded from active fee-pending reports.</p>
+    </div>
+    <button class="btn btn-ghost" data-route="students">Back to Active Students</button>
+  </header>
+  <div class="filter-bar">
+    <input type="search" id="withdrawn-search" placeholder="Search by admission no, name, guardian or place…" />
+  </div>
+  <div class="card">
+    <div id="withdrawn-students-table" class="table-wrap"></div>
+    <div class="pagination-bar" id="withdrawn-students-pagination"></div>
+  </div>
+</template>
+
 <template id="tpl-student-detail">
   <header class="page-head">
     <div>
@@ -123,6 +211,8 @@
     </div>
     <div class="head-actions">
       <button class="btn btn-ghost" id="sd-back">&larr; Back to Students</button>
+      <button class="btn btn-ghost" id="sd-reset-parent">Reset Parent Login</button>
+      <button class="btn btn-ghost" id="sd-status-action">Move to Left / Withdrawn</button>
       <button class="btn btn-primary" id="sd-edit">Edit Details</button>
       <button class="btn btn-danger" id="sd-delete">Delete Student</button>
     </div>
@@ -262,7 +352,7 @@
       </label>
       <label>Receipt No. <span class="req">*</span>
         <input type="text" name="receipt_no" id="pf-receipt-no" required />
-        <span class="field-hint" id="pf-receipt-hint">Auto-filled from the last receipt — edit if needed.</span>
+        <span class="field-hint" id="pf-receipt-hint">Suggested from the last saved numeric receipt — your chosen number determines the next suggestion.</span>
       </label>
       <label>Amount <span class="req">*</span>
         <input type="number" name="amount" min="1" required />
@@ -273,10 +363,56 @@
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn-ghost hidden" id="pf-cancel-edit" data-route="payment-history">Cancel</button>
+      <button type="button" class="btn btn-danger hidden" id="pf-delete">Delete Receipt</button>
       <button type="submit" class="btn btn-primary" id="pf-submit">Record Payment</button>
     </div>
   </form>
   <div id="pf-status" class="status-banner hidden"></div>
+</template>
+
+<template id="tpl-fee-pending-slips">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Fee Management</p>
+      <h1>Fee Pending Slip Generation</h1>
+      <p class="hint">Create printable Malayalam fee reminders for active students in a selected class and division.</p>
+    </div>
+  </header>
+  <section class="card">
+    <h2>Slip Settings</h2>
+    <div class="form-grid form-grid-narrow fee-slip-settings">
+      <label>Class <span class="req">*</span>
+        <select id="fps-class"><option value="">Select Class</option></select>
+      </label>
+      <label>Division <span class="req">*</span>
+        <select id="fps-division" disabled><option value="">Select Division</option></select>
+      </label>
+      <label>Cumulative Paid Target per Student (₹) <span class="req">*</span>
+        <input type="number" id="fps-target" min="0.01" step="0.01" placeholder="e.g. 2000" />
+        <span class="field-hint">The total amount you want each student to have paid by the due date. The slip requests the difference between this target and the amount already paid, limited to the student's actual outstanding fee.</span>
+      </label>
+      <label>Due Date <span class="req">*</span>
+        <input type="date" id="fps-due-date" />
+      </label>
+    </div>
+    <div class="form-actions" style="justify-content:flex-start;">
+      <button class="btn btn-primary" id="fps-preview">Generate Slips</button>
+      <button class="btn btn-ghost" id="fps-reset" type="button">Reset</button>
+    </div>
+    <p class="hint">Only active students who have not yet reached the cumulative paid target and still have an outstanding fee are included. The requested amount is Target − Already Paid, limited to the actual outstanding fee. Withdrawn students are excluded. Generating slips does not record a payment or change the fee ledger.</p>
+    <div id="fps-status" aria-live="polite"></div>
+  </section>
+  <section class="card hidden" id="fps-results-card">
+    <div class="card-head-row">
+      <div>
+        <h2>Generated Fee Pending Slips</h2>
+        <p class="hint" style="margin:6px 0 0;">Review the list before printing. Four Malayalam slips are arranged per A4 page (2 × 2).</p>
+      </div>
+      <button class="btn btn-primary" id="fps-print">Print All Slips</button>
+    </div>
+    <div id="fps-summary" class="fee-summary"></div>
+    <div id="fps-results-table" class="table-wrap"></div>
+  </section>
 </template>
 
 <template id="tpl-payment-history">
@@ -369,6 +505,47 @@
   </div>
 </template>
 
+
+<template id="tpl-teacher-accounts">
+  <header class="page-head tpa-page-head">
+    <div>
+      <p class="eyebrow">Access Management</p>
+      <h1>Teacher Portal Accounts</h1>
+      <p class="hint">Create teacher logins and control the subjects and classes each teacher can access.</p>
+    </div>
+    <a class="btn btn-ghost" href="/teacher-login.html" target="_blank" rel="noopener">Open Teacher Login ↗</a>
+  </header>
+  <div class="two-col tpa-layout">
+    <section class="card">
+      <div class="card-head-row"><h2 id="tpa-form-title">Add Teacher Portal Account</h2><span class="tag">New login</span></div>
+      <form id="tpa-form" class="form">
+        <input type="hidden" name="id" />
+        <div class="form-grid form-grid-narrow">
+          <label>Teacher Name <span class="req">*</span><input name="name" required maxlength="100" placeholder="Full name" /></label>
+          <label>Teacher Code <span class="req">*</span><input name="teacher_code" required maxlength="20" placeholder="e.g. SN01" autocomplete="off" /><small class="field-hint">This code is the teacher's login ID.</small></label>
+        </div>
+        <div class="tpa-choice-group">
+          <div class="tpa-choice-head"><strong>Subjects <span class="req">*</span></strong><small>Select all subjects this teacher handles.</small></div>
+          <div id="tpa-subject-options" class="tpa-check-grid"></div>
+        </div>
+        <div class="tpa-choice-group">
+          <div class="tpa-choice-head"><strong>Classes Handled <span class="req">*</span></strong><small>Teachers can only view and enter impositions for these classes.</small></div>
+          <div id="tpa-class-options" class="tpa-check-grid tpa-class-grid"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost hidden" id="tpa-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="tpa-submit">Create Teacher Login</button>
+        </div>
+      </form>
+      <div id="tpa-credential-box" class="tpa-credential-box hidden" aria-live="polite"></div>
+    </section>
+    <section class="card">
+      <div class="card-head-row"><div><h2>Teacher Accounts</h2><p class="hint">Temporary passwords are shown only when created or reset.</p></div><span id="tpa-count" class="tag">0 accounts</span></div>
+      <div id="tpa-table" class="table-wrap"></div>
+    </section>
+  </div>
+</template>
+
 <template id="tpl-timetable">
   <header class="page-head">
     <div>
@@ -449,13 +626,269 @@
   </div>
 </template>
 
+<template id="tpl-mark-entry">
+  <header class="page-head me-page-head">
+    <div class="me-page-title">
+      <p class="eyebrow">Academic Records &mdash; Quick Entry</p>
+      <h1>Mark Entry</h1>
+      <p class="me-page-intro">Set up a Weekly Test, then enter marks one student at a time. Press <kbd>Enter</kbd> after the Admission Number and again after the mark.</p>
+    </div>
+    <button class="btn btn-ghost" data-route="weekly-tests">View Weekly Tests <span aria-hidden="true">→</span></button>
+  </header>
+
+  <div class="me-workflow-steps" aria-label="Mark entry steps">
+    <div class="me-workflow-step is-current"><span>01</span><div><strong>Test details</strong><small>Set date, class and topic</small></div></div>
+    <div class="me-workflow-connector"></div>
+    <div class="me-workflow-step"><span>02</span><div><strong>Enter marks</strong><small>Admission No. → Mark</small></div></div>
+    <div class="me-workflow-connector"></div>
+    <div class="me-workflow-step"><span>03</span><div><strong>Finish &amp; export</strong><small>Review the marklist</small></div></div>
+  </div>
+
+  <section class="card me-card me-setup-card">
+    <div class="me-card-heading">
+      <span class="me-step-number">01</span>
+      <div><h2>Test Details</h2><p>Enter these details once. They will be saved in the Weekly Tests register.</p></div>
+    </div>
+    <div class="me-meta-grid" id="me-meta-form">
+      <label class="me-field">Test Date <span class="req">*</span>
+        <input type="date" id="me-date" required />
+      </label>
+      <label class="me-field">Class <span class="req">*</span>
+        <select id="me-class" required><option value="">Select class</option></select>
+      </label>
+      <label class="me-field">Maximum Marks
+        <input type="number" id="me-max-marks" min="0.5" max="1000" step="0.5" value="20" required />
+      </label>
+      <label class="me-field me-field-wide">Subject <span class="req">*</span>
+        <input type="text" id="me-subject" placeholder="e.g. Mathematics" required />
+      </label>
+      <label class="me-field me-field-wide">Topic <span class="req">*</span>
+        <input type="text" id="me-topic" placeholder="e.g. Quadratic Equations" required />
+      </label>
+    </div>
+    <div class="me-setup-footer">
+      <button class="btn btn-primary me-start-btn" id="me-load-session"><span aria-hidden="true">▶</span> Start / Resume Mark Entry</button>
+      <p class="me-status-text" id="me-session-status">Select the test details to begin.</p>
+    </div>
+  </section>
+
+  <section class="card me-card me-entry-card" id="me-entry-card" style="opacity:.65;">
+    <div class="me-entry-card-top">
+      <div class="me-card-heading">
+        <span class="me-step-number me-step-teal">02</span>
+        <div><h2>Enter Student Marks</h2><p>Fast keyboard entry &mdash; no need to click between students.</p></div>
+      </div>
+      <div class="me-entry-mode"><span class="me-live-dot"></span> Live entry</div>
+    </div>
+    <div class="me-entry-form">
+      <label class="me-field me-admission-field">Admission Number <span class="req">*</span>
+        <div class="me-input-with-icon"><span aria-hidden="true">⌕</span><input type="text" id="me-admission" placeholder="Type Admission Number" autocomplete="off" enterkeyhint="go" disabled /></div>
+        <small class="me-field-note" id="me-admission-hint">Type the Admission Number and press Enter.</small>
+      </label>
+      <div class="me-entry-arrow" aria-hidden="true">→</div>
+      <label class="me-field me-mark-field">Mark <span class="req">*</span>
+        <div class="me-mark-input-wrap"><input type="number" id="me-mark" min="0" step="0.5" placeholder="0" enterkeyhint="done" disabled /><span id="me-mark-max-label">/ 20</span></div>
+        <small class="me-field-note">Press Enter to save and load the next student.</small>
+      </label>
+    </div>
+    <div id="me-student-matches" class="me-student-matches" aria-live="polite"></div>
+    <div id="me-selected-student" class="me-selected-student hidden"></div>
+    <div class="me-entry-footer">
+      <div class="me-entry-actions">
+        <button class="btn btn-primary me-save-btn" id="me-save-mark" disabled>Save Mark <kbd>Enter</kbd></button>
+        <button class="btn btn-ghost" id="me-clear-student" disabled>Clear</button>
+        <button class="btn btn-finish" id="me-finish-entry" disabled>Finish Entry <span aria-hidden="true">✓</span></button>
+      </div>
+      <p class="me-status-text" id="me-save-status">Start a test session to enable mark entry.</p>
+    </div>
+    <div class="me-keyboard-guide"><span><kbd>Enter</kbd> after Admission No.</span><span class="me-guide-arrow">→</span><span><kbd>Enter</kbd> after Mark</span><span class="me-guide-arrow">→</span><strong>Next student loads automatically</strong></div>
+  </section>
+
+  <section class="card me-card me-marklist-card">
+    <div class="me-marklist-header">
+      <div class="me-card-heading">
+        <span class="me-step-number me-step-muted">03</span>
+        <div><h2>Weekly Test Marklist</h2><p id="me-mark-count">No test selected.</p></div>
+      </div>
+      <button class="btn btn-export" id="me-export" disabled><span aria-hidden="true">↓</span> Export Excel</button>
+    </div>
+    <div class="table-wrap" id="me-marklist"></div>
+  </section>
+</template>
+
+
+<template id="tpl-assignments">
+  <header class="page-head as-page-head">
+    <div>
+      <p class="eyebrow">Student Work Register &mdash; Administration</p>
+      <h1>Assignment Portal</h1>
+      <p class="as-intro">Assign work to a class and division in one batch, then track each student's submission.</p>
+    </div>
+    <button class="btn btn-ghost" id="as-export">Export Excel</button>
+  </header>
+
+  <div class="as-stats" id="as-stats">
+    <div class="as-stat"><span>Total assignments</span><strong id="as-total-count">0</strong></div>
+    <div class="as-stat"><span>Pending submissions</span><strong id="as-pending-count">0</strong></div>
+    <div class="as-stat"><span>Submitted</span><strong id="as-submitted-count">0</strong></div>
+    <div class="as-stat"><span>Overdue</span><strong id="as-overdue-count">0</strong></div>
+  </div>
+
+  <section class="card as-entry-card">
+    <div class="as-section-head">
+      <div class="as-step">01</div>
+      <div><h2>Create Assignment — Batch Entry</h2><p>Choose the teacher and class details, paste Admission Numbers, preview the students and confirm.</p></div>
+    </div>
+    <div class="as-batch-grid">
+      <label class="as-field">Given Date *
+        <input id="as-date" type="date" />
+      </label>
+      <label class="as-field">Teacher *
+        <div class="as-teacher-control">
+          <select id="as-teacher"><option value="">Select teacher</option></select>
+          <button type="button" class="btn btn-ghost btn-small" id="as-add-teacher">+ Add</button>
+        </div>
+      </label>
+      <label class="as-field">Subject *
+        <select id="as-subject" disabled><option value="">Select teacher first</option></select>
+      </label>
+      <label class="as-field">Class *
+        <select id="as-class"><option value="">Select class</option></select>
+      </label>
+      <label class="as-field">Division *
+        <select id="as-division" disabled><option value="">Select class first</option></select>
+      </label>
+    </div>
+    <label class="as-field as-admission-list-field">Admission Numbers *
+      <textarea id="as-admission-list" rows="4" placeholder="Paste Admission Numbers here — one per line, or separated by commas / spaces"></textarea>
+      <small>Class 10: first 3 digits; Classes 8 and 9: first 4 digits. Full Admission Numbers are also accepted. Maximum 500 students per batch.</small>
+    </label>
+    <div class="as-due-row">
+      <label class="as-field">Due Date *
+        <input id="as-due-date" type="date" />
+        <small>Defaults to one day after the given date. You can change it.</small>
+      </label>
+    </div>
+    <div class="as-work-extra-grid">
+      <label class="as-field">Work Type
+        <select id="as-type"><option>Imposition</option><option>Other Assignment</option></select>
+      </label>
+      <label class="as-field">Imposition / Work Details (optional)
+        <input id="as-details" type="text" maxlength="250" placeholder="e.g. Complete questions 1–10" />
+      </label>
+    </div>
+    <div id="as-add-teacher-panel" class="as-add-teacher-panel hidden">
+      <label class="as-field">Subject for new teacher
+        <select id="as-new-teacher-subject"><option value="">Select subject</option></select>
+      </label>
+      <label class="as-field">Teacher name / initials
+        <input id="as-new-teacher-name" type="text" maxlength="60" placeholder="e.g. AB or Full Name" />
+      </label>
+      <button type="button" class="btn btn-primary btn-small" id="as-save-teacher">Add Teacher</button>
+      <button type="button" class="btn btn-ghost btn-small" id="as-cancel-add-teacher">Cancel</button>
+    </div>
+    <div class="as-entry-footer">
+      <div class="as-actions">
+        <button class="btn btn-primary" id="as-preview">Preview Students</button>
+        <button class="btn btn-ghost" id="as-clear">Clear Form</button>
+      </div>
+      <p id="as-status" class="as-status">Fill the assignment details and paste the Admission Numbers.</p>
+    </div>
+    <div id="as-preview-panel" class="as-preview-panel hidden">
+      <div class="as-preview-head">
+        <div><h3>02 · Preview Students</h3><p id="as-preview-summary" class="hint">Review the students before confirming.</p></div>
+        <button class="btn btn-primary" id="as-confirm" disabled>Confirm &amp; Create Assignments</button>
+      </div>
+      <div id="as-preview-table" class="table-wrap"></div>
+    </div>
+  </section>
+
+  <section class="card as-pending-card">
+    <div class="as-list-head">
+      <div><h2>Pending Submissions</h2><p id="as-pending-list-count" class="hint">Assignments awaiting submission.</p></div>
+      <div class="as-export-actions"><button class="btn btn-ghost btn-small" id="as-export-pending">Export Pending Report</button><button class="btn btn-ghost btn-small" id="as-refresh-pending">Refresh</button></div>
+    </div>
+    <div class="table-wrap" id="as-pending-register"></div>
+  </section>
+
+  <section class="card as-list-card">
+    <div class="as-list-head">
+      <div><h2>Assignment Register</h2><p id="as-list-count" class="hint">Loading records…</p></div>
+      <div class="as-filter-tools">
+        <input type="date" id="as-filter-date" aria-label="Filter by given date" />
+        <select id="as-filter-status"><option value="">All statuses</option><option>Pending</option><option>Submitted</option></select>
+        <select id="as-filter-type"><option value="">All types</option><option>Imposition</option><option>Other Assignment</option></select>
+        <select id="as-filter-subject"><option value="">All subjects</option></select>
+        <input type="search" id="as-filter-search" placeholder="Search student / admission no." />
+        <button class="btn btn-ghost btn-small" id="as-filter-clear">Clear</button>
+      </div>
+    </div>
+    <div class="table-wrap" id="as-register"></div>
+  </section>
+</template>
+
+<template id="tpl-late-arrival-work">
+  <header class="page-head la-page-head">
+    <div>
+      <p class="eyebrow">Student Conduct &amp; Follow-up</p>
+      <h1>Late Arrival Additional Work</h1>
+      <p class="la-intro">Record additional work for late arrivals, preview the student list, and track submissions.</p>
+    </div>
+    <button class="btn btn-ghost" id="la-export">Export All Records (Excel)</button>
+  </header>
+
+  <div class="la-stats">
+    <div class="la-stat"><span>Total records</span><strong id="la-total-count">0</strong></div>
+    <div class="la-stat"><span>Pending</span><strong id="la-pending-count">0</strong></div>
+    <div class="la-stat"><span>Submitted</span><strong id="la-submitted-count">0</strong></div>
+    <div class="la-stat"><span>Overdue</span><strong id="la-overdue-count">0</strong></div>
+  </div>
+
+  <section class="card la-entry-card">
+    <div class="la-section-head"><span class="la-step">01</span><div><h2>Record Late Arrivals</h2><p>Enter the date and student Admission Numbers, preview the matches, then finish to save additional work for each student.</p></div></div>
+    <div class="la-form-grid la-form-grid-any-class">
+      <label class="la-field">Date of Late Arrival *<input id="la-date" type="date"></label>
+      <div class="la-field la-entry-scope-note"><span>All Classes &amp; Divisions</span><small>Students from every active class and division can be included in the same batch. Their class and division will be identified automatically from the Admission Number.</small></div>
+    </div>
+    <label class="la-field la-adm-field">Admission Numbers *
+      <textarea id="la-admission-list" rows="4" placeholder="Paste Admission Numbers from any class — one per line, or separated by commas / spaces"></textarea>
+      <small>Use at least 3 digits for Class 10 and 4 digits for Classes 8 and 9. If a prefix matches multiple students, enter the full Admission Number. Full Admission Numbers are always accepted. Maximum 500 students.</small>
+    </label>
+    <div class="la-date-note" id="la-due-note">Due date will be the day after the late-arrival date.</div>
+    <div class="la-entry-footer">
+      <div class="la-actions"><button class="btn btn-primary" id="la-preview">Preview Students</button><button class="btn btn-ghost" id="la-clear">Clear Form</button></div>
+      <p id="la-status" class="la-status">Enter the date and Admission Numbers from any class.</p>
+    </div>
+    <div id="la-preview-panel" class="la-preview-panel hidden">
+      <div class="la-preview-head"><div><h3>02 · Preview &amp; Confirm</h3><p id="la-preview-summary" class="hint">Review matched students before saving.</p><p class="la-due-preview">Due date: <strong id="la-preview-due">—</strong> (automatically one day after)</p></div>
+        <button class="btn btn-primary" id="la-finish" disabled>Finish &amp; Save Work</button></div>
+      <div class="table-wrap" id="la-preview-table"></div>
+    </div>
+  </section>
+
+  <section class="card la-pending-card">
+    <div class="la-list-head"><div><h2>Pending Late Arrival Work</h2><p id="la-pending-list-count" class="hint">Work awaiting submission.</p></div><div class="la-export-actions"><button class="btn btn-ghost btn-small" id="la-export-pending">Export Pending Records</button><button class="btn btn-ghost btn-small" id="la-refresh-pending">Refresh</button></div></div>
+    <div class="table-wrap" id="la-pending-register"></div>
+  </section>
+
+  <section class="card la-list-card">
+    <div class="la-list-head"><div><h2>Late Arrival Work Register</h2><p id="la-list-count" class="hint">Loading records…</p></div>
+      <div class="la-filter-tools"><input type="date" id="la-filter-date" aria-label="Filter by date"><select id="la-filter-status"><option value="">All statuses</option><option>Pending</option><option>Submitted</option></select><select id="la-filter-class"><option value="">All classes</option></select><select id="la-filter-division"><option value="">All divisions</option></select><input type="search" id="la-filter-search" placeholder="Search student / admission no."><button class="btn btn-ghost btn-small" id="la-filter-clear">Clear</button></div>
+    </div>
+    <div class="table-wrap" id="la-register"></div>
+  </section>
+</template>
+
 <template id="tpl-weekly-tests">
   <header class="page-head">
     <div>
       <p class="eyebrow">Register &mdash; Section 09</p>
       <h1>Weekly Tests</h1>
     </div>
-    <button class="btn btn-primary" data-route="import">+ Import Marks</button>
+    <div class="head-actions">
+      <button class="btn btn-ghost" data-route="mark-entry">Quick Mark Entry</button>
+      <button class="btn btn-primary" data-route="import">+ Import Marks</button>
+    </div>
   </header>
   <div class="table-wrap" id="wt-list"></div>
 
@@ -610,6 +1043,21 @@
     </section>
 
     <section class="card">
+      <h2>Update Student Divisions</h2>
+      <p class="hint" style="margin:0 0 14px;">Update only the division of existing students by matching Admission No. Use this when students move between divisions during the academic year. Student details, fee records, marks and other information will not be changed. Left / Withdrawn students are skipped.</p>
+      <div class="import-actions">
+        <a href="/templates/division-update-template.xlsx" download class="btn btn-ghost btn-small">Download Sample</a>
+        <label class="btn btn-primary btn-small file-btn">
+          Choose Excel File
+          <input type="file" id="import-divisions-file" accept=".xlsx,.xls" class="hidden" />
+        </label>
+        <span class="import-filename" id="import-divisions-filename"></span>
+      </div>
+      <button class="btn btn-primary" id="import-divisions-submit" style="margin-top:14px;" disabled>Upload &amp; Update Divisions</button>
+      <div id="import-divisions-result"></div>
+    </section>
+
+    <section class="card">
       <h2>Import Teachers</h2>
       <p class="hint" style="margin:0 0 14px;">Matched by Name (case-insensitive) — re-uploading updates existing teachers instead of duplicating them.</p>
       <div class="import-actions">
@@ -702,6 +1150,7 @@
   </section>
 </template>
 
+<div id="fee-slip-print" aria-hidden="true"></div>
 <script src="/js/app.js"></script>
 </body>
 </html>
