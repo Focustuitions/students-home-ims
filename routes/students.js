@@ -322,13 +322,18 @@ function weeklyTestReportHandler(req, res) {
     SELECT assignment_type, subject, teacher_name, given_date, due_date,
       submission_status, submitted_date, details
     FROM student_assignments
+<<<<<<< HEAD
     WHERE admission_no = ? AND (academic_year_id = ? OR academic_year_id IS NULL)
+=======
+    WHERE admission_no = ? AND academic_year_id = ?
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     ORDER BY given_date DESC, id DESC
   `).all(req.params.admission_no, yearId);
 
   const lateArrivalWorks = db.prepare(`
     SELECT late_date, due_date, submission_status, submitted_date, details
     FROM late_arrival_works
+<<<<<<< HEAD
     WHERE admission_no = ? AND (academic_year_id = ? OR academic_year_id IS NULL)
     ORDER BY late_date DESC, id DESC
   `).all(req.params.admission_no, yearId);
@@ -351,6 +356,12 @@ function weeklyTestReportHandler(req, res) {
       : null,
   };
 
+=======
+    WHERE admission_no = ? AND academic_year_id = ?
+    ORDER BY late_date DESC, id DESC
+  `).all(req.params.admission_no, yearId);
+
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   // Risk flags: a quick, scannable summary of anything that might need
   // attention, pulled from data already computed above.
   const riskFlags = [];
@@ -387,8 +398,11 @@ function weeklyTestReportHandler(req, res) {
     termExams,
     assignments,
     lateArrivalWorks,
+<<<<<<< HEAD
     attendanceRecords,
     attendanceSummary,
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     crossAnalysis,
     riskFlags,
   });

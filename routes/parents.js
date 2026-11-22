@@ -229,11 +229,23 @@ router.get('/dashboard', requireParentAuth, (req, res) => {
   }
   const admissionNo = req.parent.admission_no;
   const student = db.prepare(`
+<<<<<<< HEAD
     SELECT admission_no, name, class, division, medium, school, joining_date, status, academic_year_id
+=======
+    SELECT admission_no, name, class, division, medium, school, joining_date, total_fees, discount, net_fees, status
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     FROM students WHERE admission_no = ?
   `).get(admissionNo);
   if (!student) return res.status(404).json({ error: 'Student record not found.' });
 
+<<<<<<< HEAD
+=======
+  const payments = db.prepare(`
+    SELECT receipt_no, amount, payment_date
+    FROM payments WHERE admission_no = ?
+    ORDER BY payment_date DESC, id DESC
+  `).all(admissionNo);
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const weeklyTests = db.prepare(`
     SELECT t.exam_name, t.subject, t.topic, t.test_date, t.max_marks, m.marks, m.is_absent
     FROM weekly_test_marks m JOIN weekly_tests t ON t.id = m.weekly_test_id
@@ -252,6 +264,7 @@ router.get('/dashboard', requireParentAuth, (req, res) => {
     FROM hot_seats WHERE admission_no = ?
     ORDER BY date DESC, id DESC
   `).all(admissionNo);
+<<<<<<< HEAD
   const yearId = student.academic_year_id;
   const assignments = db.prepare(`
     SELECT assignment_type, subject, teacher_name, given_date, due_date,
@@ -293,6 +306,24 @@ router.get('/dashboard', requireParentAuth, (req, res) => {
     lateArrivalWorks,
     attendanceRecords,
     attendanceSummary,
+=======
+
+  const paid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    student,
+    fees: {
+      total_fees: Number(student.total_fees || 0),
+      discount: Number(student.discount || 0),
+      net_fees: Number(student.net_fees || 0),
+      paid: Math.round(paid * 100) / 100,
+      balance: Math.round((Number(student.net_fees || 0) - paid) * 100) / 100,
+    },
+    payments,
+    weeklyTests,
+    termExams,
+    observations,
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   });
 });
 
@@ -304,11 +335,17 @@ router.get('/performance-report', requireParentAuth, (req, res) => {
   if (req.parent.must_change_password) {
     return res.status(403).json({ error: 'Change your initial password before viewing student records.', mustChangePassword: true });
   }
+<<<<<<< HEAD
   const reportStudent = db.prepare('SELECT academic_year_id FROM students WHERE admission_no = ?').get(req.parent.admission_no);
   if (!reportStudent) return res.status(404).json({ error: 'Student record not found.' });
   const reportReq = {
     params: { admission_no: req.parent.admission_no },
     query: { academic_year_id: reportStudent.academic_year_id },
+=======
+  const reportReq = {
+    params: { admission_no: req.parent.admission_no },
+    query: {},
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   };
   const reportRes = {
     json(data) {

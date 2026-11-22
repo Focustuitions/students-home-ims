@@ -4,8 +4,13 @@
 1. Sign in to the Admin Portal.
 2. Open **Teacher Portal Accounts**.
 3. Add the teacher name, a unique Teacher Code, one or more subjects, and one or more classes handled.
+<<<<<<< HEAD
 4. Copy the generated 4-digit numeric password and share it privately with the teacher. It is displayed only when created or reset; Admin can reset it at any time.
 5. Teachers sign in at `/teacher-login.html` using their Teacher Code and 4-digit numeric password. No 8-character password change is required.
+=======
+4. Copy the generated temporary password and share it privately with the teacher. The temporary password is displayed only once; Admin can reset it to generate another one.
+5. Teachers sign in at `/teacher-login.html` using Teacher Code and temporary password, then set a private password (minimum 8 characters).
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
 ## Teacher workflow
 1. Open `/teacher-login.html`.
@@ -17,13 +22,19 @@ Teachers can only access students in assigned classes and subjects assigned to t
 
 ## Credentials and sessions
 - Teacher Code is the login ID.
+<<<<<<< HEAD
 - A random 4-digit numeric login password is generated at account creation/reset and stored only as a bcrypt hash.
 - Teacher passwords are exactly four numeric digits. Existing accounts with an older password can be moved to a 4-digit password by using Admin → Reset Password.
+=======
+- A random temporary password is generated at account creation/reset and stored only as a bcrypt hash.
+- First sign-in requires a new password (at least 8 characters).
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 - Teacher sessions are separate from Admin and Parent sessions and expire after 12 hours.
 - Admin can edit teacher permissions, reset passwords, or deactivate access.
 
 ## Database changes
 The app creates `teacher_portal_accounts`, `teacher_portal_sessions`, and `teacher_login_attempts` automatically. It adds `teacher_account_id` to `student_assignments` to keep each teacher's recent activity associated with their account. Existing student, fee, payment, test and assignment records are preserved. Keep the existing `DB_PATH` unchanged.
+<<<<<<< HEAD
 ## Shared imposition submission tracking
 - Impositions assigned by Admin are linked to the matching active Teacher Portal account when the teacher name resolves uniquely.
 - Teacher Portal lists the impositions explicitly linked to that teacher account by Admin, along with older unlinked records that uniquely match the teacher name within the teacher's permitted classes and subjects.
@@ -34,3 +45,5 @@ The app creates `teacher_portal_accounts`, `teacher_portal_sessions`, and `teach
 - Admins can delete individual imposition rows from Admin → Impositions & Assignments.
 - Teachers can delete individual imposition rows assigned to their account from Teacher Portal → Assigned Impositions & Submissions. The teacher-side server route enforces the same account/class/subject ownership scope used for status updates.
 - Deletion requires confirmation, including student, class, subject, date and current submission status. It permanently removes that shared `student_assignments` row from both portals. No database migration is required.
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d

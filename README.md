@@ -413,7 +413,11 @@ See [TEACHER_PORTAL.md](TEACHER_PORTAL.md) for how Admin creates teacher account
 Teachers can select a date, assigned class, division and subject, paste multiple Admission Numbers, preview matches and confirm the batch. Preview is read-only; confirmation revalidates permissions and student status and saves in one transaction. Class 10 supports 3-digit prefixes; Classes 8 and 9 support 4-digit prefixes. Ambiguous prefixes require full Admission Numbers. See `TEACHER_BATCH_IMPOSITION.md`.
 
 ### Admin Assignment Portal update
+<<<<<<< HEAD
 The Assignment Portal now supports date/teacher/subject/class/division batch assignment, due-date selection (defaulting to one day after the given date), Admission Number preview and confirmation, separate Assignment Pending and Assignment History lists, marking items Submitted, and reversing a mistaken submission back to Pending. Submitted entries are removed from Pending and shown in History with a Reverse action. Excel exports include due/submission details. See `ADMIN_ASSIGNMENT_BATCH_AND_SUBMISSIONS.md`.
+=======
+The Assignment Portal now supports date/teacher/subject/class/division batch assignment, due-date selection (defaulting to one day after the given date), Admission Number preview and confirmation, Pending Submissions, marking individual assignments Submitted/Pending, and Excel exports with due/submission details. See `ADMIN_ASSIGNMENT_BATCH_AND_SUBMISSIONS.md`.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
 
 ## Late Arrival Additional Work
@@ -424,13 +428,18 @@ Admin can record additional work for late arrivals in **Late Arrival Work**. Sel
 
 - Late Arrival Work has an **Export All Records (Excel)** button. It exports the rows matching the current Late Arrival register filters.
 - Pending Late Arrival Work has a separate **Export Pending Records** button. It exports unsubmitted work for the selected academic year; overdue rows are labelled Overdue.
+<<<<<<< HEAD
 - Assignment Pending in the Assignment Portal has an **Export Pending Report** button. It exports unsubmitted assignments for the selected academic year; overdue rows are labelled Overdue.
+=======
+- Pending Submissions in the Assignment Portal has an **Export Pending Report** button. It exports unsubmitted assignments for the selected academic year; overdue rows are labelled Overdue.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 - The Assignment Register's existing Export Excel button remains available and respects its current filters.
 
 These report exports do not change student, assignment, late-arrival, or submission data. No database migration is required for this update.
 
 
 Late Arrival Work supports a mixed-class, mixed-division batch. Enter the late-arrival date and admission numbers only; the preview identifies each student's class and division. Class/division filters remain available in the register.
+<<<<<<< HEAD
 
 ## Bulk Submission Marking
 
@@ -446,3 +455,5 @@ The Admin portals support preview-first bulk marking of Assignment and Late Arri
 
 ## Latest update — Parent Portal and class-wide assignments
 See `PARENT_AND_CLASS_WIDE_ASSIGNMENTS.md` for removal of fee information from the Parent Portal and the new assignment-to-entire-class option.
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d

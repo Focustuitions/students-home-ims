@@ -58,6 +58,7 @@
   .mono { font-variant-numeric:tabular-nums; white-space:nowrap; }
   .empty { text-align:center; color:var(--mute); font-size:12.5px; padding:19px 10px; }
   .pill { display:inline-block; border-radius:20px; background:#E8F7F6; color:var(--teal-deep); font-size:10.5px; font-weight:700; padding:4px 8px; white-space:nowrap; }
+<<<<<<< HEAD
   .pill.present,.pill.submitted { background:#EAF8F1; color:#176B4A; }
   .pill.absent,.pill.overdue { background:#FFF0F4; color:#A92050; }
   .pill.pending { background:#FFF7E8; color:#8A5C0C; }
@@ -66,6 +67,8 @@
   .attendance-metric .k { color:var(--mute); text-transform:uppercase; letter-spacing:.4px; font-size:9.5px; font-weight:800; }
   .attendance-metric .v { color:var(--navy); font:800 20px 'Baloo 2',sans-serif; margin-top:3px; }
   .attendance-note { color:var(--mute); font-size:11px; margin:9px 0 0; }
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   .danger { color:#A92050; }
   .loading,.top-error { text-align:center; background:#fff; border:1px solid var(--line); border-radius:11px; padding:30px 20px; color:var(--mute); }
   .top-error { color:#921C42; background:#FFF5F8; border-color:#F1CAD7; }
@@ -79,12 +82,17 @@
   .form-error { color:#921C42; background:#FFF5F8; border:1px solid #F1CAD7; border-radius:7px; padding:9px 11px; font-size:12px; margin-top:12px; }
   .form-success { color:#176B4A; background:#EDFAF4; border:1px solid #BDE8D4; border-radius:7px; padding:9px 11px; font-size:12px; margin-top:12px; }
   footer { color:var(--mute); text-align:center; font-size:11px; padding:0 20px 26px; }
+<<<<<<< HEAD
   @media(max-width:760px) { header { padding:14px 16px; } .brand img.mascot { display:none; } .brand-title { font-size:18px; } .welcome { align-items:flex-start; flex-direction:column; padding:18px; } .welcome-actions { width:100%; justify-content:flex-start; } .stats { grid-template-columns:1fr; gap:9px; } .stat { display:flex; align-items:center; justify-content:space-between; padding:13px 15px; gap:12px; } .stat .value { font-size:20px; margin-top:0; text-align:right; } .grid { grid-template-columns:1fr; gap:0; } .portal-links { grid-template-columns:1fr; gap:10px; } .portal-link { padding:16px; } main { margin-top:15px; padding:0 12px; } .card { padding:16px 13px; } .profile-grid { gap:12px; } .attendance-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } h1 { font-size:24px; } }
 </style>
 
 <link rel="stylesheet" href="/css/mobile.css" />
 
 <link rel="stylesheet" href="/css/desktop-fit.css?v=1366-768-1920-1080-1" />
+=======
+  @media(max-width:760px) { header { padding:14px 16px; } .brand img.mascot { display:none; } .brand-title { font-size:18px; } .welcome { align-items:flex-start; flex-direction:column; padding:18px; } .welcome-actions { width:100%; justify-content:flex-start; } .stats { grid-template-columns:1fr; gap:9px; } .stat { display:flex; align-items:center; justify-content:space-between; padding:13px 15px; gap:12px; } .stat .value { font-size:20px; margin-top:0; text-align:right; } .grid { grid-template-columns:1fr; gap:0; } .portal-links { grid-template-columns:1fr; gap:10px; } .portal-link { padding:16px; } main { margin-top:15px; padding:0 12px; } .card { padding:16px 13px; } .profile-grid { gap:12px; } h1 { font-size:24px; } }
+</style>
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 </head>
 <body>
 <header>
@@ -121,7 +129,19 @@
         <a class="download-report" href="/parent-performance-report.html" target="_blank" rel="noopener">↓ Download Student Performance Sheet</a>
       </div>
     </section>
+<<<<<<< HEAD
     <section class="card"><h2>Student Details</h2><div id="student-profile" class="profile-grid"></div></section>
+=======
+    <section class="stats">
+      <div class="stat"><div class="label">Total fees after discount</div><div class="value" id="fee-total">₹0</div></div>
+      <div class="stat"><div class="label">Fees paid</div><div class="value" id="fee-paid">₹0</div></div>
+      <div class="stat alert"><div class="label">Balance due</div><div class="value" id="fee-balance">₹0</div></div>
+    </section>
+    <div class="grid">
+      <section class="card"><h2>Student Details</h2><div id="student-profile" class="profile-grid"></div></section>
+      <section class="card"><h2>Fee Payment History</h2><div id="payments-table" class="table-wrap"></div></section>
+    </div>
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     <section class="portal-links" aria-label="Academic records">
       <a class="portal-link" href="/parent-weekly-tests.html">
         <div><h2>Weekly Tests</h2><p>Open individual weekly test and chapter assessment marks.</p></div>
@@ -132,6 +152,7 @@
         <span style="display:flex;align-items:center;gap:8px"><span class="link-count" id="term-count">0</span><span class="arrow" aria-hidden="true">›</span></span>
       </a>
     </section>
+<<<<<<< HEAD
     <section class="card">
       <h2>Assignment Details <span class="section-count" id="assignment-count">0</span></h2>
       <p class="section-intro">Regular impositions and assignments set for your child, including submission status.</p>
@@ -149,12 +170,18 @@
       <div id="attendance-table" class="table-wrap"></div>
       <p id="attendance-note" class="attendance-note"></p>
     </section>
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     <section class="card"><h2>Teacher Observations</h2><div id="observations-table" class="table-wrap"></div></section>
   </div>
 </main>
 <footer>Students' Home · Kottakkal</footer>
 <script>
 const $ = id => document.getElementById(id);
+<<<<<<< HEAD
+=======
+const rupee = value => '₹' + Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateText = value => value ? esc(value) : '—';
 const markText = row => row.is_absent ? 'Absent' : (row.marks == null ? '—' : `${esc(row.marks)} / ${esc(row.max_marks)}`);
@@ -165,6 +192,7 @@ function table(headers, rows, emptyText) {
 function profileItem(label, value) {
   return `<div class="profile-item"><div class="k">${esc(label)}</div><div class="v">${esc(value || '—')}</div></div>`;
 }
+<<<<<<< HEAD
 function submissionBadge(row) {
   if ((row.submission_status || 'Pending') === 'Submitted') {
     return `<span class="pill submitted">Submitted</span>${row.submitted_date ? `<br><small>${dateText(row.submitted_date)}</small>` : ''}`;
@@ -205,6 +233,8 @@ function renderAttendance(data) {
     ? `Showing the latest ${recent.length} of ${records.length} recorded days. The full attendance history is included in the Student Performance Sheet.`
     : records.length ? 'The complete recorded attendance history is shown above.' : 'Attendance details will appear here after the institution uploads the absent report.';
 }
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 function showError(message) {
   $('loading').classList.add('hidden');
   $('portal-content').classList.add('hidden');
@@ -234,16 +264,32 @@ function renderDashboard(data) {
   $('student-name').textContent = s.name || 'Student';
   $('student-subtitle').textContent = `Class ${s.class || '—'}-${s.division || '—'} · ${s.school || 'School not recorded'}`;
   $('admission-tag').textContent = `Admission No. ${s.admission_no}`;
+<<<<<<< HEAD
+=======
+  $('fee-total').textContent = rupee(data.fees.net_fees);
+  $('fee-paid').textContent = rupee(data.fees.paid);
+  $('fee-balance').textContent = rupee(Math.max(0, data.fees.balance));
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   $('student-profile').innerHTML = [
     profileItem('Name', s.name), profileItem('Admission Number', s.admission_no),
     profileItem('Class & Division', `${s.class || ''}-${s.division || ''}`), profileItem('Medium', s.medium),
     profileItem('School', s.school), profileItem('Joining Date', s.joining_date),
+<<<<<<< HEAD
     profileItem('Status', s.status),
   ].join('');
   $('weekly-count').textContent = data.weeklyTests.length;
   $('term-count').textContent = data.termExams.length;
   renderWorkRecords(data);
   renderAttendance(data);
+=======
+    profileItem('Fee Discount', rupee(s.discount)), profileItem('Status', s.status),
+  ].join('');
+  $('payments-table').innerHTML = table(['Date','Receipt No.','Amount'], data.payments.map(p =>
+    `<tr><td class="mono">${dateText(p.payment_date)}</td><td class="mono">${esc(p.receipt_no)}</td><td class="mono">${rupee(p.amount)}</td></tr>`
+  ), 'No fee payments are recorded yet.');
+  $('weekly-count').textContent = data.weeklyTests.length;
+  $('term-count').textContent = data.termExams.length;
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   $('observations-table').innerHTML = table(['Date','Subject','Performance','Classroom Checklist'], data.observations.map(o => {
     const checks = [];
     if (o.notes_completed) checks.push('Notes complete');

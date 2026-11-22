@@ -66,7 +66,11 @@ router.post('/logout', (req, res) => {
 
 router.post('/change-password', requireTeacherAuth, (req, res) => {
   const newPassword = String((req.body && req.body.new_password) || '');
+<<<<<<< HEAD
   if (!/^\d{4}$/.test(newPassword)) return res.status(400).json({ error: 'Teacher password must be exactly 4 digits.' });
+=======
+  if (newPassword.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const hash = bcrypt.hashSync(newPassword, 12);
   db.prepare("UPDATE teacher_portal_accounts SET password_hash = ?, must_change_password = 0, updated_at = datetime('now') WHERE id = ?").run(hash, req.teacher.id);
   // Rotate the session after a successful password change.

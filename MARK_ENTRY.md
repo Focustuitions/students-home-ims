@@ -8,7 +8,11 @@ The Admin **Mark Entry** page is a quick-entry interface for the existing Weekly
 2. Select **Start / Resume Mark Entry**. Existing marks for the matching Weekly Test are loaded.
 3. Type an Admission Number and press **Enter**. For Class 10, the first three digits can be used when they identify one student; if multiple students match, select the correct student from the candidate list.
 4. Enter the mark and press **Enter**. The mark is saved and the Admission Number field is ready for the next student.
+<<<<<<< HEAD
 5. Select **Finish** to review and complete the class marklist. The confirmation shows the number of active students who still have no result. When confirmed, every active, non-withdrawn student in the selected class and academic year without a saved mark is recorded as **Absent** (`marks = NULL`, `is_absent = 1`). Previously entered marks (including a score of zero) and existing Absent records are preserved. The complete marklist remains available for Excel export.
+=======
+5. Select **Finish** to acknowledge the end of the entry session. The saved marklist remains available for Excel export.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
 The Save Mark and Clear buttons remain available as mouse/touch alternatives. Existing marks trigger a replacement confirmation before being changed.
 
@@ -24,4 +28,8 @@ Every Weekly Test now has an entry status. A test created through Quick Mark Ent
 
 To continue later, open **Weekly Tests** and select **Resume Entry** for an in-progress test. The Mark Entry screen restores the original date, class, subject, topic and maximum marks, loads all already-saved marks, and focuses the Admission Number field for the next student. Completed or imported tests can also be reopened using **Open / Edit Marks**.
 
+<<<<<<< HEAD
 Pressing **Finish** records missing students as Absent and writes `entry_status = 'completed'`. The operation is atomic, so all missing results and the completed status are saved together. Reopening a completed test changes it back to **In Progress** until Finish is pressed again; students already recorded as Absent can then be given a mark by confirming the replacement prompt. Existing databases are upgraded automatically with a `weekly_tests.entry_status` column; old tests default to **Finished** and remain available through Open / Edit Marks.
+=======
+Pressing **Finish** writes `entry_status = 'completed'`. Reopening a completed test changes it back to **In Progress** until Finish is pressed again. Existing databases are upgraded automatically with a `weekly_tests.entry_status` column; old tests default to **Finished** and remain available through Open / Edit Marks.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d

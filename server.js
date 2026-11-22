@@ -39,7 +39,10 @@ app.use('/api/classes', require('./routes/classes'));
 app.use('/api/academic-years', require('./routes/academic-years'));
 app.use('/api/weekly-tests', require('./routes/weekly-tests'));
 app.use('/api/mark-entry', require('./routes/mark-entry'));
+<<<<<<< HEAD
 app.use('/api/attendance', require('./routes/attendance'));
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/late-arrivals', require('./routes/late-arrivals'));
 app.use('/api/term-exams', require('./routes/term-exams'));

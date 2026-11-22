@@ -96,6 +96,7 @@ router.post('/tests/:id/resume', (req, res) => {
   res.json({ message: 'Mark entry resumed.' });
 });
 
+<<<<<<< HEAD
 // Show how many students in the active class roster still have no result.
 // This allows the UI to warn the administrator before finishing the session.
 router.get('/tests/:id/finish-preview', (req, res) => {
@@ -199,6 +200,18 @@ router.post('/tests/:id/finish', (req, res) => {
     console.error('Could not finish mark-entry session:', err);
     res.status(500).json({ error: 'Could not finish this mark-entry session or mark missing students Absent.' });
   }
+=======
+// The Finish button persists completion, so interrupted sessions remain
+// visibly resumable in the Weekly Tests register.
+router.post('/tests/:id/finish', (req, res) => {
+  const yearId = resolveYearId(req.body.academic_year_id);
+  const result = db.prepare(`
+    UPDATE weekly_tests SET entry_status = 'completed'
+    WHERE id = ? AND academic_year_id = ?
+  `).run(req.params.id, yearId);
+  if (!result.changes) return res.status(404).json({ error: 'Weekly Test not found in the selected academic year.' });
+  res.json({ message: 'Mark entry marked as finished.' });
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 });
 
 // Find a student by admission-number prefix within the selected class/year.
@@ -327,11 +340,15 @@ router.get('/export', (req, res) => {
   const ws = XLSX.utils.aoa_to_sheet([
     ["Students' Home — Marklist"],
     ['Date', meta.test_date], ['Class', meta.class], ['Subject', meta.subject], ['Topic', meta.topic],
+<<<<<<< HEAD
     ['Maximum Marks', test.max_marks],
     ['Students Recorded', marks.length],
     ['Present', marks.filter(m => !m.is_absent && m.marks !== null).length],
     ['Absent', marks.filter(m => !!m.is_absent).length],
     [], header, ...rows,
+=======
+    ['Maximum Marks', test.max_marks], ['Students Entered', marks.length], [], header, ...rows,
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   ]);
   ws['!cols'] = [{ wch: 16 }, { wch: 26 }, { wch: 9 }, { wch: 10 }, { wch: 13 }, { wch: 18 }, { wch: 24 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
   ws['!autofilter'] = { ref: `A9:J${9 + rows.length}` };

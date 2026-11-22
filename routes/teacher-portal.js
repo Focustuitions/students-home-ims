@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+<<<<<<< HEAD
 const { randomUUID } = require('crypto');
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 const { resolveYearId } = require('../db/academicYear');
 const { requireTeacherAuth } = require('../db/teacherAuth');
 
@@ -61,9 +64,14 @@ function findStudentsForToken(token, cls, division, yearId) {
 function isDuplicateImposition({ yearId, admissionNo, subject, teacher, givenDate, details }) {
   return !!db.prepare(`SELECT id FROM student_assignments
     WHERE academic_year_id = ? AND admission_no = ? AND assignment_type = 'Imposition'
+<<<<<<< HEAD
       AND subject = ? AND (teacher_account_id = ? OR (teacher_account_id IS NULL AND LOWER(TRIM(teacher_name)) = LOWER(TRIM(?))))
       AND given_date = ? AND LOWER(details) = LOWER(?) LIMIT 1`)
     .get(yearId, admissionNo, subject, teacher.id, teacher.name, givenDate, details);
+=======
+      AND subject = ? AND teacher_account_id = ? AND given_date = ? AND LOWER(details) = LOWER(?) LIMIT 1`)
+    .get(yearId, admissionNo, subject, teacher.id, givenDate, details);
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 }
 
 router.get('/me', (req, res) => {
@@ -152,10 +160,16 @@ router.post('/impositions/batch', (req, res) => {
   const yearId = resolveYearId(body.academic_year_id);
   const getStudent = db.prepare(`SELECT admission_no, name, class, division FROM students
     WHERE UPPER(admission_no) = ? AND academic_year_id = ? AND COALESCE(status, 'Active') <> 'Withdrawn'`);
+<<<<<<< HEAD
   const assignmentGroupId = randomUUID();
   const insert = db.prepare(`INSERT INTO student_assignments
     (admission_no, student_name, student_class, student_division, assignment_type, subject, teacher_name, teacher_account_id, given_date, due_date, submission_status, details, academic_year_id, assignment_group_id)
     VALUES (?, ?, ?, ?, 'Imposition', ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)`);
+=======
+  const insert = db.prepare(`INSERT INTO student_assignments
+    (admission_no, student_name, student_class, student_division, assignment_type, subject, teacher_name, teacher_account_id, given_date, due_date, submission_status, details, academic_year_id)
+    VALUES (?, ?, ?, ?, 'Imposition', ?, ?, ?, ?, ?, 'Pending', ?, ?)`);
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const tx = db.transaction(() => {
     const saved = [];
     const skipped = [];
@@ -166,7 +180,11 @@ router.post('/impositions/batch', (req, res) => {
       }
       const duplicate = isDuplicateImposition({ yearId, admissionNo: student.admission_no, subject: meta.subject, teacher: req.teacher, givenDate: meta.givenDate, details: meta.details });
       if (duplicate) { skipped.push(admissionNo); continue; }
+<<<<<<< HEAD
       const result = insert.run(student.admission_no, student.name, student.class, student.division, meta.subject, req.teacher.name, req.teacher.id, meta.givenDate, addOneDay(meta.givenDate), meta.details, yearId, assignmentGroupId);
+=======
+      const result = insert.run(student.admission_no, student.name, student.class, student.division, meta.subject, req.teacher.name, req.teacher.id, meta.givenDate, addOneDay(meta.givenDate), meta.details, yearId);
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
       saved.push({ id: result.lastInsertRowid, admission_no: student.admission_no, student_name: student.name });
     }
     return { saved, skipped };
@@ -200,14 +218,21 @@ router.post('/impositions', (req, res) => {
   if (String(student.class) !== cls) return res.status(400).json({ error: `This student belongs to Class ${student.class}.` });
   const duplicate = isDuplicateImposition({ yearId, admissionNo, subject, teacher: req.teacher, givenDate, details });
   if (duplicate) return res.status(409).json({ error: 'This imposition is already recorded for this student, subject and date.' });
+<<<<<<< HEAD
   const assignmentGroupId = randomUUID();
   const result = db.prepare(`INSERT INTO student_assignments
     (admission_no, student_name, student_class, student_division, assignment_type, subject, teacher_name, teacher_account_id, given_date, due_date, submission_status, details, academic_year_id, assignment_group_id)
     VALUES (?, ?, ?, ?, 'Imposition', ?, ?, ?, ?, ?, 'Pending', ?, ?, ?)`).run(student.admission_no, student.name, student.class, student.division, subject, req.teacher.name, req.teacher.id, givenDate, addOneDay(givenDate), details, yearId, assignmentGroupId);
+=======
+  const result = db.prepare(`INSERT INTO student_assignments
+    (admission_no, student_name, student_class, student_division, assignment_type, subject, teacher_name, teacher_account_id, given_date, due_date, submission_status, details, academic_year_id)
+    VALUES (?, ?, ?, ?, 'Imposition', ?, ?, ?, ?, ?, 'Pending', ?, ?)`).run(student.admission_no, student.name, student.class, student.division, subject, req.teacher.name, req.teacher.id, givenDate, addOneDay(givenDate), details, yearId);
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const record = db.prepare('SELECT * FROM student_assignments WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json({ message: 'Imposition recorded.', record });
 });
 
+<<<<<<< HEAD
 // List both teacher-entered and admin-assigned impositions for this teacher.
 // Class and subject permissions remain enforced here, including for admin-created work.
 router.get('/impositions', (req, res) => {
@@ -304,4 +329,15 @@ router.delete('/impositions/:id', (req, res) => {
   });
 });
 
+=======
+router.get('/impositions', (req, res) => {
+  const yearId = resolveYearId(req.query.academic_year_id);
+  const rows = db.prepare(`SELECT * FROM student_assignments
+    WHERE academic_year_id = ? AND assignment_type = 'Imposition' AND teacher_account_id = ?
+    ORDER BY given_date DESC, id DESC LIMIT 200`)
+    .all(yearId, req.teacher.id);
+  res.json(rows);
+});
+
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 module.exports = router;

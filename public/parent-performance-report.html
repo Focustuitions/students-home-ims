@@ -142,10 +142,13 @@
     .section-title { break-after: avoid; page-break-after: avoid; }
   }
 </style>
+<<<<<<< HEAD
 
 <link rel="stylesheet" href="/css/mobile.css" />
 
 <link rel="stylesheet" href="/css/desktop-fit.css?v=1366-768-1920-1080-1" />
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 </head>
 <body>
   <div class="screen-wrap">
@@ -301,8 +304,11 @@ function render(r) {
 
     ${r.hotSeat && r.hotSeat.sessionCount > 0 ? renderHotSeatSection(r.hotSeat) : ''}
 
+<<<<<<< HEAD
     ${renderAttendanceSection(r.attendanceRecords || [], r.attendanceSummary || {})}
 
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     ${renderStudentWorkSection(r.assignments || [], r.lateArrivalWorks || [])}
 
     <p class="section-title">Full Test History</p>
@@ -351,6 +357,7 @@ function workStatusBadge(row) {
     : '<span class="status-pill status-absent">Pending</span>';
 }
 
+<<<<<<< HEAD
 
 function renderAttendanceSection(records, summary) {
   const s = summary || {};
@@ -375,6 +382,8 @@ function renderAttendanceSection(records, summary) {
       </table>` : '<div class="remark-box">No daily attendance records have been uploaded for this academic year yet.</div>'}`;
 }
 
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 function renderStudentWorkSection(assignments, lateArrivalWorks) {
   if (!assignments.length && !lateArrivalWorks.length) return '';
   const assignmentRows = assignments.map(a => `<tr>

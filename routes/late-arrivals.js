@@ -3,7 +3,10 @@ const router = express.Router();
 const db = require('../db/database');
 const XLSX = require('xlsx');
 const { resolveYearId } = require('../db/academicYear');
+<<<<<<< HEAD
 const { MAX_RECORDS, validDate: validBulkDate, validateWindow, parseAndResolveAdmissionNumbers, countStatuses } = require('./bulk-submission-utils');
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
 const STATUSES = ['Pending', 'Submitted'];
 
@@ -159,6 +162,7 @@ router.post('/batch', (req, res) => {
   } catch (error) { res.status(409).json({ error: error.message || 'Could not save late-arrival work.' }); }
 });
 
+<<<<<<< HEAD
 
 // Bulk-mark all pending late-arrival work due within the selected window for the listed students.
 router.post('/bulk-submission/preview', (req, res) => {
@@ -236,6 +240,8 @@ router.post('/bulk-submission/submit', (req, res) => {
   } catch (error) { res.status(409).json({ error: error.message || 'Could not submit the late-arrival batch.' }); }
 });
 
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 router.get('/', (req, res) => res.json(listRows(filtersFrom(req.query))));
 router.get('/pending', (req, res) => res.json(listRows(filtersFrom(req.query), true)));
 

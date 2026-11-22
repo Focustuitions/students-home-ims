@@ -913,12 +913,15 @@ table.tt-grid thead th:last-child { border-top-right-radius: var(--radius-sm); }
 
 /* Admin assignment batch creation and submission tracking */
 .as-batch-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:10px 0 16px; }
+<<<<<<< HEAD
 .as-whole-class-toggle { display:flex; align-items:flex-start; gap:11px; margin:12px 0 14px; padding:13px 14px; border:1px solid #cfe6e4; border-radius:10px; background:#f5fbfa; color:var(--navy-soft); cursor:pointer; }
 .as-whole-class-toggle input { width:19px; height:19px; flex:0 0 19px; margin:1px 0 0; accent-color:var(--teal); }
 .as-whole-class-toggle span { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .as-whole-class-toggle strong { color:var(--navy); font-size:12px; font-weight:750; }
 .as-whole-class-toggle small { color:var(--text-mute); font-size:10.5px; font-weight:400; line-height:1.45; }
 .as-whole-class-toggle:has(input:checked) { border-color:var(--teal); background:#eaf7f6; }
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 .as-admission-list-field { margin-top:6px; }
 .as-admission-list-field textarea { width:100%; min-height:112px; resize:vertical; padding:12px 13px; border:1px solid #d8e1ea; border-radius:9px; background:#fff; color:var(--text); font:500 13px/1.6 var(--font-mono); }
 .as-admission-list-field textarea:focus { outline:3px solid rgba(4,165,167,.13); border-color:var(--teal); }
@@ -931,16 +934,23 @@ table.tt-grid thead th:last-child { border-top-right-radius: var(--radius-sm); }
 .as-preview-panel th, .as-pending-card th { position:sticky; top:0; z-index:1; background:#f3f7fa; color:#617087; font-size:10px; text-transform:uppercase; letter-spacing:.35px; }
 .as-preview-panel td, .as-preview-panel th, .as-pending-card td, .as-pending-card th { padding:9px 10px; border-bottom:1px solid #e9eef2; text-align:left; white-space:nowrap; font-size:11.5px; }
 .as-pending-card { border-top:3px solid #d99b42; }
+<<<<<<< HEAD
 .as-history-card { border-top:3px solid #2c9b79; }
 .as-history-card .table-wrap table { width:100%; border-collapse:collapse; }
 .as-history-card .table-wrap th { background:#f1f8f5; color:#526f64; font-size:10px; text-transform:uppercase; letter-spacing:.35px; }
 .as-history-card .table-wrap td, .as-history-card .table-wrap th { padding:9px 10px; border-bottom:1px solid #e7efeb; text-align:left; white-space:nowrap; font-size:11.5px; }
 .as-history-card .btn { white-space:nowrap; }
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 .as-pending-card .as-list-head { align-items:center; }
 .as-row-actions { display:flex; align-items:center; gap:7px; }
 .as-row-actions .btn { white-space:nowrap; }
 @media (max-width:1100px) { .as-batch-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+<<<<<<< HEAD
 @media (max-width:680px) { .as-batch-grid { grid-template-columns:1fr; } .as-whole-class-toggle { padding:12px; min-height:52px; } .as-preview-head { align-items:stretch; flex-direction:column; } .as-preview-head .btn { width:100%; justify-content:center; } .as-preview-panel { padding:11px; } .as-admission-list-field textarea { min-height:135px; } }
+=======
+@media (max-width:680px) { .as-batch-grid { grid-template-columns:1fr; } .as-preview-head { align-items:stretch; flex-direction:column; } .as-preview-head .btn { width:100%; justify-content:center; } .as-preview-panel { padding:11px; } .as-admission-list-field textarea { min-height:135px; } }
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 .as-due-row { display:grid; grid-template-columns:minmax(220px, 280px); margin-top:14px; }
 .as-work-extra-grid { display:grid; grid-template-columns:minmax(180px,.55fr) minmax(260px,1.45fr); gap:14px; margin-top:14px; }
 @media (max-width:680px) { .as-work-extra-grid { grid-template-columns:1fr; } }
@@ -1043,6 +1053,7 @@ table.tt-grid thead th:last-child { border-top-right-radius: var(--radius-sm); }
   .dashboard-card-head { align-items: flex-start; }
   .dashboard-work-item { align-items: flex-start; }
 }
+<<<<<<< HEAD
 
 /* Bulk submission marking: one preview-first workflow for both work registers. */
 .bulk-submission-card { border-top: 3px solid var(--teal); }
@@ -1421,3 +1432,5 @@ table.tt-grid thead th:last-child { border-top-right-radius: var(--radius-sm); }
   .nav-group > summary { min-height: 44px; font-size: 14px; }
   .nav-submenu .tab { min-height: 42px; font-size: 13px; }
 }
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d

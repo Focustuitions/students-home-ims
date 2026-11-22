@@ -11,10 +11,15 @@
 
 ## Submission tracking
 - Each assignment has `submission_status` (`Pending` or `Submitted`), `due_date`, `submitted_date`, and `submitted_by`.
+<<<<<<< HEAD
 - Admin can mark a pending item submitted. The row immediately leaves Assignment Pending and appears in the separate Assignment History list with the status label Submitted.
 - Assignment History provides a Reverse action for mistaken submissions. Reversing returns the record to Assignment Pending and clears the submitted date/by fields.
 - Submitted records in the full Assignment Register show Submitted status and a separate Reverse action; they are not labelled Mark Pending.
 - Assignment Pending excludes submitted and withdrawn-student records; Assignment History retains the currently submitted records.
+=======
+- Admin can mark a pending item submitted or return it to Pending.
+- Pending Submissions list excludes withdrawn students; the full register retains assignment history.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 - Due/overdue status is calculated from the due date.
 - Excel export includes due date and submission details.
 

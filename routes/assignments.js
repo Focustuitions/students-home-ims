@@ -2,9 +2,13 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const XLSX = require('xlsx');
+<<<<<<< HEAD
 const { randomUUID } = require('crypto');
 const { resolveYearId } = require('../db/academicYear');
 const { MAX_RECORDS, validDate: validBulkDate, validateWindow, parseAndResolveAdmissionNumbers, countStatuses } = require('./bulk-submission-utils');
+=======
+const { resolveYearId } = require('../db/academicYear');
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
 const SUBJECTS = ['English', 'Hindi', 'History', 'Geography', 'Physics', 'Chemistry', 'Biology', 'Mathematics'];
 const TYPES = ['Imposition', 'Other Assignment'];
@@ -55,6 +59,7 @@ function validateBatch(body) {
   const subject = String(body.subject || '').trim();
   const cls = String(body.class || '').trim();
   const division = String(body.division || '').trim();
+<<<<<<< HEAD
   // Accept both the explicit scope value and the checkbox flag. This keeps
   // class-wide assignment creation reliable if a client submits the checkbox
   // state without the newer target_scope field (for example, after a stale
@@ -65,23 +70,36 @@ function validateBatch(body) {
     ['true', '1', 'yes', 'on'].includes(String(rawEntireClassFlag || '').trim().toLowerCase());
   const entireClass = rawTargetScope === 'entire_class' || entireClassFlag;
   const targetScope = entireClass ? 'entire_class' : (rawTargetScope || 'division');
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const givenDate = String(body.given_date || '').trim();
   const dueDate = String(body.due_date || '').trim();
   const type = String(body.assignment_type || 'Imposition').trim();
   const details = String(body.details || '').trim();
+<<<<<<< HEAD
   if (!['division', 'entire_class'].includes(targetScope)) return { error: 'Select a valid assignment target.' };
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   if (!teacherName) return { error: 'Select a teacher.' };
   if (!SUBJECTS.includes(subject)) return { error: 'Select a valid subject.' };
   const teacher = teacherExists(subject, teacherName);
   if (!teacher) return { error: 'The selected teacher is not assigned to this subject.' };
+<<<<<<< HEAD
   if (!cls) return { error: 'Select a class.' };
   if (!entireClass && !division) return { error: 'Select a division, or enable Assign to the entire class (all divisions).' };
+=======
+  if (!cls || !division) return { error: 'Select a class and division.' };
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   if (!validDate(givenDate)) return { error: 'Enter a valid given date.' };
   if (!validDate(dueDate)) return { error: 'Enter a valid due date.' };
   if (dueDate < givenDate) return { error: 'Due date cannot be earlier than the given date.' };
   if (!TYPES.includes(type)) return { error: 'Select a valid work type.' };
   if (details.length > 250) return { error: 'Work details must be 250 characters or fewer.' };
+<<<<<<< HEAD
   return { teacherName: teacher.teacher_name, subject, cls, division, targetScope, entireClass, givenDate, dueDate, type, details };
+=======
+  return { teacherName: teacher.teacher_name, subject, cls, division, givenDate, dueDate, type, details };
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 }
 function resolveToken(token, meta, yearId) {
   const numeric = /^\d+$/.test(token);
@@ -159,11 +177,16 @@ router.get('/students', (req, res) => {
   res.json(students);
 });
 
+<<<<<<< HEAD
 // Preview an individual division batch or every active student across a class's divisions.
+=======
+// Preview a complete class/division batch without saving anything.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 router.post('/batch/preview', (req, res) => {
   const body = req.body || {};
   const meta = validateBatch(body);
   if (meta.error) return res.status(400).json({ error: meta.error });
+<<<<<<< HEAD
   const yearId = resolveYearId(body.academic_year_id);
   let rows = [];
   let rosterAdmissionNos = [];
@@ -217,11 +240,37 @@ router.post('/batch/preview', (req, res) => {
 });
 
 // Confirm the previewed batch. Revalidates the roster and writes every record in one transaction.
+=======
+  const tokens = (Array.isArray(body.admission_numbers) ? body.admission_numbers : String(body.admission_numbers || '').split(/[\s,;]+/))
+    .map(cleanToken).filter(Boolean);
+  if (!tokens.length) return res.status(400).json({ error: 'Enter at least one Admission Number.' });
+  if (tokens.length > 500) return res.status(400).json({ error: 'A batch can contain at most 500 Admission Numbers.' });
+  const yearId = resolveYearId(body.academic_year_id);
+  const seenTokens = new Set(); const seenStudents = new Set();
+  const rows = tokens.map(token => {
+    if (seenTokens.has(token)) return { input: token, status: 'duplicate_input', message: 'This number is repeated in the list.' };
+    seenTokens.add(token);
+    const found = resolveToken(token, meta, yearId);
+    if (found.status !== 'matched') return { input: token, status: found.status, message: found.message };
+    const st = found.student;
+    if (seenStudents.has(st.admission_no)) return { input: token, admission_no: st.admission_no, name: st.name, status: 'duplicate_input', message: 'This student is already included.' };
+    seenStudents.add(st.admission_no);
+    const duplicate = isDuplicate({ yearId, admissionNo: st.admission_no, meta });
+    return { input: token, admission_no: st.admission_no, name: st.name, class: st.class, division: st.division,
+      status: duplicate ? 'already_recorded' : 'matched', message: duplicate ? 'This assignment is already recorded.' : 'Ready to save.' };
+  });
+  const summary = rows.reduce((acc, r) => { acc[r.status] = (acc[r.status] || 0) + 1; return acc; }, {});
+  res.json({ rows, summary, ready_count: rows.filter(r => r.status === 'matched').length, academic_year_id: yearId });
+});
+
+// Confirm the previewed batch. Revalidates every item and writes in one transaction.
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 router.post('/batch', (req, res) => {
   const body = req.body || {};
   const meta = validateBatch(body);
   if (meta.error) return res.status(400).json({ error: meta.error });
   const admissionNos = Array.isArray(body.admission_nos) ? body.admission_nos.map(cleanToken).filter(Boolean) : [];
+<<<<<<< HEAD
   const rosterAdmissionNos = Array.isArray(body.roster_admission_nos) ? body.roster_admission_nos.map(cleanToken).filter(Boolean) : [];
   const rosterSnapshot = Array.isArray(body.roster_snapshot) ? body.roster_snapshot : [];
   if (!admissionNos.length) return res.status(400).json({ error: 'No eligible students were selected.' });
@@ -418,6 +467,32 @@ router.post('/bulk-submission/submit', (req, res) => {
   } catch (error) { res.status(409).json({ error: error.message || 'Could not submit the assignment batch.' }); }
 });
 
+=======
+  if (!admissionNos.length) return res.status(400).json({ error: 'No eligible students were selected.' });
+  if (admissionNos.length > 500 || new Set(admissionNos).size !== admissionNos.length) return res.status(400).json({ error: 'Invalid or duplicate Admission Numbers. Preview the list again.' });
+  const yearId = resolveYearId(body.academic_year_id);
+  const getStudent = db.prepare(`SELECT admission_no, name, class, division FROM students
+    WHERE UPPER(admission_no) = ? AND academic_year_id = ? AND COALESCE(status, 'Active') <> 'Withdrawn'`);
+  const insert = db.prepare(`INSERT INTO student_assignments
+    (admission_no, student_name, student_class, student_division, assignment_type, subject, teacher_name, given_date, due_date, submission_status, details, academic_year_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, ?)`);
+  try {
+    const result = db.transaction(() => {
+      const saved = [];
+      for (const admissionNo of admissionNos) {
+        const student = getStudent.get(admissionNo, yearId);
+        if (!student || String(student.class) !== meta.cls || String(student.division).toUpperCase() !== meta.division.toUpperCase()) throw new Error(`Student ${admissionNo} is no longer active in the selected class and division. Preview again.`);
+        if (isDuplicate({ yearId, admissionNo: student.admission_no, meta })) throw new Error(`An assignment for ${student.admission_no} was already recorded. Preview again.`);
+        const id = insert.run(student.admission_no, student.name, student.class, student.division, meta.type, meta.subject, meta.teacherName, meta.givenDate, meta.dueDate, meta.details, yearId).lastInsertRowid;
+        saved.push({ id, admission_no: student.admission_no, student_name: student.name });
+      }
+      return saved;
+    })();
+    res.status(201).json({ message: 'Assignments created.', saved_count: result.length, saved: result });
+  } catch (err) { res.status(409).json({ error: err.message || 'Could not save batch.' }); }
+});
+
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 router.get('/', (req, res) => res.json(readAssignments(getFilters(req.query))));
 
 // Pending assignments are shown only for active students; submitted items remain in the register.

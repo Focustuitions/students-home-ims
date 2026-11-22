@@ -19,6 +19,7 @@ No database migration is required. The feature writes to the existing `student_a
 6. Teacher confirms the preview. Only uniquely matched, active students in the selected class and division are saved. The server repeats permission and student checks and writes the batch in one transaction.
 
 Admission-number rules: Class 10 accepts a minimum 3-digit numeric prefix; Classes 8 and 9 accept a minimum 4-digit numeric prefix. Full Admission Numbers are also accepted. If a prefix identifies more than one student in the chosen division, use the full Admission Number to disambiguate.
+<<<<<<< HEAD
 ## Shared imposition submission tracking
 - Impositions assigned by Admin are linked to the matching active Teacher Portal account when the teacher name resolves uniquely.
 - Teacher Portal lists the impositions explicitly linked to that teacher account by Admin, along with older unlinked records that uniquely match the teacher name within the teacher's permitted classes and subjects.
@@ -29,3 +30,5 @@ Admission-number rules: Class 10 accepts a minimum 3-digit numeric prefix; Class
 - Admins can delete individual imposition rows from Admin → Impositions & Assignments.
 - Teachers can delete individual imposition rows assigned to their account from Teacher Portal → Assigned Impositions & Submissions. The teacher-side server route enforces the same account/class/subject ownership scope used for status updates.
 - Deletion requires confirmation, including student, class, subject, date and current submission status. It permanently removes that shared `student_assignments` row from both portals. No database migration is required.
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d

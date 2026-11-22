@@ -150,7 +150,10 @@ const routes = {
   'teacher-accounts': renderTeacherPortalAccounts,
   timetable: renderTimetable,
   'mark-entry': renderMarkEntry,
+<<<<<<< HEAD
   attendance: renderAttendance,
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   assignments: renderAssignments,
   'late-arrival-work': renderLateArrivalWork,
   'weekly-tests': renderWeeklyTests,
@@ -1341,6 +1344,7 @@ async function renderTeacherPortalAccounts() {
     credentialBox.classList.add('hidden'); credentialBox.innerHTML = '';
     setSelected('tpa-subject', []); setSelected('tpa-class', []);
   }
+<<<<<<< HEAD
   function showTeacherPassword(code, password, message) {
     credentialBox.classList.remove('hidden');
     credentialBox.innerHTML = `<strong>${escape(message)}</strong>
@@ -1350,6 +1354,17 @@ async function renderTeacherPortalAccounts() {
       <button type="button" class="btn btn-ghost btn-small" id="tpa-copy-credentials">Copy Credentials</button>`;
     $('#tpa-copy-credentials').addEventListener('click', async () => {
       const text = `Teacher Code: ${code}\n4-Digit Password: ${password}`;
+=======
+  function showTemporaryPassword(code, password, message) {
+    credentialBox.classList.remove('hidden');
+    credentialBox.innerHTML = `<strong>${escape(message)}</strong>
+      <div class="tpa-credential-line"><span>Teacher Code</span><code>${escape(code)}</code></div>
+      <div class="tpa-credential-line"><span>Temporary Password</span><code id="tpa-temp-password">${escape(password)}</code></div>
+      <p>Share these credentials privately. The teacher must change the temporary password at first login.</p>
+      <button type="button" class="btn btn-ghost btn-small" id="tpa-copy-credentials">Copy Credentials</button>`;
+    $('#tpa-copy-credentials').addEventListener('click', async () => {
+      const text = `Teacher Code: ${code}\nTemporary Password: ${password}`;
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
       try { await navigator.clipboard.writeText(text); toast('Credentials copied.'); }
       catch { toast('Select and copy the credentials manually.', true); }
     });
@@ -1362,7 +1377,11 @@ async function renderTeacherPortalAccounts() {
       ${accounts.map(a => `<tr>
         <td><strong>${escape(a.name)}</strong></td><td class="mono">${escape(a.teacher_code)}</td>
         <td>${escape(a.subjects.join(', '))}</td><td>${escape(a.classes.map(c => 'Class ' + c).join(', '))}</td>
+<<<<<<< HEAD
         <td>${a.is_active ? '<span class="tag paid">Active</span>' : '<span class="tag due">Inactive</span>'}${a.must_change_password ? '<br><small class="hint">4-digit password setup pending</small>' : ''}</td>
+=======
+        <td>${a.is_active ? '<span class="tag paid">Active</span>' : '<span class="tag due">Inactive</span>'}${a.must_change_password ? '<br><small class="hint">Password change pending</small>' : ''}</td>
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
         <td class="tpa-actions"><button type="button" class="btn-icon" data-tpa-edit="${a.id}">Edit</button>
         <button type="button" class="btn-icon" data-tpa-reset="${a.id}">Reset Password</button>
         <button type="button" class="btn-icon" data-tpa-status="${a.id}" data-active="${a.is_active ? 1 : 0}">${a.is_active ? 'Deactivate' : 'Activate'}</button></td>
@@ -1383,11 +1402,19 @@ async function renderTeacherPortalAccounts() {
     }));
     $$('[data-tpa-reset]').forEach(btn => btn.addEventListener('click', async () => {
       const a = accounts.find(x => String(x.id) === btn.dataset.tpaReset);
+<<<<<<< HEAD
       if (!a || !confirm(`Generate a new 4-digit password for ${a.name} (${a.teacher_code})? Their current sessions will be signed out.`)) return;
       try {
         const result = await api(`/teacher-accounts/${a.id}/reset-password`, { method: 'POST', body: '{}' });
         showTeacherPassword(a.teacher_code, result.teacher_password, `New 4-digit password for ${a.name}`);
         toast('New 4-digit password generated.'); await load();
+=======
+      if (!a || !confirm(`Generate a new temporary password for ${a.name} (${a.teacher_code})? Their current sessions will be signed out.`)) return;
+      try {
+        const result = await api(`/teacher-accounts/${a.id}/reset-password`, { method: 'POST', body: '{}' });
+        showTemporaryPassword(a.teacher_code, result.temporary_password, `New temporary password for ${a.name}`);
+        toast('Temporary password generated.'); await load();
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
       } catch (err) { toast(err.message, true); }
     }));
     $$('[data-tpa-status]').forEach(btn => btn.addEventListener('click', async () => {
@@ -1418,7 +1445,11 @@ async function renderTeacherPortalAccounts() {
         resetForm();
       } else {
         const result = await api('/teacher-accounts', { method: 'POST', body: JSON.stringify(data) });
+<<<<<<< HEAD
         showTeacherPassword(data.teacher_code.toUpperCase(), result.teacher_password, `4-digit password for ${data.name}`);
+=======
+        showTemporaryPassword(data.teacher_code.toUpperCase(), result.temporary_password, `Login created for ${data.name}`);
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
         toast('Teacher portal account created.');
         form.reset(); setSelected('tpa-subject', []); setSelected('tpa-class', []);
       }
@@ -1665,7 +1696,10 @@ async function renderMarkEntry(resumeTestId = null) {
   let currentTestId = null;
   let searchSequence = 0;
   let saving = false;
+<<<<<<< HEAD
   let finishing = false;
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
   dateEl.value = todayStr();
   const updateWorkflowStage = stage => workflowSteps.forEach((step, index) => {
@@ -1702,7 +1736,11 @@ async function renderMarkEntry(resumeTestId = null) {
   }
 
   function renderEnteredMarks() {
+<<<<<<< HEAD
     $('#me-mark-count').textContent = `${enteredMarks.length} student result(s) saved to Weekly Tests`;
+=======
+    $('#me-mark-count').textContent = `${enteredMarks.length} student(s) saved to Weekly Tests`;
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     exportBtn.disabled = !enteredMarks.length;
     $('#me-marklist').innerHTML = enteredMarks.length ? `
       <table>
@@ -1821,7 +1859,11 @@ async function renderMarkEntry(resumeTestId = null) {
         : 'Type the Admission Number and press Enter. Then enter the mark and press Enter.';
       $('#me-entry-card').style.opacity = '1';
       sessionStatus.textContent = data.test_id
+<<<<<<< HEAD
         ? `Weekly Test loaded · ${enteredMarks.length} result(s) already saved. You can continue entering marks.`
+=======
+        ? `Weekly Test loaded · ${enteredMarks.length} mark(s) already saved. You can continue entering marks.`
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
         : 'Ready. This will be added directly to the Weekly Tests register when the first mark is saved.';
       matchesEl.innerHTML = '';
       admissionEl.value = '';
@@ -1833,13 +1875,18 @@ async function renderMarkEntry(resumeTestId = null) {
   }
 
   async function finishEntry() {
+<<<<<<< HEAD
     if (!activeSession || finishing) return;
+=======
+    if (!activeSession) return;
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     if (saving) return;
     if (selectedStudent || admissionEl.value.trim()) {
       toast('Save or clear the current student entry before finishing.', true);
       if (selectedStudent) markEl.focus(); else admissionEl.focus();
       return;
     }
+<<<<<<< HEAD
     if (!currentTestId) {
       toast('This mark-entry session has no Weekly Test record. Start / Resume it again.', true);
       return;
@@ -1890,6 +1937,33 @@ async function renderMarkEntry(resumeTestId = null) {
     } finally {
       finishing = false;
     }
+=======
+    const confirmed = confirm(`Finish mark entry for Class ${classEl.value} — ${subjectEl.value.trim()} — ${topicEl.value.trim()}?\n\n${enteredMarks.length} student mark(s) are saved in Weekly Tests.`);
+    if (!confirmed) return;
+    if (currentTestId) {
+      try {
+        await api(`/mark-entry/tests/${currentTestId}/finish`, {
+          method: 'POST',
+          body: JSON.stringify({ academic_year_id: currentYearId }),
+        });
+      } catch (err) {
+        toast(`Could not finish this mark-entry session: ${err.message}`, true);
+        return;
+      }
+    }
+    activeSession = false;
+    updateWorkflowStage(3);
+    searchSequence++;
+    admissionEl.disabled = true;
+    markEl.disabled = true;
+    saveBtn.disabled = true;
+    clearBtn.disabled = true;
+    finishBtn.disabled = true;
+    $('#me-entry-card').style.opacity = '.65';
+    sessionStatus.textContent = `Mark entry finished · ${enteredMarks.length} student mark(s) saved to Weekly Tests.`;
+    saveStatus.textContent = 'Entry session finished. Export the marklist or start/resume to continue.';
+    toast('Mark entry finished. All saved marks are in Weekly Tests.');
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   }
 
   async function saveMark() {
@@ -2033,6 +2107,7 @@ async function renderMarkEntry(resumeTestId = null) {
 // =====================================================================
 // IMPOSITIONS & OTHER ASSIGNMENTS — quick student-by-student entry
 // =====================================================================
+<<<<<<< HEAD
 // Shared bulk submission marking flow used by the Assignment and Late Arrival portals.
 function setupBulkSubmissionWorkflow({ prefix, endpoint, kind, refresh }) {
   const fromEl = $(`#${prefix}-bulk-from`);
@@ -2192,6 +2267,8 @@ Only the records shown in the preview will be updated.`)) return;
   clearBtn.addEventListener('click', clear);
 }
 
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 async function renderAssignments() {
   useTemplate('#tpl-assignments');
   const dateEl = $('#as-date');
@@ -2200,9 +2277,12 @@ async function renderAssignments() {
   const subjectEl = $('#as-subject');
   const classEl = $('#as-class');
   const divisionEl = $('#as-division');
+<<<<<<< HEAD
   const divisionField = $('#as-division-field');
   const entireClassEl = $('#as-entire-class');
   const admissionListField = $('#as-admission-list-field');
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const admissionListEl = $('#as-admission-list');
   const typeEl = $('#as-type');
   const detailsEl = $('#as-details');
@@ -2221,6 +2301,7 @@ async function renderAssignments() {
   let allYearRecords = [];
   let records = [];
   let pendingRecords = [];
+<<<<<<< HEAD
   let pendingGroups = [];
   let historyRecords = [];
   let expandedPendingGroupKey = null;
@@ -2267,6 +2348,9 @@ async function renderAssignments() {
       state.page = Math.min(page.pages, state.page + 1); rerender();
     });
   }
+=======
+  let busy = false;
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
   const escape = markEntryEscape;
   const localDate = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -2281,6 +2365,7 @@ async function renderAssignments() {
     statusEl.textContent = message;
     statusEl.classList.toggle('is-error', isError);
   }
+<<<<<<< HEAD
   function updateAssignmentTargetUI() {
     const entireClass = entireClassEl.checked;
     divisionField.classList.toggle('hidden', entireClass);
@@ -2289,6 +2374,8 @@ async function renderAssignments() {
     if (entireClass) setStatus('Class-wide mode: all active students in the selected class, across every division, will be included. Preview the class before saving.');
     else setStatus('Division mode: paste the Admission Numbers of the students who should receive this assignment.');
   }
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   function invalidatePreview() {
     previewData = null;
     previewPanel.classList.add('hidden');
@@ -2302,6 +2389,7 @@ async function renderAssignments() {
       teacher_name: teacherEl.value,
       subject: subjectEl.value,
       class: classEl.value,
+<<<<<<< HEAD
       division: entireClassEl.checked ? '' : divisionEl.value,
       target_scope: entireClassEl.checked ? 'entire_class' : 'division',
       // Send the checkbox state explicitly as a compatibility fallback for
@@ -2310,6 +2398,12 @@ async function renderAssignments() {
       assignment_type: typeEl.value,
       details: detailsEl.value.trim(),
       admission_numbers: entireClassEl.checked ? '' : admissionListEl.value,
+=======
+      division: divisionEl.value,
+      assignment_type: typeEl.value,
+      details: detailsEl.value.trim(),
+      admission_numbers: admissionListEl.value,
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
       academic_year_id: currentYearId,
     };
   }
@@ -2337,7 +2431,11 @@ async function renderAssignments() {
   }
   function actionButton(row) {
     return row.submission_status === 'Submitted'
+<<<<<<< HEAD
       ? `<button class="btn btn-ghost btn-small" data-as-reverse="${row.id}" title="Reverse this submission and return it to Pending">Reverse</button>`
+=======
+      ? `<button class="btn btn-ghost btn-small" data-as-pending="${row.id}">Mark Pending</button>`
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
       : `<button class="btn btn-primary btn-small" data-as-submitted="${row.id}">Mark Submitted</button>`;
   }
   function renderStats() {
@@ -2349,6 +2447,7 @@ async function renderAssignments() {
     $('#as-submitted-count').textContent = submittedCount;
     $('#as-overdue-count').textContent = overdueCount;
   }
+<<<<<<< HEAD
   function assignmentGroupKey(row) {
     if (row.assignment_group_id) return `batch:${row.assignment_group_id}`;
     // Backward-compatible grouping for records created before batch IDs existed.
@@ -2435,6 +2534,23 @@ async function renderAssignments() {
       <td>${escape(r.student_class)} - ${escape(r.student_division)}</td><td>${escape(r.subject)}</td><td>${escape(r.teacher_name)}</td>
       <td>${escape(r.details || '—')}</td><td>${escape(r.submitted_date || '—')}</td><td>${escape(r.submitted_by || '—')}</td><td class="as-row-actions">${actionButton(r)} <button class="btn-icon" data-as-delete="${r.id}">Delete</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty-state"><p>No assignment records match these filters.</p></div>';
     renderPageControls('#as-register-pagination', records, 'register', renderRegister);
+=======
+  function renderPending() {
+    $('#as-pending-list-count').textContent = `${pendingRecords.length} assignment(s) are awaiting submission.`;
+    $('#as-pending-register').innerHTML = pendingRecords.length ? `<table><thead><tr><th>Due Date</th><th>Admission No.</th><th>Student</th><th>Class &amp; Div.</th><th>Subject</th><th>Teacher</th><th>Work Details</th><th>Status</th><th>Action</th></tr></thead><tbody>${pendingRecords.map(r => `
+      <tr><td>${escape(r.due_date || '—')}</td><td class="mono">${escape(r.admission_no)}</td><td>${escape(r.student_name)}</td>
+      <td>${escape(r.student_class)} - ${escape(r.student_division)}</td><td>${escape(r.subject)}</td><td>${escape(r.teacher_name)}</td>
+      <td>${escape(r.details || '—')}</td><td>${statusBadge('Pending', r.due_date)}</td><td>${actionButton(r)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty-state"><p>No pending assignments. All recorded work has been submitted.</p></div>';
+    bindSubmissionButtons($('#as-pending-register'));
+  }
+  function renderRegister() {
+    $('#as-list-count').textContent = `${records.length} record(s) shown`;
+    $('#as-register').innerHTML = records.length ? `<table><thead><tr><th>Given Date</th><th>Due Date</th><th>Status</th><th>Type</th><th>Admission No.</th><th>Student</th><th>Class &amp; Div.</th><th>Subject</th><th>Teacher</th><th>Work Details</th><th>Submission Date</th><th>Action</th></tr></thead><tbody>${records.map(r => `
+      <tr><td>${escape(r.given_date)}</td><td>${escape(r.due_date || '—')}</td><td>${statusBadge(r.submission_status || 'Pending', r.due_date)}</td>
+      <td>${escape(r.assignment_type)}</td><td class="mono">${escape(r.admission_no)}</td><td>${escape(r.student_name)}</td>
+      <td>${escape(r.student_class)} - ${escape(r.student_division)}</td><td>${escape(r.subject)}</td><td>${escape(r.teacher_name)}</td>
+      <td>${escape(r.details || '—')}</td><td>${escape(r.submitted_date || '—')}</td><td class="as-row-actions">${actionButton(r)} <button class="btn-icon" data-as-delete="${r.id}">Delete</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty-state"><p>No assignment records match these filters.</p></div>';
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     bindSubmissionButtons($('#as-register'));
     $$('[data-as-delete]', $('#as-register')).forEach(btn => btn.addEventListener('click', async () => {
       const row = records.find(r => String(r.id) === btn.dataset.asDelete);
@@ -2444,6 +2560,7 @@ async function renderAssignments() {
     }));
   }
   function bindSubmissionButtons(root) {
+<<<<<<< HEAD
     $$('[data-as-submitted], [data-as-reverse]', root).forEach(btn => btn.addEventListener('click', async () => {
       const isSubmit = Boolean(btn.dataset.asSubmitted);
       const id = isSubmit ? btn.dataset.asSubmitted : btn.dataset.asReverse;
@@ -2456,12 +2573,26 @@ async function renderAssignments() {
       try {
         await api(`/assignments/${id}/submission`, { method: 'PATCH', body: JSON.stringify({ status: nextStatus, submitted_date: isSubmit ? localDate() : null }) });
         toast(isSubmit ? 'Marked Submitted and moved to Assignment History.' : 'Submission reversed and returned to Assignment Pending.');
+=======
+    $$('[data-as-submitted], [data-as-pending]', root).forEach(btn => btn.addEventListener('click', async () => {
+      const id = btn.dataset.asSubmitted || btn.dataset.asPending;
+      const nextStatus = btn.dataset.asSubmitted ? 'Submitted' : 'Pending';
+      if (nextStatus === 'Submitted' && !confirm('Mark this assignment as submitted?')) return;
+      if (nextStatus === 'Pending' && !confirm('Return this assignment to Pending?')) return;
+      btn.disabled = true;
+      try {
+        await api(`/assignments/${id}/submission`, { method: 'PATCH', body: JSON.stringify({ status: nextStatus, submitted_date: nextStatus === 'Submitted' ? localDate() : null }) });
+        toast(nextStatus === 'Submitted' ? 'Submission recorded.' : 'Assignment marked pending.');
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
         await refreshAssignments();
       } catch (err) { toast(err.message, true); btn.disabled = false; }
     }));
   }
   async function loadRegister() {
+<<<<<<< HEAD
     assignmentPages.register.page = 1;
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     const params = new URLSearchParams();
     if (currentYearId) params.set('academic_year_id', currentYearId);
     for (const [id, key] of [['as-filter-date','date'], ['as-filter-status','submission_status'], ['as-filter-type','assignment_type'], ['as-filter-subject','subject'], ['as-filter-search','admission_no']]) {
@@ -2473,6 +2604,7 @@ async function renderAssignments() {
   async function refreshAssignments() {
     const qs = queryYear();
     [allYearRecords, pendingRecords] = await Promise.all([api('/assignments' + qs), api('/assignments/pending' + qs)]);
+<<<<<<< HEAD
     historyRecords = allYearRecords.filter(r => (r.submission_status || 'Pending') === 'Submitted');
     pendingGroups = buildAssignmentGroups(pendingRecords);
     if (expandedPendingGroupKey && !pendingGroups.some(group => group.key === expandedPendingGroupKey)) expandedPendingGroupKey = null;
@@ -2633,12 +2765,17 @@ async function renderAssignments() {
   submissionClearBtn.addEventListener('click', clearSubmissionQueue);
   renderSubmissionQueue();
 
+=======
+    renderStats(); renderPending(); await loadRegister();
+  }
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   function renderPreview(data) {
     previewData = data;
     previewPanel.classList.remove('hidden');
     const summary = data.summary || {};
     $('#as-preview-summary').textContent = `${data.ready_count} ready to create · ${(summary.already_recorded || 0)} already recorded · ${(summary.not_found || 0) + (summary.wrong_division || 0) + (summary.invalid || 0) + (summary.ambiguous || 0) + (summary.duplicate_input || 0)} skipped / needs correction.`;
     const label = { matched:'Ready', already_recorded:'Already recorded', not_found:'Not found', wrong_division:'Wrong division', invalid:'Invalid number', ambiguous:'Ambiguous', duplicate_input:'Duplicate input' };
+<<<<<<< HEAD
     const wholeClass = data.target_scope === 'entire_class';
     const previewRows = data.rows.map(r => `
       <tr>${wholeClass ? '' : `<td class="mono">${escape(r.input)}</td>`}<td class="mono">${escape(r.admission_no || '—')}</td><td>${escape(r.name || '—')}</td>
@@ -2647,11 +2784,17 @@ async function renderAssignments() {
       ? '<th>Admission No.</th><th>Student</th><th>Class &amp; Division</th><th>Result</th><th>Message</th>'
       : '<th>Entered Number</th><th>Admission No.</th><th>Student</th><th>Class &amp; Division</th><th>Result</th><th>Message</th>';
     previewTable.innerHTML = `<table><thead><tr>${previewHeaders}</tr></thead><tbody>${previewRows}</tbody></table>`;
+=======
+    previewTable.innerHTML = `<table><thead><tr><th>Entered Number</th><th>Admission No.</th><th>Student</th><th>Class &amp; Division</th><th>Result</th><th>Message</th></tr></thead><tbody>${data.rows.map(r => `
+      <tr><td class="mono">${escape(r.input)}</td><td class="mono">${escape(r.admission_no || '—')}</td><td>${escape(r.name || '—')}</td>
+      <td>${r.class ? `Class ${escape(r.class)} - ${escape(r.division)}` : '—'}</td><td><span class="tag ${r.status === 'matched' ? 'tt-c0' : (r.status === 'already_recorded' ? '' : 'due')}">${label[r.status] || escape(r.status)}</span></td><td>${escape(r.message || '')}</td></tr>`).join('')}</tbody></table>`;
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     confirmBtn.disabled = !data.ready_count || busy;
   }
   async function previewBatch() {
     if (busy) return;
     const payload = selectedMeta();
+<<<<<<< HEAD
     const missingCommon = !payload.given_date || !payload.due_date || !payload.teacher_name || !payload.subject || !payload.class;
     const missingIndividual = payload.target_scope !== 'entire_class' && (!payload.division || !payload.admission_numbers.trim());
     if (missingCommon || missingIndividual) {
@@ -2662,6 +2805,12 @@ async function renderAssignments() {
     }
     busy = true; previewBtn.disabled = true; confirmBtn.disabled = true;
     setStatus(payload.target_scope === 'entire_class' ? 'Loading all active students in this class…' : 'Checking Admission Numbers…');
+=======
+    if (!payload.given_date || !payload.due_date || !payload.teacher_name || !payload.subject || !payload.class || !payload.division || !payload.admission_numbers.trim()) {
+      setStatus('Complete the date, teacher, subject, class, division, Admission Numbers and due date.', true); return;
+    }
+    busy = true; previewBtn.disabled = true; confirmBtn.disabled = true; setStatus('Checking Admission Numbers…');
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     try {
       const data = await api('/assignments/batch/preview', { method: 'POST', body: JSON.stringify(payload) });
       renderPreview(data); setStatus(`${data.ready_count} student(s) are ready for confirmation.`);
@@ -2671,6 +2820,7 @@ async function renderAssignments() {
   async function confirmBatch() {
     if (busy || !previewData || !previewData.ready_count) return;
     const admissionNos = previewData.rows.filter(r => r.status === 'matched').map(r => r.admission_no);
+<<<<<<< HEAD
     const targetDescription = entireClassEl.checked ? `Entire Class ${classEl.value} (all divisions)` : `Class ${classEl.value} - ${divisionEl.value}`;
     if (!confirm(`Create assignments for ${admissionNos.length} student(s)?\nTeacher: ${teacherEl.value}\nSubject: ${subjectEl.value}\nTarget: ${targetDescription}\nDue date: ${dueDateEl.value}`)) return;
     busy = true; confirmBtn.disabled = true; previewBtn.disabled = true;
@@ -2682,18 +2832,32 @@ async function renderAssignments() {
           roster_snapshot: previewData.roster_snapshot || [],
         } : {}),
       }) });
+=======
+    if (!confirm(`Create assignments for ${admissionNos.length} student(s)?\nTeacher: ${teacherEl.value}\nSubject: ${subjectEl.value}\nClass: ${classEl.value} - ${divisionEl.value}\nDue date: ${dueDateEl.value}`)) return;
+    busy = true; confirmBtn.disabled = true; previewBtn.disabled = true;
+    try {
+      const result = await api('/assignments/batch', { method: 'POST', body: JSON.stringify({ ...selectedMeta(), admission_nos: admissionNos }) });
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
       toast(`${result.saved_count} assignment(s) created.`);
       if (result.skipped_count) toast(`${result.skipped_count} duplicate(s) skipped.`, true);
       admissionListEl.value = ''; detailsEl.value = ''; previewData = null; previewPanel.classList.add('hidden');
       setStatus('Assignments created. Ready for the next batch.');
+<<<<<<< HEAD
       await refreshAssignments(); if (!entireClassEl.checked) admissionListEl.focus();
+=======
+      await refreshAssignments(); admissionListEl.focus();
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     } catch (err) { setStatus(err.message, true); toast(err.message, true); }
     finally { busy = false; previewBtn.disabled = false; confirmBtn.disabled = !previewData || !previewData.ready_count; }
   }
   function clearForm() {
     dateEl.value = localDate(); dueDateTouched = false; dueDateEl.value = addOneDay(dateEl.value);
     teacherEl.value = ''; populateSubjectsForTeacher(); classEl.value = ''; divisionEl.innerHTML = '<option value="">Select class first</option>'; divisionEl.disabled = true;
+<<<<<<< HEAD
     typeEl.value = 'Imposition'; detailsEl.value = ''; admissionListEl.value = ''; entireClassEl.checked = false; updateAssignmentTargetUI(); invalidatePreview();
+=======
+    typeEl.value = 'Imposition'; detailsEl.value = ''; admissionListEl.value = ''; invalidatePreview();
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     setStatus('Form cleared. Ready to create a new assignment batch.');
   }
 
@@ -2713,8 +2877,11 @@ async function renderAssignments() {
   const classes = await api('/assignments/classes' + queryYear());
   classEl.innerHTML = '<option value="">Select class</option>' + classes.map(v => `<option value="${escape(v)}">Class ${escape(v)}</option>`).join('');
   dateEl.value = localDate(); dueDateEl.value = addOneDay(dateEl.value);
+<<<<<<< HEAD
   updateAssignmentTargetUI();
   refreshSubmissionAssignmentOptions();
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
   teacherEl.addEventListener('change', () => { populateSubjectsForTeacher(); invalidatePreview(); });
   $('#as-add-teacher').addEventListener('click', () => { addTeacherPanel.classList.remove('hidden'); newTeacherNameEl.focus(); });
@@ -2735,7 +2902,10 @@ async function renderAssignments() {
   subjectEl.addEventListener('change', invalidatePreview);
   classEl.addEventListener('change', async () => { await loadDivisions(); invalidatePreview(); });
   divisionEl.addEventListener('change', invalidatePreview);
+<<<<<<< HEAD
   entireClassEl.addEventListener('change', () => { updateAssignmentTargetUI(); invalidatePreview(); });
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   dateEl.addEventListener('change', () => { if (!dueDateTouched) dueDateEl.value = addOneDay(dateEl.value); invalidatePreview(); });
   dueDateEl.addEventListener('input', () => { dueDateTouched = true; invalidatePreview(); });
   [typeEl, detailsEl, admissionListEl].forEach(el => el.addEventListener('input', invalidatePreview));
@@ -2743,6 +2913,7 @@ async function renderAssignments() {
   $('#as-confirm').addEventListener('click', confirmBatch);
   $('#as-clear').addEventListener('click', clearForm);
   $('#as-refresh-pending').addEventListener('click', () => refreshAssignments().catch(err => toast(err.message, true)));
+<<<<<<< HEAD
   $('#as-refresh-history').addEventListener('click', () => refreshAssignments().catch(err => toast(err.message, true)));
   $('#as-refresh-register').addEventListener('click', async () => {
     const btn = $('#as-refresh-register'); btn.disabled = true;
@@ -2750,6 +2921,8 @@ async function renderAssignments() {
     catch (err) { toast(err.message, true); }
     finally { btn.disabled = false; }
   });
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   $('#as-export-pending').addEventListener('click', () => {
     if (!pendingRecords.length) { toast('There are no pending assignments to export.', true); return; }
     const params = new URLSearchParams(); if (currentYearId) params.set('academic_year_id', currentYearId);
@@ -2866,7 +3039,10 @@ async function renderLateArrivalWork() {
     }));
   }
   async function loadRegister() {
+<<<<<<< HEAD
     // This register is independent of Assignment Portal pagination state.
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
     const params = new URLSearchParams();
     if (currentYearId) params.set('academic_year_id', currentYearId);
     for (const [id, key] of [['la-filter-date','date'], ['la-filter-status','submission_status'], ['la-filter-class','class'], ['la-filter-division','division'], ['la-filter-search','admission_no']]) {
@@ -2925,7 +3101,10 @@ async function renderLateArrivalWork() {
   }
 
   dateEl.value = localDate();
+<<<<<<< HEAD
   setupBulkSubmissionWorkflow({ prefix: 'la', endpoint: '/late-arrivals', kind: 'late-arrival', refresh });
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
   const classes = await api('/late-arrivals/classes' + yearQuery());
   $('#la-filter-class').innerHTML = '<option value="">All classes</option>' + classes.map(v => `<option value="${escape(v)}">Class ${escape(v)}</option>`).join('');
   $('#la-filter-division').innerHTML = '<option value="">All divisions</option>';
@@ -2969,6 +3148,7 @@ async function renderLateArrivalWork() {
 }
 
 // =====================================================================
+<<<<<<< HEAD
 // ATTENDANCE — upload the absent report and mark the remaining active
 // students Present for every date represented in the report.
 // =====================================================================
@@ -3210,6 +3390,8 @@ async function renderAttendance() {
 }
 
 // =====================================================================
+=======
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 // WEEKLY TESTS
 // =====================================================================
 function gradeColor(pct) {
@@ -3224,6 +3406,7 @@ async function renderWeeklyTests() {
   useTemplate('#tpl-weekly-tests');
   const tests = await api('/weekly-tests' + yearQS());
 
+<<<<<<< HEAD
   const uniqueValues = values => [...new Set(values.map(v => String(v ?? '').trim()).filter(Boolean))];
   const classValues = uniqueValues(tests.map(t => t.class)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
   const subjectValues = uniqueValues(tests.map(t => t.subject || t.exam_name)).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -3335,6 +3518,41 @@ async function renderWeeklyTests() {
     $('#wt-filter-search').focus();
   });
   renderTestList();
+=======
+  $('#wt-list').innerHTML = tests.length ? `
+    <table>
+      <thead><tr><th>Date</th><th>Exam</th><th>Class</th><th>Present</th><th>Absent</th><th>Average</th><th>Pass Rate</th><th>Entry Status</th><th></th></tr></thead>
+      <tbody>${tests.map(t => {
+        const avgPct = t.average != null ? Math.round((t.average / t.max_marks) * 1000) / 10 : null;
+        return `<tr>
+          <td>${t.test_date}</td>
+          <td>${t.subject ? `${t.subject}${t.topic ? ' — ' + t.topic : ''}` : t.exam_name}</td>
+          <td>${t.class ? `Class ${t.class}` : '—'}</td>
+          <td>${t.presentCount}</td>
+          <td>${t.absentCount > 0 ? `<span class="tag due">${t.absentCount}</span>` : '0'}</td>
+          <td>${t.average} / ${t.max_marks}${avgPct !== null ? ` <span class="mono" style="color:var(--text-mute);">(${avgPct}%)</span>` : ''}</td>
+          <td>${t.passRate}%</td>
+          <td><span class="tag ${t.entry_status === 'in_progress' ? 'due' : ''}">${t.entry_status === 'in_progress' ? 'In Progress' : 'Finished'}</span></td>
+          <td>
+            <button class="btn-icon" data-resume-entry="${t.id}">${t.entry_status === 'in_progress' ? 'Resume Entry' : 'Open / Edit Marks'}</button>
+            <a href="/weekly-test-report.html?id=${t.id}" target="_blank" rel="noopener" class="btn-icon">Report</a>
+            <button class="btn-icon" data-del="${t.id}">Remove</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>` : `<div class="empty-state"><img src="/images/mascot-main.png" alt="Nubo" /><p>No weekly tests imported yet for this academic year. Head to Import Data to add marks.</p></div>`;
+
+  $$('[data-resume-entry]').forEach(btn => btn.addEventListener('click', () => {
+    location.hash = `mark-entry/${encodeURIComponent(btn.dataset.resumeEntry)}`;
+  }));
+
+  $$('[data-del]').forEach(btn => btn.addEventListener('click', async () => {
+    if (!confirm('Delete this weekly test and all its marks? This cannot be undone.')) return;
+    await api('/weekly-tests/' + btn.dataset.del, { method: 'DELETE' });
+    toast('Weekly test deleted.');
+    renderWeeklyTests();
+  }));
+>>>>>>> 37296737b8e89abdb71d90327451e1ca2d723b4d
 
   async function loadTopPerformers() {
     const limit = $('#wt-top-limit').value;
