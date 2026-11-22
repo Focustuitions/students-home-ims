@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fee Receipt — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root {
+    --navy: #182238;
+    --teal: #04A5A7;
+    --pink: #DE306F;
+    --line: #D9DCE6;
+    --text: #262B38;
+    --text-mute: #6B7284;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #E9EAEF;
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+  }
+  .screen-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 60px;
+  }
+  .toolbar {
+    width: 148mm;
+    max-width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .toolbar .msg { font-size: 13px; color: var(--text-mute); }
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--navy);
+    background: var(--navy);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--navy); }
+
+  /* ---------- Receipt sheet: A5 ---------- */
+  .receipt {
+    width: 148mm;
+    min-height: 210mm;
+    max-width: 100%;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(24,34,56,0.08), 0 16px 40px rgba(24,34,56,0.1);
+    padding: 14mm 12mm;
+    position: relative;
+  }
+  .r-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-bottom: 10mm;
+    border-bottom: 2px solid var(--navy);
+    margin-bottom: 8mm;
+  }
+  .r-brand { display: flex; align-items: center; gap: 8px; }
+  .r-brand img { width: 34px; height: 34px; object-fit: contain; }
+  .r-brand-text { display: flex; flex-direction: column; }
+  .r-brand-text .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 16px; color: var(--navy); line-height: 1.2; }
+  .r-brand-text .addr { font-size: 10px; color: var(--text-mute); letter-spacing: 0.3px; margin-top: 2px; }
+  .r-title { text-align: right; }
+  .r-title .label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); font-weight: 700; }
+  .r-title h1 { margin: 2px 0 0; font-family: 'Baloo 2', sans-serif; font-size: 20px; color: var(--navy); }
+
+  .r-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8mm;
+    font-size: 12px;
+  }
+  .r-meta .item .l { font-family: 'Space Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-mute); }
+  .r-meta .item .v { font-size: 13.5px; font-weight: 600; color: var(--navy); margin-top: 2px; }
+
+  .r-student {
+    background: #F5F6FA;
+    border-radius: 6px;
+    padding: 5mm 6mm;
+    margin-bottom: 8mm;
+  }
+  .r-student-row { display: flex; justify-content: space-between; padding: 2.2mm 0; border-bottom: 1px dashed var(--line); font-size: 12.5px; }
+  .r-student-row:last-child { border-bottom: none; }
+  .r-student-row .l { color: var(--text-mute); }
+  .r-student-row .v { font-weight: 600; color: var(--text); }
+
+  .r-amount-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--navy);
+    border-radius: 6px;
+    padding: 6mm 7mm;
+    margin-bottom: 8mm;
+  }
+  .r-amount-box .l { font-family: 'Space Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #B7C4DC; }
+  .r-amount-box .v { font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+  .r-fee-summary { display: flex; gap: 4mm; margin-bottom: 10mm; }
+  .r-fee-summary .chip { flex: 1; text-align: center; padding: 4mm 2mm; border: 1px solid var(--line); border-radius: 6px; }
+  .r-fee-summary .chip .l { font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; color: var(--text-mute); letter-spacing: 0.5px; }
+  .r-fee-summary .chip .v { font-size: 14px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+  .r-fee-summary .chip.due .v { color: var(--pink); }
+  .r-fee-summary .chip.paid .v { color: var(--teal); }
+
+  .r-note { font-size: 11px; color: var(--text-mute); font-style: italic; margin-bottom: 14mm; }
+
+  .r-footer {
+    position: absolute;
+    bottom: 14mm;
+    left: 12mm;
+    right: 12mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .r-footer .stamp { font-size: 9px; color: var(--text-mute); }
+  .r-signature { text-align: center; }
+  .r-signature .line { width: 42mm; border-top: 1px solid var(--text); margin-bottom: 3px; }
+  .r-signature .label { font-size: 9.5px; color: var(--text-mute); }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .screen-wrap { padding: 0; }
+    .receipt { box-shadow: none; width: auto; min-height: auto; }
+    @page { size: A5; margin: 0; }
+    .receipt { padding: 14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+  <div class="screen-wrap">
+    <div class="toolbar no-print">
+      <span class="msg" id="toolbar-msg">Loading receipt…</span>
+      <div>
+        <button class="btn ghost" onclick="window.close ? window.close() : history.back()">Close</button>
+        <button class="btn" id="print-btn">Print Receipt</button>
+      </div>
+    </div>
+    <div class="receipt" id="receipt-body">
+      <p class="no-print" style="text-align:center;color:#888;padding-top:60mm;">Loading…</p>
+    </div>
+  </div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const paymentId = params.get('id');
+const money = n => '₹' + Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
+async function load() {
+  if (!paymentId) {
+    document.getElementById('receipt-body').innerHTML = '<p style="text-align:center;color:#888;">No payment specified.</p>';
+    return;
+  }
+  try {
+    const res = await fetch('/api/payments/' + paymentId + '/receipt');
+    if (!res.ok) throw new Error((await res.json()).error || 'Could not load receipt');
+    const r = await res.json();
+    render(r);
+    document.getElementById('toolbar-msg').textContent = `Receipt ${r.receipt_no} · ${r.name}`;
+  } catch (err) {
+    document.getElementById('receipt-body').innerHTML = `<p style="text-align:center;color:#c00;">${err.message}</p>`;
+  }
+}
+
+function render(r) {
+  const dateDisplay = new Date(r.payment_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  document.getElementById('receipt-body').innerHTML = `
+    <div class="r-header">
+      <div class="r-brand">
+        <img src="/images/logo-mark.png" alt="Students' Home" />
+        <div class="r-brand-text">
+          <span class="name">Students' Home</span>
+          <span class="addr">Kottakkal &middot; 9745924345</span>
+        </div>
+      </div>
+      <div class="r-title">
+        <div class="label">Fee Receipt</div>
+        <h1>#${r.receipt_no}</h1>
+      </div>
+    </div>
+
+    <div class="r-meta">
+      <div class="item"><div class="l">Date of Payment</div><div class="v">${dateDisplay}</div></div>
+      <div class="item" style="text-align:right;"><div class="l">Admission No.</div><div class="v">${r.admission_no}</div></div>
+    </div>
+
+    <div class="r-student">
+      <div class="r-student-row"><span class="l">Name of Student</span><span class="v">${r.name}</span></div>
+      <div class="r-student-row"><span class="l">Class &amp; Division</span><span class="v">${r.class} - ${r.division}</span></div>
+    </div>
+
+    <div class="r-amount-box">
+      <div><div class="l">Amount Paid</div><div class="v">${money(r.amount)}</div></div>
+      <div style="text-align:right;"><div class="l">Balance Due</div><div class="v" style="color:${r.balance > 0 ? '#FF9D9D' : '#8FE3C7'};font-size:20px;">${money(r.balance)}</div></div>
+    </div>
+
+    <div class="r-fee-summary">
+      <div class="chip"><div class="l">Net Fee</div><div class="v">${money(r.net_fees)}</div></div>
+      <div class="chip paid"><div class="l">Total Paid</div><div class="v">${money(r.total_paid)}</div></div>
+      <div class="chip due"><div class="l">Balance</div><div class="v">${money(r.balance)}</div></div>
+    </div>
+
+    <p class="r-note">Received with thanks. This receipt reflects the account balance as of the date of printing.</p>
+
+    <div class="r-footer">
+      <div class="stamp">Generated by Students' Home Institution Manager</div>
+      <div class="r-signature">
+        <div class="line"></div>
+        <div class="label">Authorized Signatory</div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+load();
+</script>
+</body>
+</html>

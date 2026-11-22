@@ -1,0 +1,347 @@
+/* -------------------------------------------------------------------------
+   Students' Home — responsive system-wide polish
+   Loaded after page styles so mobile behavior stays consistent everywhere.
+   ------------------------------------------------------------------------- */
+:root {
+  --mobile-gutter: 16px;
+  --mobile-control-height: 46px;
+  --mobile-border: #e3e9ef;
+  --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { min-width: 320px; overflow-x: hidden; }
+img, svg, canvas, video { max-width: 100%; }
+button, a, input, select, textarea, [role="button"] { -webkit-tap-highlight-color: transparent; }
+button, [role="button"] { touch-action: manipulation; }
+:focus-visible { outline: 3px solid rgba(4,165,167,.28); outline-offset: 2px; }
+
+/* Admin application shell and off-canvas navigation. */
+.mobile-appbar { display: none; }
+.mobile-nav-backdrop { display: none; }
+
+@media (max-width: 900px) {
+  body { background: #f4f6fa; }
+  .app { display: block !important; min-height: 100vh; }
+  .mobile-appbar {
+    /* Keep the app header in normal document flow: it must not hover over
+       page content while the user scrolls. */
+    position: relative;
+    top: auto;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    height: 60px;
+    min-height: 60px;
+    max-height: 60px;
+    box-sizing: border-box;
+    padding: 8px 14px;
+    background: #182238;
+    color: #fff;
+    box-shadow: none;
+    overflow: hidden;
+  }
+  .mobile-nav-toggle {
+    display: inline-flex;
+    flex: 0 0 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 46px;
+    height: 44px;
+    min-width: 46px;
+    min-height: 44px;
+    max-height: 44px;
+    margin: 0;
+    padding: 0 10px;
+    box-sizing: border-box;
+    line-height: 1;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 9px;
+    background: rgba(255,255,255,.08);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mobile-nav-toggle > span:first-child { font-size: 19px; line-height: 1; }
+  .mobile-menu-label { font-size: 12px; }
+  .mobile-appbar-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .mobile-appbar-brand img { width: 30px; height: 30px; object-fit: contain; }
+  .mobile-appbar-brand strong { overflow: hidden; color: #fff; font: 700 16px 'Baloo 2', Inter, sans-serif; white-space: nowrap; text-overflow: ellipsis; }
+  .mobile-appbar-caption { margin-left: auto; color: #aab6ca; font-size: 10px; white-space: nowrap; }
+  .spine {
+    position: fixed !important;
+    z-index: 81;
+    inset: 0 auto 0 0;
+    width: min(330px, 88vw);
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: max(16px, env(safe-area-inset-top)) 0 max(14px, env(safe-area-inset-bottom));
+    box-shadow: 18px 0 50px rgba(8,20,38,.24);
+    transform: translateX(-105%);
+    transition: transform .22s ease;
+    will-change: transform;
+  }
+  .spine.is-open { transform: translateX(0); }
+  /* The sidebar's desktop gradient edge can peek out beside the closed
+     off-canvas drawer on some mobile browsers. Remove it on small screens. */
+  .spine::after { display: none; }
+  .spine-brand { padding: 0 18px 17px; }
+  .spine-year { padding: 0 18px 14px; }
+  .tabs { padding: 6px 10px; overflow: visible; }
+  .tab { min-height: 45px; padding: 10px 12px; font-size: 14px; }
+  .spine-mascot { margin: 10px 14px 0; }
+  .spine-foot { padding: 12px 18px 8px; }
+  .spine-account { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .spine-account > div { display: flex !important; width: 100%; }
+  .spine-account button { flex: 1; min-height: 39px; }
+  .mobile-nav-backdrop { display: block; position: fixed; z-index: 80; inset: 0; background: rgba(9,18,33,.52); opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility .2s ease; }
+  body.nav-open { overflow: hidden; }
+  body.nav-open .mobile-nav-backdrop { opacity: 1; visibility: visible; }
+  .ledger { min-width: 0; padding: 18px 15px calc(30px + var(--mobile-safe-bottom)); }
+}
+
+@media (max-width: 600px) {
+  .mobile-appbar { height: 56px; min-height: 56px; max-height: 56px; gap: 8px; padding: 7px 10px; }
+  .mobile-nav-toggle { flex-basis: 42px; min-width: 42px; width: 42px; height: 42px; min-height: 42px; max-height: 42px; padding: 0; }
+  .mobile-menu-label { display: none; }
+  .mobile-appbar-brand img { width: 27px; height: 27px; }
+  .mobile-appbar-brand strong { font-size: 14px; }
+  .mobile-appbar-caption { font-size: 9px; }
+  .ledger { padding: 14px 12px calc(24px + var(--mobile-safe-bottom)); }
+}
+
+/* Admin dashboard, content headers and cards. */
+@media (max-width: 760px) {
+  .page-head { align-items: flex-start !important; flex-direction: column; gap: 12px; margin-bottom: 17px; }
+  .page-head h1 { font-size: clamp(23px, 6vw, 28px); line-height: 1.15; }
+  .page-head .hint { margin-top: 6px; font-size: 12px; line-height: 1.5; }
+  .head-actions { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .head-actions .btn { flex: 1 1 130px; justify-content: center; }
+  .welcome-banner { align-items: center; gap: 12px; padding: 14px; margin-bottom: 17px; }
+  .welcome-banner img { width: 48px; height: 48px; }
+  .welcome-banner .wb-text h3 { font-size: 15px; }
+  .welcome-banner .wb-text p { font-size: 11px; line-height: 1.45; }
+  .card { padding: 16px 14px; margin-bottom: 15px; border-radius: 12px; }
+  .card h2 { font-size: 17px; margin-bottom: 12px; padding-bottom: 10px; }
+  .card-head-row { align-items: flex-start; gap: 10px; }
+  .card-head-row h2 { font-size: 16px; }
+  .card-head-row .btn { flex-shrink: 0; }
+  .two-col { grid-template-columns: minmax(0, 1fr) !important; gap: 14px; }
+  .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-bottom: 17px; }
+  .stat { min-width: 0; padding: 12px; border-radius: 10px; }
+  .stat .label { font-size: 9px; letter-spacing: .55px; line-height: 1.35; }
+  .stat .value { font-size: 21px; overflow-wrap: anywhere; }
+  .filter-bar { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 8px; }
+  .filter-bar input, .filter-bar select { width: 100%; min-width: 0; min-height: var(--mobile-control-height); padding: 10px; font-size: 16px; }
+  .filter-bar input[type="search"] { grid-column: 1 / -1; min-width: 0; }
+  .form-grid, .form-grid-narrow { grid-template-columns: minmax(0,1fr) !important; gap: 13px; }
+  .form input, .form select, .form textarea,
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    min-height: var(--mobile-control-height);
+    max-width: 100%;
+    font-size: 16px;
+  }
+  textarea { min-height: 110px; }
+  .form-actions { align-items: stretch; flex-direction: column-reverse; gap: 8px; }
+  .form-actions .btn, .btn { min-height: 43px; }
+  .form-actions .btn { width: 100%; justify-content: center; }
+  .btn { white-space: normal; line-height: 1.25; }
+  .btn-small { min-height: 39px; padding: 9px 11px; }
+  .pagination-bar { align-items: stretch; flex-direction: column; }
+  .pagination-bar .page-controls { flex-wrap: wrap; }
+  .pagination-bar button { min-width: 40px; min-height: 40px; }
+  .detail-grid { grid-template-columns: minmax(0,1fr); gap: 7px; }
+  .fee-summary { gap: 8px; }
+  .fee-chip { min-width: calc(50% - 4px); padding: 10px; }
+  .fee-chip .value { font-size: 18px; }
+  .net-fee-display { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .toast { top: 66px; right: 12px; left: 12px; max-width: none; padding: 12px 14px; font-size: 13px; }
+  .empty-state { padding: 26px 12px; }
+}
+
+/* Tables keep their meaning and remain swipeable rather than crushing columns. */
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+.table-wrap table { max-width: 100%; }
+@media (max-width: 760px) {
+  .table-wrap { border-radius: 8px; }
+  .table-wrap table { min-width: 540px; font-size: 12px; }
+  .table-wrap th { padding: 9px 8px; font-size: 9px; letter-spacing: .35px; }
+  .table-wrap td { padding: 10px 8px; }
+  .table-wrap .btn, .table-wrap button { min-height: 36px; }
+  .as-list-card .table-wrap table, .la-list-card .table-wrap table { min-width: 700px; }
+  .bulk-preview-panel .table-wrap table { min-width: 650px; }
+  .me-marklist-card .table-wrap table { min-width: 560px; }
+  .import-skip-table { overflow-x: auto; }
+}
+
+/* Dense workflows, batch entry and teacher-account controls. */
+@media (max-width: 760px) {
+  .as-stats, .la-stats { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .as-stat, .la-stat { padding: 11px; min-width: 0; }
+  .as-stat strong, .la-stat strong { font-size: 20px; }
+  .as-session-meta, .as-entry-grid, .la-form-grid, .la-form-grid-any-class,
+  .as-batch-grid, .as-work-extra-grid, .bulk-submission-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .as-session-meta { padding: 11px; }
+  .as-entry-footer, .la-entry-footer, .me-entry-footer { align-items: stretch; flex-direction: column; }
+  .as-actions, .la-actions, .me-entry-actions { display: flex; width: 100%; flex-wrap: wrap; }
+  .as-actions .btn, .la-actions .btn, .me-entry-actions .btn { flex: 1 1 130px; justify-content: center; }
+  .as-list-head, .la-list-head { align-items: stretch; flex-direction: column; }
+  .as-filter-tools, .la-filter-tools { width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .as-filter-tools input, .as-filter-tools select, .la-filter-tools input, .la-filter-tools select { min-width: 0; max-width: none; width: 100%; min-height: 44px; font-size: 16px; }
+  .as-filter-tools input[type="search"], .la-filter-tools input[type="search"] { grid-column: 1 / -1; }
+  .as-export-actions, .la-export-actions, .import-actions { width: 100%; gap: 7px; }
+  .as-export-actions .btn, .la-export-actions .btn, .import-actions .btn { flex: 1 1 130px; justify-content: center; }
+  .bulk-submission-head, .bulk-preview-head { align-items: stretch; flex-direction: column; }
+  .bulk-submission-actions { align-items: stretch; }
+  .bulk-submission-actions .btn { flex: 1 1 100%; justify-content: center; }
+  .bulk-submission-status { flex-basis: 100%; margin: 4px 0 0; }
+  .tpa-check-grid, .tpa-class-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .tpa-page-head { align-items: flex-start; flex-direction: column; }
+  .tpa-credential-line { flex-wrap: wrap; }
+  .me-meta-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 420px) {
+  .filter-bar, .as-filter-tools, .la-filter-tools { grid-template-columns: minmax(0,1fr); }
+  .filter-bar input[type="search"], .as-filter-tools input[type="search"], .la-filter-tools input[type="search"] { grid-column: auto; }
+  .tpa-check-grid, .tpa-class-grid, .me-meta-grid { grid-template-columns: minmax(0,1fr); }
+  .as-stats, .la-stats { gap: 7px; }
+  .welcome-banner img { width: 42px; height: 42px; }
+}
+
+/* Teacher portal: compact header, single-column forms, full-width actions. */
+@media (max-width: 760px) {
+  body:has(.top .brand) { overflow-x: hidden; }
+  .top { position: sticky; top: 0; z-index: 30; align-items: center !important; padding: 9px 12px !important; gap: 8px !important; }
+  .top .brand { min-width: 0; gap: 7px; }
+  .top .brand img { width: 31px; height: 31px; }
+  .top .brand strong { font-size: 14px; line-height: 1.2; }
+  .top .user { flex-direction: row !important; align-items: center !important; gap: 7px !important; font-size: 10px; }
+  .top .user span { max-width: 108px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .top .user button { min-height: 38px; padding: 7px 9px; font-size: 11px; }
+  .wrap { width: calc(100% - 24px) !important; margin: 16px auto calc(26px + var(--mobile-safe-bottom)) !important; }
+  .welcome { align-items: flex-start !important; flex-direction: column; gap: 8px; }
+  .welcome h1 { font-size: 23px !important; line-height: 1.2; }
+  .card { padding: 15px !important; margin-bottom: 13px; border-radius: 12px; }
+  .card-head { align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 13px; }
+  .grid, .entry-grid { grid-template-columns: minmax(0,1fr) !important; gap: 12px !important; }
+  .field input, .field select, .field textarea { min-height: 46px; font-size: 16px !important; }
+  .field textarea { min-height: 125px; }
+  .buttons { display: grid; grid-template-columns: minmax(0,1fr); }
+  .buttons .btn { width: 100%; min-height: 45px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-wrap table { min-width: 640px !important; }
+  .preview-table table { min-width: 760px !important; }
+  .overlay { padding: 12px; }
+  .pw-card { max-height: calc(100dvh - 24px); overflow-y: auto; padding: 20px !important; }
+}
+@media (max-width: 420px) {
+  .top .brand strong { max-width: 148px; font-size: 12px; }
+  .top .user span { max-width: 78px; }
+  .badge { max-width: 100%; white-space: normal; }
+}
+
+/* Parent portal and parent academic pages. */
+@media (max-width: 760px) {
+  body:has(#portal-content) header { align-items: center; gap: 8px; padding: 10px 12px !important; }
+  body:has(#portal-content) header .brand { min-width: 0; gap: 7px; }
+  body:has(#portal-content) header .brand img.logo { width: 30px; height: 30px; }
+  body:has(#portal-content) header .brand-title { font-size: 15px; }
+  body:has(#portal-content) header .brand-sub { font-size: 9px; }
+  body:has(#portal-content) header .mascot { display: none; }
+  body:has(#portal-content) header .logout { min-height: 38px; padding: 7px 10px; }
+  body:has(#portal-content) main { margin-top: 13px !important; padding: 0 12px !important; }
+  body:has(#portal-content) .welcome { padding: 16px !important; border-radius: 12px; }
+  body:has(#portal-content) .welcome h1 { font-size: 23px; }
+  body:has(#portal-content) .welcome-actions { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; }
+  body:has(#portal-content) .download-report { width: 100%; min-height: 44px; white-space: normal; }
+  body:has(#portal-content) .stats { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 8px !important; }
+  body:has(#portal-content) .stat { display: block !important; min-width: 0; padding: 11px !important; }
+  body:has(#portal-content) .stat .label { font-size: 9px; line-height: 1.35; }
+  body:has(#portal-content) .stat .value { margin-top: 4px !important; text-align: left !important; font-size: 19px !important; }
+  body:has(#portal-content) .grid, body:has(#portal-content) .portal-links { grid-template-columns: minmax(0,1fr) !important; gap: 10px !important; }
+  body:has(#portal-content) .card { padding: 15px 13px !important; }
+  body:has(#portal-content) .profile-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  body:has(#portal-content) .portal-link { min-height: 86px; padding: 14px; }
+  body:has(#portal-content) table { min-width: 510px; }
+  .page-title { font-size: 23px !important; line-height: 1.2; }
+  .header-actions { flex-wrap: wrap; gap: 8px; }
+  .header-actions a, .header-actions button, .back, .header-btn { min-height: 42px; }
+  .student-tag { max-width: 100%; white-space: normal; }
+}
+@media (max-width: 420px) {
+  body:has(#portal-content) .profile-grid { grid-template-columns: minmax(0,1fr); }
+  body:has(#portal-content) .stats { grid-template-columns: minmax(0,1fr) !important; }
+}
+
+/* Login pages: readable, thumb-friendly forms without oversized desktop cards. */
+@media (max-width: 600px) {
+  body:has(#auth-form), body:has(#login-form), body:has(#teacher-login-form) {
+    min-height: 100dvh;
+    align-items: center;
+    justify-content: center;
+    padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
+  }
+  body:has(#auth-form) .card, body:has(#login-form) .card, body:has(#teacher-login-form) .card {
+    width: 100% !important;
+    max-width: 440px !important;
+    padding: 24px 20px !important;
+    border-radius: 15px;
+  }
+  body:has(#auth-form) h1, body:has(#login-form) h1 { font-size: 23px; }
+  body:has(#auth-form) input, body:has(#login-form) input, body:has(#teacher-login-form) input { min-height: 48px; font-size: 16px; }
+  body:has(#auth-form) .btn, body:has(#login-form) .btn, body:has(#teacher-login-form) .btn { min-height: 48px; }
+  body:has(#auth-form) .links, body:has(#login-form) .links { flex-direction: column; align-items: center; }
+}
+
+/* Reports, printable sheets and receipts remain legible on narrow screens. */
+@media screen and (max-width: 760px) {
+  .screen-wrap { width: 100% !important; max-width: 100% !important; margin: 0 auto !important; padding: 0 10px 20px !important; }
+  .toolbar { position: sticky; top: 0; z-index: 25; display: flex; flex-wrap: wrap; gap: 7px; padding: 8px 10px !important; background: rgba(244,246,250,.96); backdrop-filter: blur(10px); }
+  .toolbar .btn { flex: 1 1 120px; min-height: 42px; justify-content: center; }
+  .sheet, .receipt { width: 100% !important; max-width: 100% !important; min-width: 0 !important; margin: 10px auto !important; padding: 16px 12px !important; overflow: hidden; border-radius: 10px; }
+  .r-header { gap: 10px; }
+  .r-brand img { max-width: 42px; }
+  .r-title { font-size: 17px !important; }
+  .r-meta { flex-wrap: wrap; gap: 7px; }
+  .stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 8px !important; }
+  .stat-card { min-width: 0; padding: 10px !important; }
+  .tp-columns { grid-template-columns: minmax(0,1fr) !important; }
+  .marks-table, .compare-table, .tp-table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .marks-table table, .compare-table table, .tp-table table { min-width: 560px; }
+  .chart-wrap { max-width: 100%; overflow-x: auto; }
+  .highlight-list { gap: 8px; }
+  .highlight-list .item { padding: 10px; }
+  .r-footer { gap: 8px; }
+  .screen-wrap .msg { padding: 10px; }
+}
+
+@media print {
+  .mobile-appbar, .mobile-nav-backdrop { display: none !important; }
+}
+
+/* Weekly Tests register: stacked filters and swipeable results on phones. */
+@media (max-width: 760px) {
+  .wt-register-head { align-items:stretch; flex-direction:column; gap:9px; }
+  .wt-register-head .btn { width:100%; justify-content:center; }
+  .wt-filter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+  .wt-filter-field { font-size:10px; }
+  .wt-filter-field input,.wt-filter-field select { height:46px; min-height:46px; font-size:16px; }
+  .wt-filter-field:first-child { grid-column:1 / -1; }
+  #wt-list table { min-width:900px; }
+}
+@media (max-width: 420px) {
+  .wt-filter-grid { grid-template-columns:minmax(0,1fr); }
+  .wt-filter-field:first-child { grid-column:auto; }
+}

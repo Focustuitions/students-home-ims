@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Student Performance Sheet — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root {
+    --navy: #182238;
+    --teal: #04A5A7;
+    --teal-deep: #04807F;
+    --orange: #FA7232;
+    --pink: #DE306F;
+    --blue: #1C66A1;
+    --yellow: #F7B23D;
+    --line: #E6E8F0;
+    --text: #262B38;
+    --text-mute: #6B7284;
+    --bg: #F5F6FA;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; padding: 28px 16px 60px; }
+  .toolbar { width: 210mm; max-width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .toolbar .msg { font-size: 13px; color: var(--text-mute); }
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer; margin-left: 8px; }
+  .btn.ghost { background: transparent; color: var(--navy); }
+
+  .sheet { width: 210mm; max-width: 100%; min-height: 297mm; background: #fff; box-shadow: 0 2px 4px rgba(24,34,56,0.08), 0 16px 40px rgba(24,34,56,0.1); padding: 16mm; }
+
+  .r-header { display: flex; align-items: flex-start; justify-content: space-between; padding-bottom: 8mm; border-bottom: 2px solid var(--navy); margin-bottom: 8mm; }
+  .r-brand { display: flex; align-items: center; gap: 10px; }
+  .r-brand img { width: 40px; height: 40px; object-fit: contain; }
+  .r-brand .name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 18px; color: var(--navy); line-height: 1.2; }
+  .r-brand .addr { font-size: 10.5px; color: var(--text-mute); margin-top: 2px; }
+  .r-title { text-align: right; }
+  .r-title .label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pink); font-weight: 700; }
+  .r-title h1 { margin: 3px 0 0; font-family: 'Baloo 2', sans-serif; font-size: 20px; color: var(--navy); }
+
+  .student-strip { display: flex; justify-content: space-between; align-items: center; background: var(--navy); border-radius: 8px; padding: 5mm 7mm; margin-bottom: 8mm; }
+  .student-strip .who .n { font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 700; color: #fff; }
+  .student-strip .who .s { font-size: 11px; color: #B7C4DC; margin-top: 2px; }
+  .student-strip .avg { text-align: right; }
+  .student-strip .avg .l { font-family: 'Space Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #B7C4DC; }
+  .student-strip .avg .v { font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 700; color: #fff; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-bottom: 8mm; }
+  .stat-grid.stat-grid-5 { grid-template-columns: repeat(5, 1fr); }
+  .risk-banner {
+    background: rgba(222,48,111,0.08);
+    border: 1px solid rgba(222,48,111,0.3);
+    border-left: 3px solid var(--pink);
+    border-radius: 4px;
+    padding: 3.5mm 5mm;
+    margin-bottom: 6mm;
+    font-size: 11px;
+  }
+  .risk-banner strong { color: #921C42; }
+  .risk-banner ul { margin: 2mm 0 0; padding-left: 5mm; }
+  .risk-banner li { margin-bottom: 1mm; }
+  .keep-together { break-inside: avoid; page-break-inside: avoid; }
+  .signoff-row { display: flex; justify-content: space-between; gap: 10mm; margin-top: 10mm; }
+  .signoff-box { flex: 1; }
+  .signoff-box .signoff-label { font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-mute); margin-bottom: 10mm; }
+  .signoff-box .signoff-line { border-top: 1px solid var(--text); padding-top: 2mm; font-size: 9.5px; color: var(--text-mute); }
+  .remarks-box-blank { border: 1px dashed var(--line); border-radius: 4px; min-height: 16mm; margin-top: 3mm; }
+  .stat-card { background: var(--bg); border-radius: 6px; padding: 4mm 3mm; text-align: center; }
+  .stat-card .l { font-family: 'Space Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); }
+  .stat-card .v { font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 700; color: var(--navy); margin-top: 3px; }
+  .stat-card.good .v { color: var(--teal-deep); }
+  .stat-card.warn .v { color: var(--pink); }
+
+  .section-title { font-family: 'Baloo 2', sans-serif; font-size: 14px; font-weight: 700; color: var(--navy); margin: 0 0 4mm; }
+
+  .remark-box { background: rgba(4,165,167,0.08); border-left: 3px solid var(--teal); border-radius: 4px; padding: 4mm 5mm; margin-bottom: 8mm; font-size: 11.5px; line-height: 1.6; }
+  .remark-box strong { color: var(--navy); }
+
+  .subject-row { display: flex; align-items: center; gap: 3mm; margin-bottom: 2.5mm; font-size: 11px; }
+  .subject-row .subj-label { width: 32mm; flex-shrink: 0; font-weight: 600; color: var(--navy); }
+  .subject-row .subj-bar-wrap { flex: 1; background: var(--bg); border-radius: 4px; height: 5mm; overflow: hidden; position: relative; }
+  .subject-row .subj-bar { height: 100%; border-radius: 4px; }
+  .subject-row .subj-pct { width: 12mm; text-align: right; font-weight: 700; color: var(--navy); flex-shrink: 0; }
+
+  .two-col-report { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm; }
+  .highlight-list { list-style: none; margin: 0; padding: 0; }
+  .highlight-list li { padding: 2mm 0; border-bottom: 1px dashed var(--line); font-size: 10.5px; line-height: 1.5; }
+  .highlight-list li:last-child { border-bottom: none; }
+  .highlight-list .hl-date { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-mute); margin-right: 2mm; }
+  .highlight-list .hl-subject { font-weight: 600; color: var(--navy); }
+  .perf-chip-row { display: flex; gap: 2mm; flex-wrap: wrap; margin-bottom: 6mm; }
+  .perf-chip { font-size: 10px; font-weight: 700; padding: 1mm 2.5mm; border-radius: 10px; }
+  .perf-chip.pc-excellent { background: rgba(4,165,167,0.14); color: #04807F; }
+  .perf-chip.pc-verygood { background: rgba(28,102,161,0.14); color: #1C66A1; }
+  .perf-chip.pc-good { background: rgba(247,178,61,0.2); color: #8A5C0C; }
+  .perf-chip.pc-average { background: rgba(250,114,50,0.16); color: #B4501C; }
+  .perf-chip.pc-poor { background: rgba(222,48,111,0.14); color: #DE306F; }
+
+  .compare-stat-row { display: flex; gap: 4mm; margin-bottom: 6mm; }
+  .compare-stat { flex: 1; background: var(--bg); border-radius: 6px; padding: 4mm; text-align: center; }
+  .compare-stat .cs-label { font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); }
+  .compare-stat .cs-value { font-family: 'Baloo 2', sans-serif; font-size: 22px; font-weight: 700; color: var(--navy); margin-top: 3px; }
+  .compare-stat.badge .cs-value { font-size: 13px; }
+  .compare-stat.badge.consistent .cs-value { color: #04807F; }
+  .compare-stat.badge.weekly-stronger .cs-value,
+  .compare-stat.badge.term-stronger .cs-value { color: #B4501C; }
+
+  table.compare-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 8mm; }
+  table.compare-table thead th { text-align: left; font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); border-bottom: 2px solid var(--navy); padding: 1.8mm 2mm; }
+  table.compare-table tbody td { padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); }
+  .gap-pos { color: #04807F; font-weight: 700; }
+  .gap-neg { color: #DE306F; font-weight: 700; }
+
+  .chart-wrap { margin-bottom: 8mm; }
+  .chart-legend { display: flex; gap: 5mm; font-size: 10px; color: var(--text-mute); margin-top: 2mm; }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 1.5mm; }
+  .chart-legend .dot { width: 2.5mm; height: 2.5mm; border-radius: 50%; display: inline-block; }
+
+  table.marks-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+  table.marks-table thead th { text-align: left; font-family: 'Space Mono', monospace; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-mute); border-bottom: 2px solid var(--navy); padding: 2mm 2mm; }
+  table.marks-table tbody td { padding: 1.6mm 2mm; border-bottom: 1px solid var(--line); }
+  .status-pill { display: inline-block; font-size: 8.5px; font-weight: 700; padding: 0.5mm 2mm; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .status-pass { background: rgba(4,165,167,0.14); color: var(--teal-deep); }
+  .status-fail { background: rgba(222,48,111,0.12); color: var(--pink); }
+  .status-absent { background: rgba(107,114,132,0.14); color: var(--text-mute); }
+  .vs-above { color: var(--teal-deep); font-weight: 700; }
+  .vs-below { color: var(--pink); font-weight: 700; }
+
+  .r-footer { margin-top: 10mm; padding-top: 4mm; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 9px; color: var(--text-mute); }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .screen-wrap { padding: 0; }
+    .sheet { box-shadow: none; width: auto; min-height: auto; }
+    @page { size: A4; margin: 12mm; }
+    table.marks-table { page-break-inside: auto; }
+    table.marks-table tr { page-break-inside: avoid; }
+    .student-strip, .risk-banner, .stat-grid, .remark-box, .signoff-row { break-inside: avoid; page-break-inside: avoid; }
+    .section-title { break-after: avoid; page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="screen-wrap">
+    <div class="toolbar no-print">
+      <span class="msg" id="toolbar-msg">Loading report…</span>
+      <div>
+        <button class="btn ghost" onclick="window.close ? window.close() : history.back()">Close</button>
+        <button class="btn" id="print-btn">Download / Save as PDF</button>
+      </div>
+    </div>
+    <div class="sheet" id="report-body">
+      <p class="no-print" style="text-align:center;color:#888;padding-top:100mm;">Loading…</p>
+    </div>
+  </div>
+
+<script>
+const subjectColors = ['#04A5A7', '#1C66A1', '#FA7232', '#DE306F', '#F7B23D', '#8A5C0C', '#B4501C'];
+
+async function load() {
+  try {
+    const res = await fetch('/api/parents/performance-report', { credentials: 'same-origin', cache: 'no-store' });
+    if (!res.ok) throw new Error((await res.json()).error || `Could not load your child's performance sheet`);
+    const r = await res.json();
+    render(r);
+    document.getElementById('toolbar-msg').textContent = `${r.student.name} — Performance Sheet`;
+  } catch (err) {
+    document.getElementById('report-body').innerHTML = `<p style="text-align:center;color:#c00;">${err.message}</p>`;
+  }
+}
+
+function buildTrendChart(timeline) {
+  const present = timeline.filter(t => !t.is_absent);
+  if (present.length < 2) return '';
+  const w = 680, h = 140, pad = 24;
+  const xStep = (w - pad * 2) / (present.length - 1);
+  const yFor = pct => h - pad - (pct / 100) * (h - pad * 2);
+  const studentPts = present.map((t, i) => `${pad + i * xStep},${yFor(t.pct)}`).join(' ');
+  const classPts = present.filter(t => t.class_average_pct !== null).map((t, i) => `${pad + i * xStep},${yFor(t.class_average_pct)}`).join(' ');
+  const dots = present.map((t, i) => `<circle cx="${pad + i * xStep}" cy="${yFor(t.pct)}" r="3.5" fill="#04A5A7" />`).join('');
+  return `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;">
+      <line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#E6E8F0" stroke-width="1" />
+      <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h - pad}" stroke="#E6E8F0" stroke-width="1" />
+      <polyline points="${classPts}" fill="none" stroke="#C7CBD6" stroke-width="2" stroke-dasharray="4,3" />
+      <polyline points="${studentPts}" fill="none" stroke="#04A5A7" stroke-width="2.5" />
+      ${dots}
+    </svg>`;
+}
+
+function render(r) {
+  const trendColor = r.trend === 'Improving' ? 'good' : r.trend === 'Declining' ? 'warn' : '';
+  const trendArrow = r.trend === 'Improving' ? '↑' : r.trend === 'Declining' ? '↓' : r.trend === 'Steady' ? '→' : '';
+  const trendCaveat = (r.trend === 'Improving' || r.trend === 'Declining' || r.trend === 'Steady') ? ` <span style="font-size:8px;opacity:0.75;">(${r.presentCount} tests)</span>` : '';
+  const rankText = r.weeklyRank ? `${r.weeklyRank} of ${r.weeklyOutOf}` : '—';
+
+  let remarkParts = [];
+  if (r.strongest) remarkParts.push(`<strong>${r.student.name.split(' ')[0]}</strong> is strongest in <strong>${r.strongest.subject}</strong>, averaging ${r.strongest.average}%.`);
+  if (r.weakest && r.weakest.subject !== (r.strongest && r.strongest.subject)) remarkParts.push(`The subject needing the most attention is <strong>${r.weakest.subject}</strong>, averaging ${r.weakest.average}%.`);
+  if (r.trend === 'Improving') remarkParts.push(`Scores have been trending <strong style="color:#04807F;">upward</strong> across recent tests — keep it up!`);
+  else if (r.trend === 'Declining') remarkParts.push(`Scores have been trending <strong style="color:#DE306F;">downward</strong> recently — extra support here may help.`);
+  else if (r.trend === 'Steady') remarkParts.push(`Performance has been fairly <strong>steady</strong> across tests.`);
+  if (r.absentCount > 0) remarkParts.push(`Missed ${r.absentCount} test${r.absentCount > 1 ? 's' : ''} — regular attendance at weekly tests helps build an accurate picture of progress.`);
+  const remarkText = remarkParts.length ? remarkParts.join(' ') : 'Not enough weekly test data yet to generate a performance summary.';
+
+  const riskBanner = (r.riskFlags && r.riskFlags.length) ? `
+    <div class="risk-banner">
+      <strong>Needs attention:</strong>
+      <ul>${r.riskFlags.map(f => `<li>${f}</li>`).join('')}</ul>
+    </div>` : '';
+
+  const maxSubjPct = Math.max(...r.subjects.map(s => s.average), 100);
+  const subjectRows = r.subjects.map((s, i) => `
+    <div class="subject-row">
+      <span class="subj-label">${s.subject}</span>
+      <span class="subj-bar-wrap"><span class="subj-bar" style="width:${(s.average / 100) * 100}%;background:${subjectColors[i % subjectColors.length]};display:block;"></span></span>
+      <span class="subj-pct">${s.average}%</span>
+    </div>`).join('');
+
+  const timelineRows = r.timeline.map(t => {
+    const status = t.is_absent ? `<span class="status-pill status-absent">Absent</span>`
+      : (t.pct >= 35 ? `<span class="status-pill status-pass">Pass</span>` : `<span class="status-pill status-fail">Below Pass</span>`);
+    let vs = '—';
+    if (!t.is_absent && t.class_average_pct !== null) {
+      const diff = Math.round((t.pct - t.class_average_pct) * 10) / 10;
+      vs = diff >= 0 ? `<span class="vs-above">+${diff}%</span>` : `<span class="vs-below">${diff}%</span>`;
+    }
+    return `<tr>
+      <td>${t.test_date}</td>
+      <td>${t.subject}${t.topic ? ' — ' + t.topic : ''}</td>
+      <td>${t.is_absent ? 'AB' : t.marks + ' / ' + t.max_marks}</td>
+      <td>${t.is_absent ? '—' : t.pct + '%'}</td>
+      <td>${t.class_average_pct !== null ? t.class_average_pct + '%' : '—'}</td>
+      <td>${vs}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('report-body').innerHTML = `
+    <div class="r-header">
+      <div class="r-brand">
+        <img src="/images/logo-mark.png" alt="Students' Home" />
+        <div>
+          <div class="name">Students' Home</div>
+          <div class="addr">Kottakkal &middot; 9745924345</div>
+        </div>
+      </div>
+      <div class="r-title">
+        <div class="label">Academic Year Summary</div>
+        <h1>Performance Report</h1>
+      </div>
+    </div>
+
+    <div class="student-strip">
+      <div class="who">
+        <div class="n">${r.student.name}</div>
+        <div class="s">${r.student.admission_no} &middot; Class ${r.student.class}-${r.student.division}</div>
+      </div>
+      <div class="avg">
+        <div class="l">Overall Average</div>
+        <div class="v">${r.overallAverage !== null ? r.overallAverage + '%' : '—'}</div>
+      </div>
+    </div>
+
+    ${riskBanner}
+
+    <div class="stat-grid stat-grid-5">
+      <div class="stat-card"><div class="l">Tests Taken</div><div class="v">${r.testsTaken}</div></div>
+      <div class="stat-card"><div class="l">Class Rank</div><div class="v" style="font-size:15px;">${rankText}</div></div>
+      <div class="stat-card ${r.absentCount > 0 ? 'warn' : 'good'}"><div class="l">Absences</div><div class="v">${r.absentCount}</div></div>
+      <div class="stat-card good"><div class="l">Strongest Subject</div><div class="v" style="font-size:13px;">${r.strongest ? r.strongest.subject : '—'}</div></div>
+      <div class="stat-card ${trendColor}"><div class="l">Trend</div><div class="v">${trendArrow} ${r.trend}${trendCaveat}</div></div>
+    </div>
+
+    <div class="remark-box">${remarkText}</div>
+
+    ${r.subjects.length ? `
+      <p class="section-title">Weekly Test &mdash; Subject-wise Strength &amp; Weakness</p>
+      <div class="keep-together" style="margin-bottom:8mm;">${subjectRows}</div>` : ''}
+
+    ${r.timeline.filter(t => !t.is_absent).length >= 2 ? `
+      <p class="section-title">Performance Over Time</p>
+      <div class="chart-wrap keep-together">
+        ${buildTrendChart(r.timeline)}
+        <div class="chart-legend">
+          <span><span class="dot" style="background:#04A5A7;"></span> This student</span>
+          <span><span class="dot" style="background:#C7CBD6;"></span> Class average</span>
+        </div>
+      </div>` : ''}
+
+    ${r.termExams && r.termExams.length ? renderTermExamsSection(r.termExams) : ''}
+
+    ${r.crossAnalysis && r.crossAnalysis.weeklyOverall !== null && r.crossAnalysis.termOverall !== null ? renderAnalysisSection(r.crossAnalysis, r.student.name) : ''}
+
+    ${r.hotSeat && r.hotSeat.sessionCount > 0 ? renderHotSeatSection(r.hotSeat) : ''}
+
+    <p class="section-title">Full Test History</p>
+    <table class="marks-table">
+      <thead><tr><th>Date</th><th>Exam</th><th>Marks</th><th>%</th><th>Class Avg</th><th>vs. Class</th><th>Status</th></tr></thead>
+      <tbody>${timelineRows}</tbody>
+    </table>
+
+    <div class="keep-together">
+      <p class="section-title" style="margin-top:8mm;">Teacher's Remarks</p>
+      <div class="remarks-box-blank"></div>
+    </div>
+
+    <div class="signoff-row keep-together">
+      <div class="signoff-box">
+        <div class="signoff-label">Date</div>
+        <div class="signoff-line">&nbsp;</div>
+      </div>
+      <div class="signoff-box">
+        <div class="signoff-label">Class Teacher's Signature</div>
+        <div class="signoff-line">&nbsp;</div>
+      </div>
+      <div class="signoff-box">
+        <div class="signoff-label">Parent / Guardian's Signature</div>
+        <div class="signoff-line">&nbsp;</div>
+      </div>
+    </div>
+
+    <div class="r-footer">
+      <span>Generated by Students' Home Institution Manager</span>
+      <span>Pass mark: 35% &middot; Dashed line = class average</span>
+    </div>
+  `;
+}
+
+function perfChipClass(perf) {
+  const key = (perf || '').toLowerCase().replace(/\s+/g, '');
+  return { excellent: 'pc-excellent', verygood: 'pc-verygood', good: 'pc-good', average: 'pc-average', poor: 'pc-poor' }[key] || '';
+}
+
+function renderAnalysisSection(ca, firstNameFull) {
+  const firstName = (firstNameFull || '').split(' ')[0] || 'This student';
+  const consistencyClass = ca.consistency === 'Consistent' ? 'consistent'
+    : ca.consistency === 'Stronger in Weekly Tests' ? 'weekly-stronger' : 'term-stronger';
+
+  let narrative;
+  if (ca.consistency === 'Consistent') {
+    narrative = `${firstName}'s weekly test average (${ca.weeklyOverall}%) and term exam average (${ca.termOverall}%) are closely matched — performance is holding up consistently across both quick weekly checks and the more comprehensive term exam.`;
+  } else if (ca.consistency === 'Stronger in Weekly Tests') {
+    narrative = `${firstName} scores notably higher in weekly tests (${ca.weeklyOverall}%) than in term exams (${ca.termOverall}%), a gap of ${ca.overallGap}%. This can point to exam-day pressure, gaps in retaining material over a longer syllabus, or term exam papers covering more ground than the weekly checks — worth a closer look at exam preparation and revision habits.`;
+  } else {
+    narrative = `${firstName} scores notably higher in term exams (${ca.termOverall}%) than in weekly tests (${ca.weeklyOverall}%), a gap of ${Math.abs(ca.overallGap)}%. This can mean stronger performance under full-syllabus revision than in the shorter weekly checks — worth checking whether weekly preparation is keeping pace with actual understanding.`;
+  }
+
+  const comparableSubjects = ca.subjectComparison.filter(s => s.weeklyAverage !== null && s.termAverage !== null);
+  const rows = ca.subjectComparison.map(s => {
+    const gapCell = s.gap === null ? '—' : `<span class="${s.gap >= 0 ? 'gap-pos' : 'gap-neg'}">${s.gap >= 0 ? '+' : ''}${s.gap}%</span>`;
+    return `<tr>
+      <td>${s.subject}</td>
+      <td>${s.weeklyAverage !== null ? s.weeklyAverage + '%' : '—'}</td>
+      <td>${s.termAverage !== null ? s.termAverage + '%' : '—'}</td>
+      <td>${gapCell}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <p class="section-title">Analysis: Weekly Tests vs. Term Exams</p>
+    <div class="compare-stat-row">
+      <div class="compare-stat"><div class="cs-label">Weekly Test Avg</div><div class="cs-value">${ca.weeklyOverall}%</div></div>
+      <div class="compare-stat"><div class="cs-label">Term Exam Avg</div><div class="cs-value">${ca.termOverall}%</div></div>
+      <div class="compare-stat badge ${consistencyClass}"><div class="cs-label">Overall</div><div class="cs-value">${ca.consistency}</div></div>
+    </div>
+    <div class="remark-box">${narrative}</div>
+    ${comparableSubjects.length ? `
+      <table class="compare-table">
+        <thead><tr><th>Subject</th><th>Weekly Test Avg</th><th>Term Exam Avg</th><th>Difference</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : ''}`;
+}
+
+function renderTermExamsSection(termExams) {
+  const subjectColors = ['#04A5A7', '#1C66A1', '#FA7232', '#DE306F', '#F7B23D', '#8A5C0C', '#B4501C', '#04807F', '#921C42'];
+  const examsHtml = termExams.map(ex => {
+    const dateDisplay = new Date(ex.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const vsClass = ex.pct !== null && ex.classAverage !== null ? Math.round((ex.pct - ex.classAverage) * 10) / 10 : null;
+    const subjectRows = ex.subjects.map((s, i) => {
+      const pct = s.is_absent || s.marks === null ? null : Math.round((s.marks / s.max_marks) * 1000) / 10;
+      return `
+        <div class="subject-row">
+          <span class="subj-label">${s.subject}</span>
+          <span class="subj-bar-wrap"><span class="subj-bar" style="width:${pct ?? 0}%;background:${subjectColors[i % subjectColors.length]};display:block;"></span></span>
+          <span class="subj-pct">${s.is_absent ? 'AB' : (pct !== null ? pct + '%' : '—')}</span>
+        </div>`;
+    }).join('');
+    return `
+      <div class="keep-together" style="margin-bottom:6mm;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3mm;">
+          <strong style="font-family:'Baloo 2',sans-serif;font-size:12.5px;color:var(--navy);">${ex.exam_name} <span style="font-weight:400;color:var(--text-mute);font-size:10.5px;">(${dateDisplay})</span></strong>
+          <span style="font-size:11.5px;">
+            <strong style="color:var(--navy);">${ex.pct !== null ? ex.pct + '%' : '—'}</strong>
+            ${ex.rank ? ` <span style="color:var(--text-mute);">&middot; Rank ${ex.rank} of ${ex.outOf}</span>` : ''}
+            ${ex.classAverage !== null ? ` <span style="color:var(--text-mute);">(class avg ${ex.classAverage}%${vsClass !== null ? `, ${vsClass >= 0 ? '+' : ''}${vsClass}%` : ''})</span>` : ''}
+          </span>
+        </div>
+        ${subjectRows}
+      </div>`;
+  }).join('');
+
+  return `
+    <p class="section-title">Term Examinations</p>
+    <div style="margin-bottom:8mm;">${examsHtml}</div>`;
+}
+
+function renderHotSeatSection(hs) {
+  const checklistLabels = {
+    notes_completed: 'Notes Completed',
+    notebook_neat: 'Notebook Neat',
+    questions_answered: 'Questions Answered',
+    good_attention_span: 'Good Attention Span',
+  };
+  const checklistRows = Object.entries(checklistLabels).map(([key, label]) => {
+    const pct = hs.checklistRates ? hs.checklistRates[key] : 0;
+    return `
+      <div class="subject-row">
+        <span class="subj-label">${label}</span>
+        <span class="subj-bar-wrap"><span class="subj-bar" style="width:${pct}%;background:#04A5A7;display:block;"></span></span>
+        <span class="subj-pct">${pct}%</span>
+      </div>`;
+  }).join('');
+
+  const ratingChips = Object.entries(hs.ratingCounts || {}).map(([label, count]) =>
+    `<span class="perf-chip ${perfChipClass(label)}">${label}: ${count}</span>`).join('');
+
+  const remarksList = (hs.recentRemarks || []).length
+    ? hs.recentRemarks.map(rm => `<li><span class="hl-date">${rm.date}</span><span class="hl-subject">${rm.subject || 'General'}</span> — ${rm.remarks}</li>`).join('')
+    : '<li style="color:#888;">No remarks logged yet.</li>';
+
+  const feedbackList = (hs.recentParentFeedback || []).length
+    ? hs.recentParentFeedback.map(fb => `<li><span class="hl-date">${fb.date}</span><span class="hl-subject">${fb.subject || 'General'}</span> — ${fb.parent_feedback}</li>`).join('')
+    : '<li style="color:#888;">No parent feedback logged yet.</li>';
+
+  const checklistRates = hs.checklistRates || {};
+  const positiveKeys = ['notes_completed', 'notebook_neat', 'questions_answered', 'good_attention_span'];
+  const avgChecklist = positiveKeys.length
+    ? Math.round((positiveKeys.reduce((s, k) => s + (checklistRates[k] || 0), 0) / positiveKeys.length) * 10) / 10
+    : 0;
+
+  return `
+    <p class="section-title">Classroom Engagement (Hot Seat)</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="l">Sessions</div><div class="v">${hs.sessionCount}</div></div>
+      <div class="stat-card good"><div class="l">Predominant Rating</div><div class="v" style="font-size:13px;">${hs.predominantRating || '—'}</div></div>
+      <div class="stat-card good"><div class="l">Avg. Checklist Score</div><div class="v">${avgChecklist}%</div></div>
+      <div class="stat-card ${hs.alertCount > 0 ? 'warn' : 'good'}"><div class="l">Missing Materials</div><div class="v">${hs.alertCount}</div></div>
+    </div>
+
+    <div class="perf-chip-row">${ratingChips}</div>
+
+    <div style="margin-bottom:8mm;">${checklistRows}</div>
+
+    <div class="two-col-report">
+      <div>
+        <p class="section-title">Recent Remarks</p>
+        <ul class="highlight-list">${remarksList}</ul>
+      </div>
+      <div>
+        <p class="section-title">Recent Parent Feedback</p>
+        <ul class="highlight-list">${feedbackList}</ul>
+      </div>
+    </div>`;
+}
+
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+load();
+</script>
+</body>
+</html>

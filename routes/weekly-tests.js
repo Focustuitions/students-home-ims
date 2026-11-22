@@ -43,7 +43,7 @@ function computeStats(marksRows, maxMarks) {
 // List weekly tests for the active academic year, with quick stats
 router.get('/', (req, res) => {
   const yearId = resolveYearId(req.query.academic_year_id);
-  const tests = db.prepare('SELECT * FROM weekly_tests WHERE academic_year_id = ? ORDER BY test_date DESC, id DESC').all(yearId);
+  const tests = db.prepare("SELECT * FROM weekly_tests WHERE academic_year_id = ? ORDER BY CASE WHEN entry_status = 'in_progress' THEN 0 ELSE 1 END, test_date DESC, id DESC").all(yearId);
   const withStats = tests.map(t => {
     const marksRows = db.prepare('SELECT * FROM weekly_test_marks WHERE weekly_test_id = ?').all(t.id);
     const stats = computeStats(marksRows, t.max_marks);

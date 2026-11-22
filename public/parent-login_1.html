@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Parent Portal — Students' Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/images/logo-mark.png" />
+<style>
+  :root { --navy:#182238; --teal:#04A5A7; --teal-deep:#04807F; --pink:#DE306F; --line:#E6E8F0; --text:#262B38; --mute:#6B7284; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 0; background:linear-gradient(135deg,#103A52,var(--navy)); font-family:Inter,sans-serif; color:var(--text); }
+  .card { width:400px; max-width:92vw; background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.35); padding:32px; }
+  .mascot { display:flex; justify-content:center; margin-bottom:8px; }
+  .mascot img { width:60px; height:60px; object-fit:contain; }
+  .brand { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+  .brand img { width:38px; height:38px; object-fit:contain; }
+  .brand span { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:19px; color:var(--navy); }
+  h1 { font-family:'Baloo 2',sans-serif; font-size:25px; line-height:1.15; color:var(--navy); margin:22px 0 6px; }
+  .subtitle { font-size:13px; color:var(--mute); line-height:1.55; margin:0 0 22px; }
+  label { display:block; font-size:12.5px; font-weight:700; color:#2A3B5C; margin:0 0 7px; }
+  input { display:block; width:100%; font:14px Inter,sans-serif; padding:12px; border:1px solid var(--line); border-radius:7px; margin-bottom:16px; }
+  input:focus { outline:2px solid var(--teal); outline-offset:1px; }
+  .hint { color:var(--mute); font-size:11.5px; line-height:1.5; margin:-5px 0 16px; }
+  .btn { width:100%; font:700 14px Inter,sans-serif; padding:12px; border:0; border-radius:7px; background:var(--teal); color:white; cursor:pointer; }
+  .btn:hover { background:var(--teal-deep); } .btn:disabled { opacity:.6; cursor:default; }
+  .error { display:none; color:#921C42; background:rgba(222,48,111,.1); border:1px solid rgba(222,48,111,.35); border-radius:7px; padding:10px 12px; font-size:12.5px; font-weight:600; margin:0 0 14px; line-height:1.45; }
+  .error.shown { display:block; }
+  .links { display:flex; justify-content:space-between; gap:12px; margin-top:18px; font-size:12px; }
+  a { color:var(--teal-deep); text-decoration:none; font-weight:700; } a:hover { text-decoration:underline; }
+  .foot { text-align:center; color:var(--mute); font-size:11px; margin-top:22px; }
+  .loading { text-align:center; color:var(--mute); font-size:13px; padding:16px 0; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="mascot"><img src="/images/mascot-main.png" alt="Nubo" /></div>
+    <div class="brand"><img src="/images/logo-mark.png" alt="Students' Home logo" /><span>Students' Home</span></div>
+    <h1>Parent Portal</h1>
+    <p class="subtitle">View your child's fee payment history, weekly test marks, examination results, and teacher observations.</p>
+    <p class="loading" id="loading">Checking sign-in status…</p>
+    <form id="login-form" hidden>
+      <label for="admission-no">Student Admission Number</label>
+      <input id="admission-no" name="admissionNo" type="text" autocomplete="username" autocapitalize="characters" maxlength="80" required />
+      <label for="password">Mother's Mobile Number</label>
+      <input id="password" name="password" type="password" inputmode="tel" autocomplete="current-password" maxlength="256" required />
+      <p class="hint">Use the mother's mobile number registered with Students' Home for the first login. You will be asked to create a private password before viewing records.</p>
+      <div id="error" class="error" role="alert"></div>
+      <button class="btn" id="submit" type="submit">Sign In to Parent Portal</button>
+    </form>
+    <div class="links"><a href="/login.html">Administrator Login</a><a href="/">Students' Home</a></div>
+    <p class="foot">Students' Home · Kottakkal</p>
+  </main>
+<script>
+const form = document.getElementById('login-form');
+const loading = document.getElementById('loading');
+const errorBox = document.getElementById('error');
+const submit = document.getElementById('submit');
+function showError(message) { errorBox.textContent = message; errorBox.classList.add('shown'); }
+async function init() {
+  try {
+    const response = await fetch('/api/parents/status', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Could not check sign-in status.');
+    const state = await response.json();
+    if (state.loggedIn) { location.replace('/parent.html'); return; }
+  } catch (e) {
+    // The login attempt will show a clear error if the application is temporarily unavailable.
+  }
+  loading.hidden = true;
+  form.hidden = false;
+}
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  errorBox.classList.remove('shown');
+  submit.disabled = true;
+  submit.textContent = 'Signing in…';
+  try {
+    const response = await fetch('/api/parents/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admissionNo: document.getElementById('admission-no').value.trim(),
+        password: document.getElementById('password').value,
+      }),
+      cache: 'no-store',
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'Unable to sign in. Please try again.');
+    location.replace('/parent.html');
+  } catch (e) {
+    showError(e.message || 'Could not reach the server. Please try again.');
+    submit.disabled = false;
+    submit.textContent = 'Sign In to Parent Portal';
+  }
+});
+init();
+</script>
+</body>
+</html>

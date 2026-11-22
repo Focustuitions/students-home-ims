@@ -12,7 +12,7 @@ and Nubo the mascot).
 
 ## Requirements
 
-- Node.js 18 or newer (download from https://nodejs.org if you don't have it)
+- Node.js 22 or newer (download from https://nodejs.org if you don't have it)
 
 ## Setup
 
@@ -27,25 +27,23 @@ and Nubo the mascot).
    ```
 4. Open your browser to **http://localhost:3000**
 
-The database file is created automatically on first run at `db/institution.db`.
+For local development without `DB_PATH`, the database file is created at `db/institution.db`.
+For Hostinger production, set `NODE_ENV=production` and `DB_PATH` to the existing SQLite file in a private persistent folder outside `hbuilds` and `public_html`; the app intentionally refuses to start with a missing production database. See `HOSTINGER_DEPLOYMENT_NOTES.md`.
 To run on a different port: `PORT=4000 npm start`.
 
 ### First-time login
 
-The very first time you open the app, you'll be asked to create the one
-administrator account (username + password, at least 6 characters) instead
-of seeing a login form. From then on, everyone signs in with that account.
-You can change the password later from the sidebar (**Change Password**),
-and sign out with **Log Out**. There's no separate "forgot password" flow —
-if you lose the password, you'll need to reset it directly in the database
-(ask if you'd like help with that) or delete `db/institution.db` to start
-over (this erases all data, so only do this on a fresh install).
+The first time an administrator opens the app, they create the administrator
+account (username + password, at least 6 characters). Administrators can change
+the password from the sidebar and sign out with **Log Out**. There is no
+self-service administrator password recovery; keep the admin credentials secure
+and retain backups. Do not delete the production database to recover a password,
+as that would erase the institution's data.
 
 ## Features
 
 ### Administrator Login
-- The whole app sits behind a single administrator login — every API route
-  requires a signed-in session except the login/setup screens themselves.
+- The Institution Manager sits behind administrator login. The separate Parent Portal uses student-specific sessions and can only access the signed-in student's records.
 - Sessions are cookie-based (HttpOnly, 30-day expiry) and stored in the
   database, so a server restart doesn't force everyone to sign in again.
 - Passwords are hashed with bcrypt before being stored — the plain password
@@ -109,10 +107,12 @@ over (this erases all data, so only do this on a fresh install).
 - Type an **Admission No.** and the student's name, class, net fee, amount already
   paid, and balance due fill in automatically.
 - Enter receipt no. and amount; payment date defaults to today and is editable.
-  Receipt No. is auto-filled with one more than the highest numeric receipt on
-  file (so 825 → 826) but stays fully editable for the rare correction.
-  Non-numeric receipts (like the "OB-" opening-balance entries an import
-  creates) are ignored when suggesting the next number.
+  Receipt No. is initially auto-filled with one more than the highest numeric
+  receipt on file (so 825 → 826). After that, the last numeric receipt number
+  saved (or set while editing a receipt) becomes the basis for the next
+  suggestion. Manually changing the number therefore changes the next
+  auto-filled number too. Non-numeric receipts (like "OB-" opening-balance
+  entries an import creates) are ignored when suggesting the next number.
 - **Payment History** lists every payment across all students, searchable by
   admission no., student name, or receipt number, and each row links back to the
   student's file. Shows **50 payments per page**, with page controls underneath.
@@ -326,25 +326,123 @@ Excel or share directly.
 
 ```
 ims/
-├── server.js              Express app entry point
+├── server.js                  Express app entry point
 ├── db/
-│   └── database.js        SQLite schema & connection
+│   ├── database.js            SQLite schema & connection
+│   ├── auth.js                Administrator sessions
+│   └── parentAuth.js          Parent sessions
 ├── routes/
+│   ├── parents.js             Parent login, password, and student-only API
 │   ├── students.js
 │   ├── payments.js
-│   ├── teachers.js
-│   ├── timetable.js
-│   └── classes.js
-└── public/                 Frontend (served statically)
-    ├── index.html
+│   └── other admin APIs…
+└── public/
+    ├── index.html             Administrator dashboard
+    ├── login.html             Administrator login
+    ├── parent-login.html      Parent sign-in
+    ├── parent.html            Parent home dashboard
+    ├── parent-weekly-tests.html Weekly test records
+    ├── parent-term-exams.html Term exam records
+    ├── parent-progress-report.html Printable progress report
     ├── css/style.css
     └── js/app.js
 ```
 
-## Notes
+## Production security and backups
 
-- This is a single-tenant admin tool with no login/authentication built in — it's
-  intended to run on a local machine or a private network. If you plan to expose
-  it on the internet, add an authentication layer first.
-- All data lives in `db/institution.db`. Back that file up regularly; copying it
-  elsewhere is a complete backup.
+- Use HTTPS on the public website. Keep `DB_PATH` outside the public web root and replaceable deployment folders. Never include the live database in a deployment ZIP or public repository.
+- Parent users initially sign in with Admission Number and the mother's registered mobile number, then must choose a private password. If a parent forgets it, an administrator can use **Reset Parent Login** on the student detail page.
+- Back up the persistent database regularly, and keep at least one backup offline. All student, payment, and exam data is stored there; treat it as confidential.
+
+### Parent Portal
+- Parents sign in at `/parent-login.html` with the student's Admission Number and the mother's mobile number currently registered on that student record.
+- On the first successful sign-in, the portal asks the parent to create a private password before displaying student information. Passwords are stored as bcrypt hashes in `parent_accounts`.
+- The portal shows only the signed-in student's profile, fee-payment history and balance, weekly test marks, term-exam marks, and Hot Seat teacher observations. Parent sessions use a separate HttpOnly cookie and do not grant access to administrator APIs.
+- Parent login attempts are rate-limited. Parent sessions expire after seven days.
+- To recover a forgotten parent password, an administrator can open that student's record and click **Reset Parent Login**. This resets the initial password to the mother's currently registered mobile number, invalidates existing parent sessions, and requires a password change at the next sign-in. If the mother's number is missing or outdated, update the student record first.
+- The parent portal is available at `/parent-login.html`; the administrator sign-in page now links to it.
+
+### Parent Portal — Separate Academic Pages and Progress Report
+- The Parent Portal home page shows **Weekly Tests** and **Term Exam Reports** as separate navigation cards with result counts; the marks tables are not displayed on the home page.
+- **Weekly Tests** opens `/parent-weekly-tests.html` and **Term Exam Reports** opens `/parent-term-exams.html`. Each page has its own results table, student identification, home navigation, and logout control.
+- Parents can still open **Download Progress Report** from the home page. The report includes the student's profile, weekly-test marks, term-exam marks, and teacher observations in separate sections.
+- The report can be saved as a PDF using the browser's **Download / Save as PDF** print action. All three academic pages read data only from the authenticated parent dashboard API; they do not accept an admission number in the URL, so records remain limited to the signed-in student's account.
+## Latest dashboard update
+
+The admin dashboard now includes a **Top 20 Students with Highest Pending Fee** table. It uses the existing student balance calculation, follows the selected academic year, excludes fully paid students, and links each row to the student profile. No database migration is needed. See `ADMIN_TOP20_PENDING_FEES.md`.
+
+### Student withdrawal / archive
+
+Admin can move a student from their profile into the **Left / Withdrawn** register. This is a reversible status change, not deletion: student details, payment receipts, and academic marks remain preserved. Withdrawn students are excluded from active student totals and all active fee-pending lists/exports. Their remaining balance is retained in the archive as historical information. The archive includes search and a Restore action for students who rejoin. Database columns and status-history records are created automatically at startup.
+
+## Update Student Divisions by Excel
+
+Use **Import Data → Update Student Divisions** to move existing students between divisions. Download the sample template, fill `Admission No` and `New Division`, then upload it. `Class (Optional)` can be included as a cross-check. The import updates only the division, skips withdrawn students and duplicate admission numbers, and reports unchanged or invalid rows. See `DIVISION_UPDATE_IMPORT.md` for details.
+
+
+## Fee Pending Slip Generation
+
+The Admin navigation includes **Fee Pending Slips**. Select a class, enter a target amount per student, and choose a due date. The tool previews active students with unpaid balances in the selected class and prints individual reminders (four per A4 page (2 × 2)). The entered amount is a cumulative paid-fee target. Each slip requests `min(max(target − already paid, 0), actual outstanding balance)`. Students who have already reached the target are excluded, as are withdrawn students. This tool is a print-only workflow and does not alter payments or the database. See `FEE_PENDING_SLIPS.md` for details.
+
+## Delete Receipt
+
+Administrators can delete a payment receipt from the Student Profile fee ledger, Payment History, Dashboard recent payments, or Edit Fee Receipt screen. Deletion is permanent, removes that payment from the fee ledger, and recalculates paid and pending totals wherever they are displayed. The receipt-number sequence is not rolled back, avoiding accidental reuse of a deleted receipt number. Back up the database before deleting real payment records. See `DELETE_RECEIPT.md`.
+
+
+## Quick Mark Entry (November 2026)
+
+Admin can now enter marks one student at a time using date, class, subject, topic and maximum marks. Class 10 students can be found using the first three digits of the Admission Number. Saved entries are part of Weekly Tests and can be exported to Excel. See `MARK_ENTRY.md`.
+
+
+## Mark Entry update (keyboard-driven)
+
+The Mark Entry page now follows this flow: enter test date, class, subject, topic and maximum marks; select Start / Resume; type an Admission Number and press Enter; type the mark and press Enter. The saved mark clears the entry fields and focuses the Admission Number input for the next student. For Class 10, the first three digits can identify a student; if multiple records match, select the correct student from the list. The Finish button closes the entry session after confirmation. Saved marks are written directly to the existing Weekly Tests register and remain available for Excel export.
+
+### Mark Entry resume support
+
+Quick Mark Entry writes directly to Weekly Tests. Started tests remain marked **In Progress** if the portal/browser is closed, including sessions closed before the first mark is saved. Resume them from **Weekly Tests → Resume Entry**; the date, class, subject, topic, maximum marks and saved marks are restored. Press **Finish** to mark the session completed. Existing databases automatically receive the `weekly_tests.entry_status` column; existing test rows default to `completed`.
+
+## Impositions & Other Assignments
+See `ASSIGNMENTS.md` for the subject-specific teacher roster, quick-entry workflow, register filters and Excel export.
+
+
+## Teacher Portal
+See [TEACHER_PORTAL.md](TEACHER_PORTAL.md) for how Admin creates teacher accounts, shares temporary credentials, and how teachers record impositions from `/teacher-login.html`.
+
+### Teacher Portal batch imposition entry
+Teachers can select a date, assigned class, division and subject, paste multiple Admission Numbers, preview matches and confirm the batch. Preview is read-only; confirmation revalidates permissions and student status and saves in one transaction. Class 10 supports 3-digit prefixes; Classes 8 and 9 support 4-digit prefixes. Ambiguous prefixes require full Admission Numbers. See `TEACHER_BATCH_IMPOSITION.md`.
+
+### Admin Assignment Portal update
+The Assignment Portal now supports date/teacher/subject/class/division batch assignment, due-date selection (defaulting to one day after the given date), Admission Number preview and confirmation, separate Assignment Pending and Assignment History lists, marking items Submitted, and reversing a mistaken submission back to Pending. Submitted entries are removed from Pending and shown in History with a Reverse action. Excel exports include due/submission details. See `ADMIN_ASSIGNMENT_BATCH_AND_SUBMISSIONS.md`.
+
+
+## Late Arrival Additional Work
+
+Admin can record additional work for late arrivals in **Late Arrival Work**. Select the late-arrival date, class and division, paste Admission Numbers, preview matched students, then finish to save. Class 10 accepts 3-digit prefixes; Classes 8 and 9 accept 4-digit prefixes. The due date is automatically set to the day after the late-arrival date. The register supports Pending / Submitted status, submission dates, deletion, filters and Excel export. Late-arrival records are included in both the Admin Student Performance Report and Parent Performance Sheet, alongside the existing Impositions & Assignments section. The `late_arrival_works` table is created automatically on startup; keep the existing persistent `DB_PATH` and do not replace the database. See `LATE_ARRIVAL_WORK.md`.
+
+## Excel report exports
+
+- Late Arrival Work has an **Export All Records (Excel)** button. It exports the rows matching the current Late Arrival register filters.
+- Pending Late Arrival Work has a separate **Export Pending Records** button. It exports unsubmitted work for the selected academic year; overdue rows are labelled Overdue.
+- Assignment Pending in the Assignment Portal has an **Export Pending Report** button. It exports unsubmitted assignments for the selected academic year; overdue rows are labelled Overdue.
+- The Assignment Register's existing Export Excel button remains available and respects its current filters.
+
+These report exports do not change student, assignment, late-arrival, or submission data. No database migration is required for this update.
+
+
+Late Arrival Work supports a mixed-class, mixed-division batch. Enter the late-arrival date and admission numbers only; the preview identifies each student's class and division. Class/division filters remain available in the register.
+
+## Bulk Submission Marking
+
+The Admin portals support preview-first bulk marking of Assignment and Late Arrival submissions. See `BULK_SUBMISSION_MARKING.md` for the due-date window, admission-number resolution, preview, and transactional submit workflow.
+
+
+### Teacher Portal password policy
+- Teacher Portal passwords are four-digit numeric passwords. Admin sees the password only when creating an account or resetting its password.
+- New accounts and reset accounts can sign in directly with the generated four-digit password; there is no forced eight-character password change.
+- To move a previously configured teacher account to a four-digit password, use **Teacher Portal Accounts → Reset Password**.
+
+- **Attendance:** upload the institution absent-report Excel file, preview admission-number matches, then mark listed students Absent and all remaining active students Present for the report dates. See `ATTENDANCE_ABSENT_REPORT_IMPORT.md`.
+
+## Latest update — Parent Portal and class-wide assignments
+See `PARENT_AND_CLASS_WIDE_ASSIGNMENTS.md` for removal of fee information from the Parent Portal and the new assignment-to-entire-class option.
